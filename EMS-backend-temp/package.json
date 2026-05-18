@@ -1,0 +1,38 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "start": "nodemon server.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "db:create": "node-pg-migrate create",
+    "db:migrate": "node-pg-migrate up",
+    "db:rollback": "node-pg-migrate down",
+    "db:check": "node-pg-migrate up --dry-run",
+    "db:fake": "node-pg-migrate up --fake",
+    "db:seed": "node seeds/dev_seed.js",
+    "db:seed:full": "node seeds/full_mock_seed.js",
+    "db:seed:comprehensive": "node seeds/comprehensive_seed.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.1",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "node-pg-migrate": "^8.0.4",
+    "pg": "^8.20.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.11",
+    "vitest": "^4.1.4"
+  }
+}

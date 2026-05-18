@@ -8,5 +8,3 @@
 *.userosscache
 *.sln.docstates
 
-# Backend folder (tracked in separate repository)
-EMS-backend-temp/
