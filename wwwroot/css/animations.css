@@ -1,0 +1,61 @@
+/* ═══════════════════════════════════════════
+   TRACK360 ERP - Animations (Light Theme)
+   ═══════════════════════════════════════════ */
+
+/* Keyframes */
+@keyframes fadeIn       { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fadeInUp     { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeInDown   { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes scaleIn      { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+@keyframes slideInRight { from { opacity: 0; transform: translateX(16px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes slideInLeft  { from { opacity: 0; transform: translateX(-16px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes float        { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+@keyframes spin         { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes modalSlideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes shimmer      { 0% { background-position: -400px 0; } 100% { background-position: 400px 0; } }
+@keyframes slideInToast { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes fadeOutToast { from { opacity: 1; } to { opacity: 0; transform: translateX(20px); } }
+
+/* Utility Classes */
+.anim-fade-in      { animation: fadeIn 0.4s ease-out both; }
+.anim-fade-in-up   { animation: fadeInUp 0.4s ease-out both; }
+.anim-fade-in-down { animation: fadeInDown 0.3s ease-out both; }
+.anim-scale-in     { animation: scaleIn 0.3s ease-out both; }
+.anim-slide-right  { animation: slideInRight 0.3s ease-out both; }
+.anim-slide-left   { animation: slideInLeft 0.3s ease-out both; }
+
+/* Stagger */
+.stagger > *:nth-child(1) { animation-delay: 0.02s; }
+.stagger > *:nth-child(2) { animation-delay: 0.06s; }
+.stagger > *:nth-child(3) { animation-delay: 0.10s; }
+.stagger > *:nth-child(4) { animation-delay: 0.14s; }
+.stagger > *:nth-child(5) { animation-delay: 0.18s; }
+
+/* Hover Effects */
+.hover-lift { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.hover-lift:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.06); }
+
+/* Skeleton */
+.skeleton {
+    background: linear-gradient(90deg, var(--surface2) 25%, var(--surface3) 50%, var(--surface2) 75%);
+    background-size: 800px 100%; animation: shimmer 1.5s infinite linear;
+    border-radius: 6px;
+}
+.skeleton-text { height: 12px; margin-bottom: 8px; border-radius: 4px; }
+.skeleton-text.short { width: 60%; }
+.skeleton-heading { height: 18px; width: 40%; margin-bottom: 12px; border-radius: 4px; }
+
+/* Toast */
+.toast {
+    position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 18px; border-radius: 10px; min-width: 280px;
+    font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+    animation: slideInToast 0.4s ease-out, fadeOutToast 0.4s ease-in 3.8s both;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+}
+.toast svg { width: 16px; height: 16px; flex-shrink: 0; }
+.toast-success { background: #fff; border: 1px solid rgba(5,150,105,0.2); color: var(--accent2); }
+.toast-error   { background: #fff; border: 1px solid rgba(220,38,38,0.2); color: var(--accent4); }
+.toast-info    { background: #fff; border: 1px solid rgba(37,99,235,0.2); color: var(--accent); }
+.toast-warning { background: #fff; border: 1px solid rgba(217,119,6,0.2); color: var(--accent3); }

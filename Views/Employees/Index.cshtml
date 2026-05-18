@@ -1,0 +1,202 @@
+@{
+    ViewData["Title"] = "Employees";
+    ViewData["Active"] = "Employees";
+}
+
+<!-- PAGE HEADER -->
+<div class="page-header anim-fade-in-up">
+    <div>
+        <h1 class="page-title">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+            Employee Directory
+        </h1>
+        <div class="page-date">Manage all employees across departments and branches</div>
+    </div>
+    <div style="display:flex;gap:8px;">
+        <button class="btn btn-ghost" onclick="window.print()">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export
+        </button>
+        <a class="btn btn-primary" asp-action="Create">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Employee
+        </a>
+    </div>
+</div>
+
+<!-- STAT CARDS -->
+<div class="kpi-grid stagger" style="grid-template-columns: repeat(4, 1fr);">
+    <div class="stat-card blue"><div class="kpi-label"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> Total Employees</div><div class="kpi-num" id="statTotal">--</div><div class="kpi-sub" id="statTotalSub">Loading...</div></div>
+    <div class="stat-card green"><div class="kpi-label"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Active</div><div class="kpi-num" style="color:var(--accent2)" id="statActive">--</div><div class="kpi-sub" id="statActiveSub">Loading...</div></div>
+    <div class="stat-card amber"><div class="kpi-label"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> On Probation</div><div class="kpi-num" style="color:var(--accent3)" id="statProbation">--</div><div class="kpi-sub" id="statProbationSub">Loading...</div></div>
+    <div class="stat-card red"><div class="kpi-label"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> Inactive</div><div class="kpi-num" style="color:var(--accent4)" id="statInactive">--</div><div class="kpi-sub" id="statInactiveSub">Loading...</div></div>
+</div>
+
+<!-- TABLE -->
+<div class="table-container anim-fade-in-up" style="margin-top:20px;">
+    <div class="filter-bar">
+        <div class="filter-group">
+            <label class="filter-label">Department</label>
+            <select class="filter-select" id="filterDept" onchange="applyFilters()"><option value="all">All Departments</option></select>
+        </div>
+        <div class="filter-group">
+            <label class="filter-label">Status</label>
+            <select class="filter-select" id="filterStatus" onchange="applyFilters()">
+                <option value="all">All Statuses</option><option value="active">Active</option><option value="probation">Probation</option><option value="inactive">Inactive</option>
+            </select>
+        </div>
+        <input class="filter-search" type="text" placeholder="Search employees…" oninput="applyFilters()" id="empSearch" />
+    </div>
+
+    <div class="table-scroll-wrapper">
+        <table class="data-table" id="employeesTable">
+            <thead>
+                <tr>
+                    <th style="width:30px;"><input type="checkbox" class="table-checkbox" onclick="toggleSelectAll('employeesTable', this)" /></th>
+                    <th class="sortable" onclick="sortTable('employeesTable', 1)">Employee <span class="sort-icon">↕</span></th>
+                    <th class="sortable" onclick="sortTable('employeesTable', 2)">ID <span class="sort-icon">↕</span></th>
+                    <th class="sortable" onclick="sortTable('employeesTable', 3)">Department <span class="sort-icon">↕</span></th>
+                    <th class="sortable" onclick="sortTable('employeesTable', 4)">Designation <span class="sort-icon">↕</span></th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="empTableBody">
+                <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--muted);font-size:13px;">Loading employees from server...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="table-pagination" id="empPagination">
+        <div class="pagination-info" id="empPagInfo">Loading...</div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="~/js/tables.js" asp-append-version="true"></script>
+<script src="~/js/modals.js" asp-append-version="true"></script>
+<script>
+    let allEmployees = [];
+
+    // Load employees from API
+    (async function loadEmployees() {
+        console.log('Loading employees...');
+        const res = await EmsApi.employees.list();
+        console.log('Employees response:', res);
+        
+        const tbody = document.getElementById('empTableBody');
+
+        if (res.success && res.data) {
+            const employees = Array.isArray(res.data) ? res.data : (res.data.data || []);
+            allEmployees = employees;
+            renderEmployees(allEmployees);
+            
+            if (res.data.meta && res.data.meta.total !== undefined) {
+                updateStatsWithTotal(allEmployees, res.data.meta.total);
+            } else {
+                updateStats(allEmployees);
+            }
+            loadDepartmentFilter();
+        } else {
+            const errorMsg = res.error || 'Unknown error';
+            console.error('Failed to load employees:', errorMsg);
+            alert('Employees Error: ' + errorMsg);
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--accent4);">DEBUG: Could not load employees. ' + errorMsg + '</td></tr>';
+        }
+    })();
+
+    function updateStatsWithTotal(emps, total) {
+        document.getElementById('statTotal').textContent = total;
+        document.getElementById('statTotalSub').textContent = 'Total records';
+        // We still filter local list for active/probation counts
+        updateStats(emps);
+        // Overwrite total
+        document.getElementById('statTotal').textContent = total;
+    }
+
+    function renderEmployees(emps) {
+        const tbody = document.getElementById('empTableBody');
+        const pagInfo = document.getElementById('empPagInfo');
+        if (emps.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--muted);">No employees found</td></tr>';
+            if (pagInfo) pagInfo.textContent = 'No results';
+            return;
+        }
+
+        tbody.innerHTML = emps.map(emp => {
+            const name = emp.name || emp.employee_id || 'Unknown';
+            const initials = name.split(' ').map(w => w[0]).join('').substring(0,2).toUpperCase();
+            const dept = emp.department_name || '—';
+            const desg = emp.designation_title || emp.designation_name || '—';
+            const status = emp.job_status_name || emp.status || 'Active';
+            const statusClass = status.toLowerCase().includes('active') ? 'present' : status.toLowerCase().includes('probat') ? 'pending' : 'absent';
+            const colors = ['blue','green','amber','purple','teal','red'];
+            const colorIdx = name.charCodeAt(0) % colors.length;
+
+            return `<tr>
+                <td><input type="checkbox" class="table-checkbox" onclick="toggleRowSelect(this)" /></td>
+                <td>
+                    <div class="cell-employee">
+                        <div class="cell-avatar ${colors[colorIdx]}">${initials}</div>
+                        <div><div class="cell-name">${name}</div><div class="cell-sub">${emp.email || emp.cnic || ''}</div></div>
+                    </div>
+                </td>
+                <td><span class="cell-mono">${emp.employee_id || emp.id || '—'}</span></td>
+                <td>${dept}</td>
+                <td>${desg}</td>
+                <td><span class="status-badge ${statusClass}">${status}</span></td>
+                <td>
+                    <div class="table-actions">
+                        <a class="table-action-btn" href="/Employees/Details/${emp.employee_id || emp.id}" title="View">
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </a>
+                    </div>
+                </td>
+            </tr>`;
+        }).join('');
+
+        if (pagInfo) pagInfo.innerHTML = `Showing <strong>1</strong> to <strong>${emps.length}</strong> of <strong>${allEmployees.length}</strong>`;
+    }
+
+    function updateStats(emps) {
+        document.getElementById('statTotal').textContent = emps.length;
+        document.getElementById('statTotalSub').textContent = 'Total employees';
+        const active = emps.filter(e => (e.job_status_name || e.status || 'active').toLowerCase().includes('active')).length;
+        const probation = emps.filter(e => (e.job_status_name || e.status || '').toLowerCase().includes('probat')).length;
+        const inactive = emps.length - active - probation;
+        document.getElementById('statActive').textContent = active;
+        document.getElementById('statActiveSub').textContent = emps.length > 0 ? Math.round(active/emps.length*100) + '% of total' : '';
+        document.getElementById('statProbation').textContent = probation;
+        document.getElementById('statProbationSub').textContent = probation + ' on probation';
+        document.getElementById('statInactive').textContent = inactive;
+        document.getElementById('statInactiveSub').textContent = inactive + ' separated';
+    }
+
+    async function loadDepartmentFilter() {
+        const res = await EmsApi.config.get('departments');
+        const select = document.getElementById('filterDept');
+        if (res.success && Array.isArray(res.data)) {
+            res.data.forEach(d => {
+                const opt = document.createElement('option');
+                opt.value = d.department_name || d.name;
+                opt.textContent = d.department_name || d.name;
+                select.appendChild(opt);
+            });
+        }
+    }
+
+    function applyFilters() {
+        const dept = document.getElementById('filterDept').value;
+        const status = document.getElementById('filterStatus').value;
+        const search = document.getElementById('empSearch').value.toLowerCase();
+        let filtered = allEmployees;
+        if (dept !== 'all') filtered = filtered.filter(e => (e.department_name || '').toLowerCase() === dept.toLowerCase());
+        if (status !== 'all') filtered = filtered.filter(e => (e.job_status_name || e.status || '').toLowerCase().includes(status));
+        if (search) filtered = filtered.filter(e => (e.name || '').toLowerCase().includes(search) || (e.employee_id || '').toLowerCase().includes(search));
+        renderEmployees(filtered);
+    }
+</script>
+}

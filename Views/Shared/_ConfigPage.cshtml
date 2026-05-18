@@ -1,0 +1,56 @@
+@* Reusable CRUD configuration page template *@
+@model dynamic
+
+<div class="page-header anim-fade-in-up">
+    <div>
+        <h1 class="page-title">@Html.Raw(ViewData["Icon"]) @ViewData["Title"]</h1>
+        <div class="page-date">@ViewData["Subtitle"]</div>
+    </div>
+    <button class="btn btn-primary" onclick="openModal('configModal')">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Add @ViewData["ItemName"]
+    </button>
+</div>
+
+<div class="table-container anim-fade-in-up">
+    <div class="filter-bar">
+        <input class="filter-search" type="text" placeholder="Search @ViewData["Title"]…" id="configSearch" oninput="filterTable('configTable','configSearch')" />
+        <div style="margin-left:auto;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:4px;">
+            <strong id="configTable-count" style="color:var(--text);">@ViewData["Count"]</strong> records
+        </div>
+    </div>
+    <div class="table-scroll-wrapper">
+        <table class="data-table" id="configTable">
+            <thead>
+                <tr>
+                    @Html.Raw(ViewData["TableHeaders"]?.ToString())
+                </tr>
+            </thead>
+            <tbody>
+                @Html.Raw(ViewData["TableBody"]?.ToString())
+            </tbody>
+        </table>
+    </div>
+    <div class="table-pagination">
+        <div class="pagination-info">Showing all <strong>@ViewData["Count"]</strong> records</div>
+        <div class="pagination-controls"><button class="page-btn active">1</button></div>
+    </div>
+</div>
+
+<div class="modal-backdrop" id="configModal">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <div class="modal-title">@Html.Raw(ViewData["Icon"]) Add @ViewData["ItemName"]</div>
+            <button class="modal-close" onclick="closeModal('configModal')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+        <div class="modal-body">
+            @Html.Raw(ViewData["ModalFields"]?.ToString())
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModal('configModal')">Cancel</button>
+            <button class="btn btn-primary" onclick="closeModal('configModal'); showToast('@ViewData["ItemName"] saved successfully','success')">Save</button>
+        </div>
+    </div>
+</div>

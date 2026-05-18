@@ -1,0 +1,241 @@
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
+@{
+    ViewData["Title"] = "Sign In";
+    Layout = "~/Views/Shared/_LoginLayout.cshtml";
+}
+
+<div class="login-page" id="loginPage">
+    <!-- Animated Background -->
+    <div class="login-bg">
+        <div class="login-orb login-orb-1"></div>
+        <div class="login-orb login-orb-2"></div>
+        <div class="login-orb login-orb-3"></div>
+    </div>
+    <div class="login-grid-overlay"></div>
+
+    <!-- Login Card -->
+    <div class="login-card">
+        <!-- Brand -->
+        <div class="login-brand">
+            <div class="login-logo">
+                <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                </svg>
+            </div>
+            <h1 class="login-title">TRACK360 ERP</h1>
+            <p class="login-subtitle">Sign in to your workspace</p>
+        </div>
+
+        <!-- Connection Status -->
+        <div class="login-connection-status" id="connectionStatus" style="display:none;">
+            <div class="connection-dot"></div>
+            <span id="connectionText">Checking backend...</span>
+        </div>
+
+        <!-- Error Alert -->
+        <div class="login-error" id="loginError">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" />
+            </svg>
+            <span id="loginErrorText">Invalid email or password</span>
+        </div>
+
+        <!-- Form -->
+        <form class="login-form" id="loginForm" onsubmit="return handleLogin(event)">
+            <div class="form-group">
+                <label class="form-label" for="email">Email Address</label>
+                <div class="form-input-wrapper">
+                    <input type="email" class="form-input" id="email" name="email"
+                           placeholder="Enter your email" autocomplete="email" required />
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="password">Password</label>
+                <div class="form-input-wrapper">
+                    <input type="password" class="form-input" id="password" name="password"
+                           placeholder="Enter your password" autocomplete="current-password" required
+                           style="padding-right: 44px;" />
+                    <button type="button" class="password-toggle" onclick="togglePassword()" id="pwToggle">
+                        <svg id="eyeIcon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                            <circle cx="12" cy="12" r="3" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+                <button type="submit" class="login-btn" id="loginBtn">
+                <span class="btn-text">Sign In</span>
+                <svg class="btn-spinner" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+                </svg>
+            </button>
+        </form>
+
+        <!-- Demo Accounts -->
+        <div class="demo-accounts">
+            <div class="demo-accounts-title">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+                Demo Accounts
+            </div>
+            <div class="demo-row" onclick="fillCredentials('superadmin@esspl.com', 'Admin@1234')">
+                <div class="demo-creds">superadmin&#64;esspl.com <span>/</span> Admin&#64;1234</div>
+                <div class="demo-role admin">Super Admin</div>
+            </div>
+            <div class="demo-row" onclick="fillCredentials('hr@esspl.com', 'Hr@12345')">
+                <div class="demo-creds">hr&#64;esspl.com <span>/</span> Hr&#64;12345</div>
+                <div class="demo-role hr">HR Admin</div>
+            </div>
+            <div class="demo-row" onclick="fillCredentials('employee@esspl.com', 'Emp@12345')">
+                <div class="demo-creds">employee&#64;esspl.com <span>/</span> Emp&#64;12345</div>
+                <div class="demo-role employee">Employee</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="login-footer">
+        TRACK360 ERP &copy; @DateTime.Now.Year &middot; ESSPL Solutions
+    </div>
+</div>
+
+@section Scripts {
+<style>
+    .login-connection-status {
+        display: flex; align-items: center; gap: 8px;
+        padding: 8px 14px; border-radius: 8px; font-size: 12px;
+        margin-bottom: 12px; transition: all 0.3s ease;
+    }
+    .login-connection-status.online {
+        background: rgba(16,185,129,0.08); color: #10b981; border: 1px solid rgba(16,185,129,0.2);
+    }
+    .login-connection-status.offline {
+        background: rgba(239,68,68,0.08); color: #ef4444; border: 1px solid rgba(239,68,68,0.2);
+    }
+    .login-connection-status.checking {
+        background: rgba(59,130,246,0.08); color: #3b82f6; border: 1px solid rgba(59,130,246,0.2);
+    }
+    .connection-dot {
+        width: 8px; height: 8px; border-radius: 50%; background: currentColor;
+        animation: pulse-dot 1.5s infinite;
+    }
+    @@keyframes pulse-dot { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+</style>
+<script>
+    // ── Check backend connectivity on page load ──
+    (async function checkBackend() {
+        const statusEl = document.getElementById('connectionStatus');
+        const textEl = document.getElementById('connectionText');
+        statusEl.style.display = 'flex';
+        statusEl.className = 'login-connection-status checking';
+        textEl.textContent = 'Connecting to server...';
+
+        try {
+            const res = await fetch(EmsApi.API_BASE + '/', { method: 'GET' });
+            if (res.ok) {
+                statusEl.className = 'login-connection-status online';
+                textEl.textContent = 'Server connected — Ready to sign in';
+                setTimeout(() => { statusEl.style.opacity = '0'; setTimeout(() => statusEl.style.display = 'none', 300); }, 3000);
+            } else {
+                statusEl.className = 'login-connection-status offline';
+                textEl.textContent = 'Server responded with error. Check backend.';
+            }
+        } catch {
+            statusEl.className = 'login-connection-status offline';
+            textEl.textContent = 'Cannot reach backend server at ' + EmsApi.API_BASE;
+        }
+    })();
+
+    // ── If already logged in, redirect ──
+    if (EmsApi.isLoggedIn()) {
+        window.location.href = '/Dashboard';
+    }
+
+    // Fill credentials from demo account click
+    function fillCredentials(email, pass) {
+        document.getElementById('email').value = email;
+        document.getElementById('password').value = pass;
+        document.getElementById('email').focus();
+    }
+
+    // Toggle password visibility
+    function togglePassword() {
+        const input = document.getElementById('password');
+        const icon = document.getElementById('eyeIcon');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
+        } else {
+            input.type = 'password';
+            icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+        }
+    }
+
+    // Handle login — calls real backend API
+    async function handleLogin(e) {
+        e.preventDefault();
+        const btn = document.getElementById('loginBtn');
+        const errorEl = document.getElementById('loginError');
+        const email = document.getElementById('email').value.trim();
+        const pass = document.getElementById('password').value;
+
+        // Hide previous error
+        errorEl.classList.remove('show');
+
+        // Validate
+        if (!email || !pass) {
+            errorEl.classList.add('show');
+            document.getElementById('loginErrorText').textContent = 'Please enter both email and password.';
+            return false;
+        }
+
+        // Show loading
+        btn.classList.add('loading');
+
+        try {
+            const result = await EmsApi.login(email, pass);
+
+            if (result.success) {
+                // Get session to determine role
+                const session = await EmsApi.getSession();
+                if (session.success && session.data) {
+                    // Store role info
+                    const userData = EmsApi.getUser() || {};
+                    userData.role_name = session.data.role_name || session.data.role_id;
+                    userData.is_super_admin = session.data.is_super_admin || false;
+                    userData.permissions = session.data.permissions || [];
+                    localStorage.setItem('ems_user_data', JSON.stringify(userData));
+
+                    // Redirect based on role
+                    const isSuperAdmin = session.data.is_super_admin;
+                    const roleName = (session.data.role_name || '').toLowerCase();
+                    if (isSuperAdmin || roleName.includes('admin') || roleName.includes('hr')) {
+                        window.location.href = '/Dashboard';
+                    } else {
+                        window.location.href = '/MyPortal/Dashboard';
+                    }
+                } else {
+                    // Session fetch failed but login succeeded, redirect to dashboard
+                    window.location.href = '/Dashboard';
+                }
+            } else {
+                btn.classList.remove('loading');
+                errorEl.classList.add('show');
+                let errMsg = result.error || 'Invalid email or password. Please try again.';
+                if (typeof errMsg === 'object') errMsg = JSON.stringify(errMsg);
+                document.getElementById('loginErrorText').textContent = errMsg;
+            }
+        } catch (err) {
+            btn.classList.remove('loading');
+            errorEl.classList.add('show');
+            document.getElementById('loginErrorText').textContent =
+                'Connection error. Please check if the backend server is running.';
+        }
+
+        return false;
+    }
+</script>
+}

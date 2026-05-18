@@ -1,0 +1,265 @@
+@{
+    ViewData["Title"] = "Payroll";
+    ViewData["Active"] = "Payroll";
+}
+
+<!-- PAGE HEADER -->
+<div class="page-header anim-fade-in-up">
+    <div>
+        <h1 class="page-title">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+            Payroll Management
+        </h1>
+        <div class="page-date">Process monthly salaries and manage compensation</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+        <select class="filter-select" style="height:38px;" id="payrollMonth">
+            <option value="1">January</option><option value="2">February</option>
+            <option value="3">March</option><option value="4">April</option>
+            <option value="5">May</option><option value="6">June</option>
+            <option value="7">July</option><option value="8">August</option>
+            <option value="9">September</option><option value="10">October</option>
+            <option value="11">November</option><option value="12">December</option>
+        </select>
+        <select class="filter-select" style="height:38px;" id="payrollYear">
+            <option value="2026">2026</option><option value="2025">2025</option>
+        </select>
+        <button class="btn btn-primary" onclick="loadPayroll()">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            Load
+        </button>
+        <button class="btn btn-success" onclick="generatePayroll()" id="btnGenerate">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+            Generate Payroll
+        </button>
+    </div>
+</div>
+
+<!-- KPI CARDS -->
+<div class="kpi-grid stagger" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 20px;">
+    <div class="stat-card blue">
+        <div class="kpi-label">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            Total Net Payroll
+        </div>
+        <div class="kpi-num" id="payKpiTotal">--</div>
+        <div class="kpi-sub" id="payKpiTotalSub">Loading...</div>
+    </div>
+    <div class="stat-card green">
+        <div class="kpi-label">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            Total Employees
+        </div>
+        <div class="kpi-num" style="color:var(--accent2)" id="payKpiEmp">--</div>
+        <div class="kpi-sub" id="payKpiEmpSub">Loading...</div>
+    </div>
+    <div class="stat-card amber">
+        <div class="kpi-label">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Avg Basic Salary
+        </div>
+        <div class="kpi-num" style="color:var(--accent3)" id="payKpiAvg">--</div>
+        <div class="kpi-sub">Average across employees</div>
+    </div>
+    <div class="stat-card red">
+        <div class="kpi-label">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+            Total Deductions
+        </div>
+        <div class="kpi-num" style="color:var(--accent4)" id="payKpiDeductions">--</div>
+        <div class="kpi-sub">Tax + Penalties + Other</div>
+    </div>
+</div>
+
+<!-- PAYROLL TABLE -->
+<div class="table-container anim-fade-in-up">
+    <div class="filter-bar">
+        <div class="filter-group">
+            <label class="filter-label">Department</label>
+            <select class="filter-select" id="payDeptFilter" onchange="filterPayroll()">
+                <option value="all">All Departments</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label class="filter-label">Status</label>
+            <select class="filter-select" id="payStatusFilter" onchange="filterPayroll()">
+                <option value="all">All</option>
+                <option value="processed">Processed</option>
+                <option value="pending">Pending</option>
+            </select>
+        </div>
+        <input class="filter-search" type="text" placeholder="Search employee…" id="paySearch" oninput="filterPayroll()" />
+        <button class="btn btn-sm btn-success" style="margin-left:auto;" onclick="processAllPending()">Process All Pending</button>
+    </div>
+
+    <div class="table-scroll-wrapper">
+        <table class="data-table" id="payrollTable">
+            <thead>
+                <tr>
+                    <th class="sortable" onclick="sortTable('payrollTable', 0)">Employee <span class="sort-icon">↕</span></th>
+                    <th>ID</th>
+                    <th>Department</th>
+                    <th class="sortable" onclick="sortTable('payrollTable', 3)">Basic <span class="sort-icon">↕</span></th>
+                    <th>Allowances</th>
+                    <th>Deductions</th>
+                    <th class="sortable" onclick="sortTable('payrollTable', 6)">Net Pay <span class="sort-icon">↕</span></th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="payrollTableBody">
+                <tr><td colspan="9" style="text-align:center;padding:40px;color:var(--muted);">Loading payroll data...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="table-pagination">
+        <div class="pagination-info" id="payrollPagInfo">Loading...</div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="~/js/tables.js" asp-append-version="true"></script>
+<script src="~/js/modals.js" asp-append-version="true"></script>
+<script>
+    let allPayroll = [];
+
+    const nowDate = new Date();
+    document.getElementById('payrollMonth').value = nowDate.getMonth() + 1;
+    document.getElementById('payrollYear').value = nowDate.getFullYear();
+
+    async function loadPayroll() {
+        const month = document.getElementById('payrollMonth').value;
+        const year = document.getElementById('payrollYear').value;
+        const tbody = document.getElementById('payrollTableBody');
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--muted);">Loading...</td></tr>';
+
+        const res = await EmsApi.payroll.list({ month, year });
+        if (res.success && res.data) {
+            allPayroll = Array.isArray(res.data) ? res.data : (res.data.data || []);
+            renderPayroll(allPayroll);
+            updatePayrollKPIs(allPayroll);
+            loadDeptFilter();
+        } else {
+            tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--accent4);">' + (res.error || 'Could not load payroll data') + '</td></tr>';
+        }
+    }
+
+    function renderPayroll(data) {
+        const tbody = document.getElementById('payrollTableBody');
+        const pagInfo = document.getElementById('payrollPagInfo');
+        if (!data.length) {
+            tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--muted);">No payroll records found for this period</td></tr>';
+            if (pagInfo) pagInfo.textContent = 'No records';
+            return;
+        }
+        const colors = ['blue','green','amber','purple','teal','red'];
+        tbody.innerHTML = data.map(p => {
+            const name = p.employee_name || p.name || 'Employee';
+            const initials = name.split(' ').map(w => w[0]).join('').substring(0,2).toUpperCase();
+            const ci = name.charCodeAt(0) % colors.length;
+            const status = (p.status || 'pending').toLowerCase();
+            const statusClass = status === 'processed' ? 'approved' : 'pending';
+            const statusLabel = status.charAt(0).toUpperCase() + status.slice(1);
+            const basic = Number(p.basic_salary || 0);
+            const allowances = Number(p.allowances || p.total_allowances || 0);
+            const deductions = Number(p.deductions || p.total_deductions || 0);
+            const net = Number(p.net_salary || (basic + allowances - deductions) || 0);
+
+            return `<tr>
+                <td><div class="cell-employee"><div class="cell-avatar ${colors[ci]}">${initials}</div><div class="cell-name">${name}</div></div></td>
+                <td><span class="cell-mono">${p.employee_id || '—'}</span></td>
+                <td>${p.department_name || '—'}</td>
+                <td><span class="cell-mono">${basic.toLocaleString()}</span></td>
+                <td><span style="color:var(--accent2);font-family:'DM Mono',monospace;font-size:12px;">+${allowances.toLocaleString()}</span></td>
+                <td><span style="color:var(--accent4);font-family:'DM Mono',monospace;font-size:12px;">-${deductions.toLocaleString()}</span></td>
+                <td><strong style="font-family:'DM Mono',monospace;font-size:13px;">${net.toLocaleString()}</strong></td>
+                <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
+                <td>${status !== 'processed' && p.id ? `<button class="table-action-btn" title="Process" onclick="processPayroll('${p.id}')" style="color:var(--accent2);"><svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></button>` : '<span style="font-size:11px;color:var(--muted);">—</span>'}</td>
+            </tr>`;
+        }).join('');
+        if (pagInfo) pagInfo.innerHTML = `Showing <strong>${data.length}</strong> employees`;
+    }
+
+    function updatePayrollKPIs(data) {
+        const total = data.reduce((s, p) => s + Number(p.net_salary || 0), 0);
+        const avgBasic = data.length > 0 ? data.reduce((s, p) => s + Number(p.basic_salary || 0), 0) / data.length : 0;
+        const totalDed = data.reduce((s, p) => s + Number(p.deductions || p.total_deductions || 0), 0);
+        const monthEl = document.getElementById('payrollMonth');
+        const monthName = monthEl.options[monthEl.selectedIndex].text;
+        const year = document.getElementById('payrollYear').value;
+        document.getElementById('payKpiTotal').textContent = 'PKR ' + (total/1000000).toFixed(1) + 'M';
+        document.getElementById('payKpiTotalSub').textContent = monthName + ' ' + year;
+        document.getElementById('payKpiEmp').textContent = data.length;
+        document.getElementById('payKpiEmpSub').textContent = data.filter(p => (p.status||'').toLowerCase() === 'processed').length + ' processed';
+        document.getElementById('payKpiAvg').textContent = 'PKR ' + Math.round(avgBasic).toLocaleString();
+        document.getElementById('payKpiDeductions').textContent = 'PKR ' + Math.round(totalDed).toLocaleString();
+    }
+
+    function filterPayroll() {
+        const dept = document.getElementById('payDeptFilter').value;
+        const status = document.getElementById('payStatusFilter').value;
+        const search = document.getElementById('paySearch').value.toLowerCase();
+        let filtered = allPayroll;
+        if (dept !== 'all') filtered = filtered.filter(p => (p.department_name||'').toLowerCase() === dept.toLowerCase());
+        if (status !== 'all') filtered = filtered.filter(p => (p.status||'pending').toLowerCase() === status);
+        if (search) filtered = filtered.filter(p => (p.employee_name||'').toLowerCase().includes(search) || (p.employee_id||'').toLowerCase().includes(search));
+        renderPayroll(filtered);
+    }
+
+    function loadDeptFilter() {
+        const sel = document.getElementById('payDeptFilter');
+        sel.innerHTML = '<option value="all">All Departments</option>';
+        const depts = [...new Set(allPayroll.map(p => p.department_name).filter(Boolean))];
+        depts.forEach(d => { const o = document.createElement('option'); o.value = d; o.textContent = d; sel.appendChild(o); });
+    }
+
+    async function processPayroll(id) {
+        const res = await EmsApi.payroll.process(id);
+        if (res.success) { showToast('Payroll processed!', 'success'); loadPayroll(); }
+        else showToast(res.error || 'Failed', 'error');
+    }
+
+    async function processAllPending() {
+        const pending = allPayroll.filter(p => (p.status||'pending').toLowerCase() !== 'processed' && p.id);
+        if (!pending.length) { showToast('No pending payrolls', 'info'); return; }
+        let count = 0;
+        for (const p of pending) { const r = await EmsApi.payroll.process(p.id); if (r.success) count++; }
+        showToast(`Processed ${count} payrolls`, 'success');
+        loadPayroll();
+    }
+
+    async function generatePayroll() {
+        const month = document.getElementById('payrollMonth').value;
+        const year = document.getElementById('payrollYear').value;
+        const monthName = document.getElementById('payrollMonth').options[document.getElementById('payrollMonth').selectedIndex].text;
+
+        showConfirm({
+            title: 'Generate Payroll?',
+            message: `Are you sure you want to generate payroll for ${monthName} ${year}? This will calculate salaries and deductions for all active employees.`,
+            type: 'info',
+            confirmText: 'Generate Now',
+            onConfirm: async function() {
+                const btn = document.getElementById('btnGenerate');
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-sm"></span> Generating...';
+
+                const res = await EmsApi.payroll.generate({ month, year });
+                btn.disabled = false;
+                btn.innerHTML = '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg> Generate Payroll';
+
+                if (res.success) {
+                    showToast(res.message || 'Payroll generated successfully!', 'success');
+                    loadPayroll();
+                } else {
+                    showToast(res.error || 'Failed to generate payroll', 'error');
+                }
+            }
+        });
+    }
+
+    loadPayroll();
+</script>
+}

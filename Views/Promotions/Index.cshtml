@@ -1,0 +1,290 @@
+@{
+    ViewData["Title"] = "Promotions";
+    ViewData["Active"] = "Promotions";
+}
+
+<div class="page-header anim-fade-in-up">
+    <div>
+        <h1 class="page-title">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            Promotions & Transitions
+        </h1>
+        <div class="page-date">Record role changes, department transfers, and promotions</div>
+    </div>
+    <button class="btn btn-primary" onclick="openModal('promoModal')">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Record Promotion
+    </button>
+</div>
+
+<div class="table-container anim-fade-in-up">
+    <div class="filter-bar">
+        <input class="filter-search" type="text" placeholder="Search…" id="promoSearch" oninput="filterTable('promoTable','promoSearch')" />
+    </div>
+    <div class="table-scroll-wrapper">
+        <table class="data-table" id="promoTable">
+            <thead>
+                <tr>
+                    <th class="sortable" onclick="sortTable('promoTable', 0)">Employee <span class="sort-icon">↕</span></th>
+                    <th>From Designation</th>
+                    <th>To Designation</th>
+                    <th>Department</th>
+                    <th class="sortable" onclick="sortTable('promoTable', 4)">Effective Date <span class="sort-icon">↕</span></th>
+                    <th>Approved By</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="promoTableBody">
+                <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--muted);">Loading promotions...</td></tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="table-pagination">
+        <div class="pagination-info" id="promoPagInfo">Loading...</div>
+    </div>
+</div>
+
+<!-- RECORD PROMOTION MODAL -->
+<div class="modal-backdrop" id="promoModal">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <div class="modal-title">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                Record Promotion
+            </div>
+            <button class="modal-close" onclick="closeModal('promoModal')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+        <div class="modal-body">
+            <div class="form-grid form-grid-2">
+                <div class="field-group form-full">
+                    <label class="field-label">Employee <span class="field-required">*</span></label>
+                    <select class="field-select" id="promoEmployeeId"><option value="">Select Employee</option></select>
+                </div>
+                <div class="field-group"><label class="field-label">From Designation</label><input type="text" class="field-input" id="promoFromDesg" placeholder="Auto-loaded" readonly /></div>
+                <div class="field-group"><label class="field-label">To Designation <span class="field-required">*</span></label><select class="field-select" id="promoToDesg"><option>Select Designation</option></select></div>
+                <div class="field-group"><label class="field-label">From Department</label><input type="text" class="field-input" id="promoFromDept" placeholder="Auto-loaded" readonly /></div>
+                <div class="field-group"><label class="field-label">To Department</label><select class="field-select" id="promoToDept"><option value="">Same Department</option></select></div>
+                <div class="field-group"><label class="field-label">Effective Date <span class="field-required">*</span></label><input type="date" class="field-input" id="promoDate" /></div>
+                <div class="field-group"><label class="field-label">Salary Revision (PKR)</label><input type="number" class="field-input" id="promoSalary" placeholder="New basic salary" /></div>
+                <div class="field-group form-full"><label class="field-label">Remarks</label><textarea class="field-textarea" id="promoRemarks" rows="2" placeholder="Reason for promotion"></textarea></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModal('promoModal')">Cancel</button>
+            <button class="btn btn-success" id="btnSavePromo" onclick="savePromotion()">Save Promotion</button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="~/js/tables.js" asp-append-version="true"></script>
+<script src="~/js/modals.js" asp-append-version="true"></script>
+<script>
+    let allPromotions = [];
+
+    async function loadPromotions() {
+        const tbody = document.getElementById('promoTableBody');
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--muted);">Loading promotions...</td></tr>';
+
+        const res = await EmsApi.promotions.list();
+
+        if (res.success && res.data) {
+            allPromotions = Array.isArray(res.data) ? res.data : (res.data.data || []);
+            renderPromotions(allPromotions);
+        } else {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--muted);"><div style="font-size:32px;opacity:0.3;margin-bottom:8px;">📋</div>No promotion records found.<div style="font-size:12px;margin-top:6px;">Click "Record Promotion" to add the first entry.</div></td></tr>';
+            document.getElementById('promoPagInfo').textContent = '0 records';
+        }
+
+        // Load employees for modal dropdown
+        const empRes = await EmsApi.employees.list();
+        if (empRes.success && empRes.data) {
+            const emps = Array.isArray(empRes.data) ? empRes.data : (empRes.data.data || []);
+            const sel = document.getElementById('promoEmployeeId');
+            sel.innerHTML = '<option value="">Select Employee</option>';
+            emps.forEach(e => {
+                const o = document.createElement('option');
+                o.value = e.employee_id || e.id;
+                o.textContent = e.name + ' (' + (e.employee_id || e.id) + ')';
+                o.dataset.desg = e.designation_title || '';
+                o.dataset.dept = e.department_name || '';
+                o.dataset.desg_id = e.designation_id || '';
+                o.dataset.dept_id = e.department_id || '';
+                sel.appendChild(o);
+            });
+        }
+
+        // Load designations for "To Designation" dropdown
+        const desgRes = await EmsApi.config.get('designations');
+        if (desgRes.success && Array.isArray(desgRes.data)) {
+            const sel = document.getElementById('promoToDesg');
+            sel.innerHTML = '<option value="">Select Designation</option>';
+            desgRes.data.forEach(d => {
+                const o = document.createElement('option');
+                o.value = d.id;
+                o.textContent = d.title || d.name;
+                sel.appendChild(o);
+            });
+        }
+
+        // Load departments for "To Department" dropdown
+        const deptRes = await EmsApi.config.get('departments');
+        if (deptRes.success && Array.isArray(deptRes.data)) {
+            const sel = document.getElementById('promoToDept');
+            sel.innerHTML = '<option value="">Same Department</option>';
+            deptRes.data.forEach(d => {
+                const o = document.createElement('option');
+                o.value = d.id;
+                o.textContent = d.department_name || d.name;
+                sel.appendChild(o);
+            });
+        }
+    }
+
+    // Auto-fill current designation/dept when employee selected
+    document.getElementById('promoEmployeeId').addEventListener('change', function() {
+        const opt = this.options[this.selectedIndex];
+        document.getElementById('promoFromDesg').value = opt.dataset.desg || '';
+        document.getElementById('promoFromDept').value = opt.dataset.dept || '';
+    });
+
+    function renderPromotions(data) {
+        const tbody = document.getElementById('promoTableBody');
+        const pagInfo = document.getElementById('promoPagInfo');
+        if (!data.length) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--muted);">No promotion records found</td></tr>';
+            if (pagInfo) pagInfo.textContent = 'No records';
+            return;
+        }
+
+        tbody.innerHTML = data.map(p => {
+            const name = p.employee_name || p.name || 'Employee';
+            const initials = name.split(' ').map(w => w[0]).join('').substring(0,2).toUpperCase();
+            const colors = ['blue','green','amber','purple','teal','red'];
+            const ci = name.charCodeAt(0) % colors.length;
+            const status = (p.status || 'pending').toLowerCase();
+            const statusClass = status === 'approved' ? 'approved' : status === 'rejected' ? 'rejected' : 'pending';
+            const statusLabel = status.charAt(0).toUpperCase() + status.slice(1);
+            const effDate = p.effective_date ? new Date(p.effective_date).toLocaleDateString() : '—';
+
+            return `<tr>
+                <td>
+                    <div class="cell-employee">
+                        <div class="cell-avatar ${colors[ci]}">${initials}</div>
+                        <div class="cell-name">${name}</div>
+                    </div>
+                </td>
+                <td><span style="font-size:12px;color:var(--muted);">${p.from_designation_title || p.from_designation || p.curr_designation || 'None'}</span></td>
+                <td><strong style="font-size:12px;">${p.to_designation_title || p.to_designation || '—'}</strong></td>
+                <td>${p.department_name || p.to_department || p.from_department || p.curr_department || 'General'}</td>
+                <td><span class="cell-mono" style="font-size:11px;">${effDate}</span></td>
+                <td><span style="font-size:12px;color:var(--muted);">${p.approved_by_name || (status === 'approved' ? 'Super Admin' : '—')}</span></td>
+                <td>
+                    ${status === 'pending' ? `
+                    <div class="table-actions">
+                        <span class="status-badge pending" style="margin-right:6px;">${statusLabel}</span>
+                        <button class="table-action-btn" title="Approve" style="color:var(--accent2);" onclick="approvePromotion('${p.id}')">
+                            <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                        </button>
+                        <button class="table-action-btn danger" title="Reject" onclick="rejectPromotion('${p.id}')">
+                            <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        </button>
+                    </div>` : `<span class="status-badge ${statusClass}">${statusLabel}</span>`}
+                </td>
+            </tr>`;
+        }).join('');
+
+        if (pagInfo) pagInfo.innerHTML = `Showing <strong>${data.length}</strong> of <strong>${allPromotions.length}</strong>`;
+    }
+
+    async function savePromotion() {
+        const empId = document.getElementById('promoEmployeeId').value;
+        const toDesg = document.getElementById('promoToDesg').value;
+        const effDate = document.getElementById('promoDate').value;
+        const fromDesg = document.getElementById('promoFromDesg').value;
+        const fromDept = document.getElementById('promoFromDept').value;
+        const toDept = document.getElementById('promoToDept').value;
+        const salary = document.getElementById('promoSalary').value;
+        const remarks = document.getElementById('promoRemarks').value;
+
+        if (!empId) { showToast('Please select an employee', 'error'); return; }
+        if (!toDesg) { showToast('Please select a designation', 'error'); return; }
+        if (!effDate) { showToast('Please select effective date', 'error'); return; }
+
+        const btn = document.getElementById('btnSavePromo');
+        btn.disabled = true; btn.textContent = 'Saving...';
+
+        const empOpt = document.getElementById('promoEmployeeId').options[document.getElementById('promoEmployeeId').selectedIndex];
+        
+        const payload = {
+            employee_id: empId,
+            from_designation_id: empOpt.dataset.desg_id || null,
+            to_designation_id: toDesg,
+            from_department_id: empOpt.dataset.dept_id || null,
+            to_department_id: toDept || null,
+            effective_date: effDate,
+            new_salary: salary ? Number(salary) : null,
+            remarks
+        };
+
+        const res = await EmsApi.promotions.create(payload);
+        btn.disabled = false; btn.textContent = 'Save Promotion';
+
+        if (res.success) {
+            showToast('Promotion recorded successfully!', 'success');
+            closeModal('promoModal');
+            loadPromotions();
+        } else {
+            alert('Backend Error: ' + (res.error || 'Failed to save promotion. Please check terminal logs.'));
+            // Local fallback for demo
+            const empSel = document.getElementById('promoEmployeeId');
+            const empName = empSel.options[empSel.selectedIndex]?.textContent || 'Employee';
+            const toDesgName = document.getElementById('promoToDesg').options[document.getElementById('promoToDesg').selectedIndex]?.textContent || toDesg;
+            
+            allPromotions.unshift({
+                id: 'local_' + Date.now(), 
+                employee_name: empName.split('(')[0].trim(),
+                from_designation_title: fromDesg, 
+                to_designation_title: toDesgName,
+                department_name: fromDept, 
+                effective_date: effDate,
+                approved_by_name: '—', 
+                status: 'pending', 
+                remarks
+            });
+            renderPromotions(allPromotions);
+            showToast('Promotion recorded (preview mode)', 'success');
+            closeModal('promoModal');
+        }
+    }
+
+    async function approvePromotion(id) {
+        const res = await EmsApi.promotions.approve(id);
+        if (res.success) {
+            const p = allPromotions.find(x => String(x.id) === String(id));
+            if (p) { p.status = 'approved'; renderPromotions(allPromotions); }
+            showToast('Promotion approved', 'success');
+        } else {
+            alert('Approve Error: ' + (res.error || 'Failed to approve'));
+        }
+    }
+
+    async function rejectPromotion(id) {
+        showConfirm({ title: 'Reject Promotion?', message: 'This will reject the promotion record.', type: 'warning', confirmText: 'Reject',
+            onConfirm: async () => {
+                const res = await EmsApi.promotions.reject(id);
+                if (res.success) {
+                    const p = allPromotions.find(x => String(x.id) === String(id));
+                    if (p) { p.status = 'rejected'; renderPromotions(allPromotions); }
+                    showToast('Promotion rejected', 'success');
+                } else {
+                    alert('Reject Error: ' + (res.error || 'Failed to reject'));
+                }
+            }
+        });
+    }
+
+    loadPromotions();
+</script>
+}
+

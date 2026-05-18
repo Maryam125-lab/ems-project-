@@ -1,0 +1,16 @@
+@{ ViewData["Title"] = "My Penalties"; }
+<div class="page-header anim-fade-in-up"><div><h1 class="page-title">⚠️ My Penalties</h1><div class="page-date">View penalties and fines applied to your record</div></div></div>
+<div class="kpi-grid stagger" style="grid-template-columns:repeat(3,1fr);">
+    <div class="stat-card red"><div class="kpi-label">Total Fines</div><div class="kpi-num" style="color:var(--accent4)">1,000</div><div class="kpi-sub">PKR · All time</div></div>
+    <div class="stat-card amber"><div class="kpi-label">This Month</div><div class="kpi-num" style="color:var(--accent3)">500</div><div class="kpi-sub">1 penalty</div></div>
+    <div class="stat-card green"><div class="kpi-label">Penalty-Free Streak</div><div class="kpi-num" style="color:var(--accent2)">24</div><div class="kpi-sub">Days since last penalty</div></div>
+</div>
+<div class="table-container anim-fade-in-up">
+    <div class="table-scroll-wrapper">
+        <table class="data-table"><thead><tr><th>Date</th><th>Type</th><th>Amount</th><th>Reason</th><th>Status</th></tr></thead>
+        <tbody>
+            <tr><td class="cell-mono" style="font-size:11px;">Apr 14, 2026</td><td><span class="tag tag-amber">Late Arrival</span></td><td><strong style="color:var(--accent4);font-family:'DM Mono',monospace;">PKR 500</strong></td><td>Arrived at 09:22 (grace: 09:10)</td><td><span class="status-badge approved">Approved</span></td></tr>
+            <tr><td class="cell-mono" style="font-size:11px;">Mar 20, 2026</td><td><span class="tag tag-amber">Late Arrival</span></td><td><strong style="color:var(--accent4);font-family:'DM Mono',monospace;">PKR 500</strong></td><td>Arrived at 09:18</td><td><span class="status-badge approved">Approved</span></td></tr>
+        </tbody></table>
+    </div>
+</div>

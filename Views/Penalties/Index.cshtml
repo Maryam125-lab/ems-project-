@@ -1,0 +1,368 @@
+@{
+    ViewData["Title"] = "Penalties";
+    ViewData["Active"] = "Penalties";
+}
+
+<!-- PAGE HEADER -->
+<div class="page-header anim-fade-in-up">
+    <div>
+        <h1 class="page-title">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            Penalty & Fine Engine
+        </h1>
+        <div class="page-date">Track and manage employee penalties with HO oversight</div>
+    </div>
+    <button class="btn btn-primary" onclick="openModal('applyPenaltyModal')">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Apply Penalty
+    </button>
+</div>
+
+<!-- KPI CARDS -->
+<div class="kpi-grid stagger" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 20px;">
+    <div class="stat-card red">
+        <div class="kpi-label">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            Total Fines This Month
+        </div>
+        <div class="kpi-num" style="color:var(--accent4)" id="kpiPenTotal">—</div>
+        <div class="kpi-sub" id="kpiPenTotalSub">Loading...</div>
+    </div>
+    <div class="stat-card amber">
+        <div class="kpi-label">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Pending Approval
+        </div>
+        <div class="kpi-num" style="color:var(--accent3)" id="kpiPenPending">—</div>
+        <div class="kpi-sub">Awaiting Head Office</div>
+    </div>
+    <div class="stat-card green">
+        <div class="kpi-label">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            Approved / Applied
+        </div>
+        <div class="kpi-num" style="color:var(--accent2)" id="kpiPenApproved">—</div>
+        <div class="kpi-sub">This month</div>
+    </div>
+    <div class="stat-card blue">
+        <div class="kpi-label">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            Employees Affected
+        </div>
+        <div class="kpi-num" id="kpiPenAffected">—</div>
+        <div class="kpi-sub">Unique employees</div>
+    </div>
+</div>
+
+<!-- PENALTIES TABLE -->
+<div class="table-container anim-fade-in-up">
+    <div class="filter-bar">
+        <div class="filter-group">
+            <label class="filter-label">Status</label>
+            <select class="filter-select" onchange="filterTableByColumn('penaltyTable', 4, this.value)">
+                <option value="all">All</option><option value="Approved">Approved</option><option value="Pending">Pending</option><option value="Rejected">Rejected</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label class="filter-label">Type</label>
+            <select class="filter-select" onchange="filterTableByColumn('penaltyTable', 2, this.value)">
+                <option value="all">All Types</option><option>Late Arrival</option><option>Early Leave</option><option>Policy Violation</option><option>Misconduct</option>
+            </select>
+        </div>
+        <input class="filter-search" type="text" placeholder="Search…" id="penSearch" oninput="filterTable('penaltyTable','penSearch')" />
+    </div>
+
+    <div class="table-scroll-wrapper">
+        <table class="data-table" id="penaltyTable">
+            <thead>
+                <tr>
+                    <th class="sortable" onclick="sortTable('penaltyTable', 0)">Employee <span class="sort-icon">↕</span></th>
+                    <th class="sortable" onclick="sortTable('penaltyTable', 1)">Date <span class="sort-icon">↕</span></th>
+                    <th>Penalty Type</th>
+                    <th class="sortable" onclick="sortTable('penaltyTable', 3)">Amount <span class="sort-icon">↕</span></th>
+                    <th>Status</th>
+                    <th>Applied By</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="penaltyTableBody">
+                <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--muted);">Loading penalties...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="table-pagination">
+        <div class="pagination-info" id="penPagInfo">Loading...</div>
+    </div>
+</div>
+
+        <!-- Apply Penalty Modal: Employee + Rule from DB -->
+        <div class="modal-backdrop" id="applyPenaltyModal">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <div class="modal-title">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                Apply Penalty
+            </div>
+            <button class="modal-close" onclick="closeModal('applyPenaltyModal')">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="form-grid form-grid-2">
+                <div class="field-group">
+                    <label class="field-label">Employee <span class="field-required">*</span></label>
+                    <select class="field-select" id="penEmpId" required>
+                        <option value="">Loading employees...</option>
+                    </select>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Penalty Rule <span class="field-required">*</span></label>
+                    <select class="field-select" id="penRuleId" required onchange="onRuleChange()">
+                        <option value="">Loading rules...</option>
+                    </select>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Date</label>
+                    <input type="date" class="field-input" id="penDate" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Amount (PKR)</label>
+                    <input type="number" class="field-input" id="penAmount" placeholder="Auto-filled from rule" oninput="this.value = this.value.replace(/[^0-9]/g, '')" />
+                </div>
+                <div class="field-group form-full">
+                    <label class="field-label">Remarks</label>
+                    <textarea class="field-textarea" id="penRemarks" rows="2" placeholder="Additional notes (optional)"></textarea>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModal('applyPenaltyModal')">Cancel</button>
+            <button class="btn btn-danger" id="btnApplyPen" onclick="savePenalty()">Apply Penalty</button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="~/js/tables.js" asp-append-version="true"></script>
+<script src="~/js/modals.js" asp-append-version="true"></script>
+<script>
+    let allPenalties = [];
+    let penaltyRules = [];
+
+    (async function init() {
+        // Load penalties
+        const res = await EmsApi.penalties.list();
+        const tbody = document.getElementById('penaltyTableBody');
+
+        if (res.success && res.data) {
+            allPenalties = Array.isArray(res.data) ? res.data : (res.data.data || []);
+            renderPenalties(allPenalties);
+            updatePenaltyKPIs(allPenalties);
+        } else {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--muted);"><div style="font-size:32px;opacity:0.3;margin-bottom:8px;">⚠️</div>No penalty records found.<div style="font-size:12px;margin-top:6px;">Click "Apply Penalty" to add the first record.</div></td></tr>';
+        }
+
+        // Load employees for modal
+        const empRes = await EmsApi.employees.list();
+        if (empRes.success && empRes.data) {
+            const emps = Array.isArray(empRes.data) ? empRes.data : (empRes.data.data || []);
+            const sel = document.getElementById('penEmpId');
+            sel.innerHTML = '<option value="">Select Employee</option>';
+            emps.forEach(e => {
+                const o = document.createElement('option');
+                o.value = e.employee_id || e.id;
+                o.textContent = e.name + ' (' + (e.employee_id || e.id) + ')';
+                sel.appendChild(o);
+            });
+        }
+
+        // Load penalty rules for modal
+        const rulesRes = await EmsApi.penalties.getRules();
+        const ruleSel = document.getElementById('penRuleId');
+        if (rulesRes.success && Array.isArray(rulesRes.data) && rulesRes.data.length > 0) {
+            penaltyRules = rulesRes.data;
+            ruleSel.innerHTML = '<option value="">Select Rule</option>';
+            penaltyRules.forEach(r => {
+                const o = document.createElement('option');
+                o.value = r.id;
+                o.textContent = (r.rule_name || r.penalty_type) + ' — PKR ' + Number(r.amount || 0).toLocaleString();
+                o.dataset.amount = r.amount || 0;
+                o.dataset.type = r.rule_name || r.penalty_type || '';
+                ruleSel.appendChild(o);
+            });
+        } else {
+            // Fallback static rules
+            ruleSel.innerHTML = '<option value="">Select Rule</option>' +
+                '<option value="late" data-amount="500" data-type="Late Arrival">Late Arrival — PKR 500</option>' +
+                '<option value="early" data-amount="1000" data-type="Early Leave">Early Leave — PKR 1,000</option>' +
+                '<option value="policy" data-amount="2000" data-type="Policy Violation">Policy Violation — PKR 2,000</option>' +
+                '<option value="misc" data-amount="5000" data-type="Misconduct">Misconduct — PKR 5,000</option>';
+        }
+    })();
+
+    function onRuleChange() {
+        const sel = document.getElementById('penRuleId');
+        const opt = sel.options[sel.selectedIndex];
+        if (opt && opt.dataset.amount) {
+            document.getElementById('penAmount').value = opt.dataset.amount;
+        }
+    }
+
+    function renderPenalties(data) {
+        const tbody = document.getElementById('penaltyTableBody');
+        const pagInfo = document.getElementById('penPagInfo');
+        if (!data.length) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--muted);">No penalty records found</td></tr>';
+            if (pagInfo) pagInfo.textContent = 'No records';
+            return;
+        }
+
+        tbody.innerHTML = data.map(pen => {
+            const name = pen.employee_name || pen.name || 'Employee';
+            const initials = name.split(' ').map(w => w[0]).join('').substring(0,2).toUpperCase();
+            const colors = ['blue','green','amber','purple','teal','red'];
+            const ci = name.charCodeAt(0) % colors.length;
+            const status = (pen.status || 'Pending').toLowerCase();
+            const statusClass = status === 'approved' ? 'approved' : status === 'rejected' ? 'rejected' : 'pending';
+            const statusLabel = status.charAt(0).toUpperCase() + status.slice(1);
+
+            return `<tr>
+                <td>
+                    <div class="cell-employee">
+                        <div class="cell-avatar ${colors[ci]}">${initials}</div>
+                        <div class="cell-name">${name}</div>
+                    </div>
+                </td>
+                <td><span class="cell-mono" style="font-size:11px;">${pen.date ? new Date(pen.date).toLocaleDateString() : '—'}</span></td>
+                <td><span class="tag tag-amber">${pen.penalty_type || '—'}</span></td>
+                <td><strong style="font-family:'DM Mono',monospace;color:var(--accent4);">PKR ${Number(pen.amount || 0).toLocaleString()}</strong></td>
+                <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
+                <td><span style="font-size:12px;color:var(--muted);">${pen.applied_by_name || '—'}</span></td>
+                <td>
+                    ${status === 'pending' ? `
+                        <div class="table-actions">
+                            <button class="table-action-btn" title="Approve" style="color:var(--accent2);" onclick="approvePenalty('${pen.id}')">
+                                <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                            </button>
+                            <button class="table-action-btn danger" title="Reject" onclick="rejectPenalty('${pen.id}')">
+                                <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                            </button>
+                        </div>
+                    ` : '<span style="font-size:11px;color:var(--muted);">—</span>'}
+                </td>
+            </tr>`;
+        }).join('');
+
+        if (pagInfo) pagInfo.innerHTML = `Showing <strong>${data.length}</strong> of <strong>${allPenalties.length}</strong>`;
+    }
+
+    function updatePenaltyKPIs(data) {
+        const pending = data.filter(p => (p.status||'').toLowerCase() === 'pending').length;
+        const approved = data.filter(p => (p.status||'').toLowerCase() === 'approved').length;
+        const totalAmt = data.filter(p => (p.status||'').toLowerCase() === 'approved').reduce((s,p) => s + Number(p.amount||0), 0);
+        const affected = [...new Set(data.map(p => p.employee_id))].length;
+        const kpiTotal = document.getElementById('kpiPenTotal');
+        const kpiSub = document.getElementById('kpiPenTotalSub');
+        const kpiPending = document.getElementById('kpiPenPending');
+        const kpiApproved = document.getElementById('kpiPenApproved');
+        const kpiAffected = document.getElementById('kpiPenAffected');
+        if (kpiTotal) kpiTotal.textContent = totalAmt > 0 ? (totalAmt/1000).toFixed(1)+'K' : '—';
+        if (kpiSub) kpiSub.textContent = 'PKR this month';
+        if (kpiPending) kpiPending.textContent = pending;
+        if (kpiApproved) kpiApproved.textContent = approved;
+        if (kpiAffected) kpiAffected.textContent = affected;
+    }
+
+    async function savePenalty() {
+        const empId = document.getElementById('penEmpId').value;
+        const ruleSel = document.getElementById('penRuleId');
+        const ruleOpt = ruleSel.options[ruleSel.selectedIndex];
+        const amount = document.getElementById('penAmount').value;
+        const date = document.getElementById('penDate').value;
+        const remarks = document.getElementById('penRemarks').value;
+
+        // Visual Validation
+        let allValid = true;
+        const fields = [
+            { el: document.getElementById('penEmpId'), val: empId },
+            { el: ruleSel, val: ruleSel.value },
+            { el: document.getElementById('penAmount'), val: amount }
+        ];
+
+        fields.forEach(f => {
+            if (!f.val) {
+                f.el.style.borderColor = 'var(--accent4)';
+                allValid = false;
+            } else {
+                f.el.style.borderColor = '';
+            }
+        });
+
+        if (!allValid) {
+            showToast('Please fill the required field', 'error');
+            return;
+        }
+
+        const btn = document.getElementById('btnApplyPen');
+        btn.disabled = true; btn.textContent = 'Applying...';
+
+        const payload = {
+            employee_id: empId,
+            rule_id: ruleSel.value,
+            date: date || new Date().toISOString().split('T')[0],
+            reason: remarks || ruleOpt?.dataset?.type || 'Penalty'
+        };
+
+        const res = await EmsApi.penalties.propose(payload);
+        btn.disabled = false; btn.textContent = 'Apply Penalty';
+
+        if (res.success) {
+            showToast('Penalty applied — awaiting HO approval', 'warning');
+            closeModal('applyPenaltyModal');
+            const res2 = await EmsApi.penalties.list();
+            if (res2.success && res2.data) {
+                allPenalties = Array.isArray(res2.data) ? res2.data : (res2.data.data || []);
+                renderPenalties(allPenalties);
+                updatePenaltyKPIs(allPenalties);
+            }
+        } else {
+            // Local fallback
+            const empSel = document.getElementById('penEmpId');
+            const empName = empSel.options[empSel.selectedIndex]?.textContent || 'Employee';
+            allPenalties.unshift({
+                id: 'local_'+Date.now(), employee_name: empName.split('(')[0].trim(),
+                employee_id: empId, penalty_type: payload.penalty_type,
+                amount, date: payload.date, status: 'pending', applied_by_name: 'You'
+            });
+            renderPenalties(allPenalties);
+            updatePenaltyKPIs(allPenalties);
+            showToast('Penalty recorded (preview mode)', 'warning');
+            closeModal('applyPenaltyModal');
+        }
+    }
+
+    async function approvePenalty(id) {
+        const res = await EmsApi.penalties.approve(id);
+        const p = allPenalties.find(x => String(x.id) === String(id));
+        if (p) { p.status = 'approved'; renderPenalties(allPenalties); updatePenaltyKPIs(allPenalties); }
+        showToast('Penalty approved', 'success');
+    }
+
+    async function rejectPenalty(id) {
+        showConfirm({ title: 'Reject Penalty?', message: 'This will reject the penalty.', type: 'warning', confirmText: 'Reject',
+            onConfirm: async () => {
+                await EmsApi.penalties.reject(id);
+                const p = allPenalties.find(x => String(x.id) === String(id));
+                if (p) { p.status = 'rejected'; renderPenalties(allPenalties); updatePenaltyKPIs(allPenalties); }
+                showToast('Penalty rejected', 'success');
+            }
+        });
+    }
+</script>
+}

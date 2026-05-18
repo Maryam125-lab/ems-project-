@@ -1,0 +1,443 @@
+@{
+    ViewData["Title"] = "Add Employee";
+    ViewData["Active"] = "Employees";
+}
+
+<!-- PAGE HEADER -->
+<div class="page-header anim-fade-in-up">
+    <div>
+        <h1 class="page-title">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/>
+                <line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/>
+            </svg>
+            Employee Onboarding
+        </h1>
+        <div class="page-date">Register a new employee into the system</div>
+    </div>
+    <a class="btn btn-ghost" asp-action="Index">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        Back to Directory
+    </a>
+</div>
+
+<!-- STEP INDICATOR -->
+<div class="step-indicator anim-fade-in-up" style="display:flex; justify-content:space-between; margin-bottom:30px; position:relative;">
+    <div class="step-line" style="position:absolute; top:18px; left:0; right:0; height:2px; background:var(--surface2); z-index:0;">
+        <div id="stepProgress" style="width:0%; height:100%; background:var(--accent); transition: width 0.3s ease;"></div>
+    </div>
+    <div class="step-item active" data-step="1" style="z-index:1; background:var(--surface1); padding:0 10px; text-align:center;">
+        <div class="step-dot" style="width:36px; height:36px; border-radius:50%; border:2px solid var(--accent); display:flex; align-items:center; justify-content:center; margin:0 auto 8px; background:var(--surface1); font-weight:600; color:var(--accent);">1</div>
+        <div style="font-size:11px; font-weight:600; color:var(--accent);">Personal</div>
+    </div>
+    <div class="step-item" data-step="2" style="z-index:1; background:var(--surface1); padding:0 10px; text-align:center;">
+        <div class="step-dot" style="width:36px; height:36px; border-radius:50%; border:2px solid var(--surface3); display:flex; align-items:center; justify-content:center; margin:0 auto 8px; background:var(--surface1); font-weight:600; color:var(--muted);">2</div>
+        <div style="font-size:11px; font-weight:600; color:var(--muted);">Job</div>
+    </div>
+    <div class="step-item" data-step="3" style="z-index:1; background:var(--surface1); padding:0 10px; text-align:center;">
+        <div class="step-dot" style="width:36px; height:36px; border-radius:50%; border:2px solid var(--surface3); display:flex; align-items:center; justify-content:center; margin:0 auto 8px; background:var(--surface1); font-weight:600; color:var(--muted);">3</div>
+        <div style="font-size:11px; font-weight:600; color:var(--muted);">Financial</div>
+    </div>
+</div>
+
+<form id="onboardingForm" class="anim-fade-in-up" onsubmit="return handleOnboarding(event)">
+    <div class="card" style="margin-bottom:16px; min-height: 400px;">
+        <!-- STEP 1: Personal Information -->
+        <div class="form-step active" id="step-1">
+            <div class="form-section-title">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Personal Information
+            </div>
+            <div class="form-grid form-grid-3">
+                <div class="field-group">
+                    <label class="field-label">First Name <span class="field-required">*</span></label>
+                    <input type="text" name="first_name" class="field-input" placeholder="e.g. Ahmed" required oninput="this.value = this.value.replace(/[^a-zA-Z\s]/g, '')" />
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Last Name <span class="field-required">*</span></label>
+                    <input type="text" name="last_name" class="field-input" placeholder="e.g. Khan" required oninput="this.value = this.value.replace(/[^a-zA-Z\s]/g, '')" />
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Father's Name <span class="field-required">*</span></label>
+                    <input type="text" name="father_name" class="field-input" placeholder="e.g. Mohammad Khan" required oninput="this.value = this.value.replace(/[^a-zA-Z\s]/g, '')" />
+                </div>
+                <div class="field-group">
+                    <label class="field-label">CNIC / ID Number <span class="field-required">*</span></label>
+                    <input type="text" name="cnic" class="field-input" placeholder="e.g. 4220112345678" required maxlength="15" oninput="this.value = this.value.replace(/[^0-9]/g, '')" />
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Date of Birth <span class="field-required">*</span></label>
+                    <input type="date" name="dob" class="field-input" required />
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Gender</label>
+                    <select name="gender" class="field-select">
+                        <option value="">Select Gender</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Blood Group</label>
+                    <select name="blood_group" class="field-select">
+                        <option value="">Select</option>
+                        <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
+                        <option>O+</option><option>O-</option><option>AB+</option><option>AB-</option>
+                    </select>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Phone Number <span class="field-required">*</span></label>
+                    <input type="tel" name="phone" class="field-input" placeholder="e.g. 03001234567" required maxlength="11" oninput="this.value = this.value.replace(/[^0-9]/g, '')" />
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Marital Status</label>
+                    <select name="marital_status" class="field-select">
+                        <option value="">Select</option>
+                        <option value="single">Single</option><option value="married">Married</option><option value="divorced">Divorced</option><option value="widowed">Widowed</option>
+                    </select>
+                </div>
+                <div class="field-group form-full">
+                    <label class="field-label">Address</label>
+                    <textarea name="address" class="field-textarea" rows="2" placeholder="Full residential address"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 2: Job Information -->
+        <div class="form-step" id="step-2" style="display:none;">
+            <div class="form-section-title">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+                Job Information
+            </div>
+            <div class="form-grid form-grid-3">
+                <div class="field-group">
+                    <label class="field-label">Department <span class="field-required">*</span></label>
+                    <select name="department_id" id="department_id" class="field-select" required>
+                        <option value="">Loading...</option>
+                    </select>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Designation <span class="field-required">*</span></label>
+                    <select name="designation_id" id="designation_id" class="field-select" required>
+                        <option value="">Loading...</option>
+                    </select>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Branch <span class="field-required">*</span></label>
+                    <select name="location_id" id="location_id" class="field-select" required>
+                        <option value="">Loading...</option>
+                    </select>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Employment Type</label>
+                    <select name="employee_type_id" id="employee_type_id" class="field-select">
+                        <option value="">Loading...</option>
+                    </select>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Work Mode</label>
+                    <select name="work_mode_id" id="work_mode_id" class="field-select">
+                        <option value="">Loading...</option>
+                    </select>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Shift</label>
+                    <select name="shift_id" id="shift_id" class="field-select">
+                        <option value="">Loading...</option>
+                    </select>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Joining Date <span class="field-required">*</span></label>
+                    <input type="date" name="joining_date" class="field-input" required />
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Reporting Manager</label>
+                    <select name="manager_id" id="manager_id" class="field-select">
+                        <option value="">Select Manager</option>
+                    </select>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Job Status <span class="field-required">*</span></label>
+                    <select name="job_status_id" id="job_status_id" class="field-select" required>
+                        <option value="">Loading...</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 3: Financial & Account -->
+        <div class="form-step" id="step-3" style="display:none;">
+            <div class="form-section-title">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                Account & Financial Details
+            </div>
+            <div class="form-grid form-grid-3">
+                <div class="field-group form-full" style="padding-bottom: 20px; border-bottom: 1px solid var(--surface3); margin-bottom: 20px;">
+                    <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 12px;">Login Credentials</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div>
+                            <label class="field-label">Official Email <span class="field-required">*</span></label>
+                            <input type="email" name="email" class="field-input" placeholder="e.g. ahmed.k@esspl.com" required />
+                        </div>
+                        <div>
+                            <label class="field-label">Initial Password <span class="field-required">*</span></label>
+                            <input type="text" name="password" class="field-input" placeholder="e.g. Emp@12345" required />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <label class="field-label">Bank Name</label>
+                    <input type="text" name="bank_name" class="field-input" placeholder="e.g. HBL" />
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Account Title</label>
+                    <input type="text" name="bank_account_title" class="field-input" placeholder="e.g. Ahmed Khan" />
+                </div>
+                <div class="field-group">
+                    <label class="field-label">IBAN</label>
+                    <input type="text" name="bank_account_no" class="field-input" placeholder="e.g. PK36HABB0012345678901" />
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Basic Salary (PKR)</label>
+                    <input type="number" name="basic_salary" class="field-input" placeholder="e.g. 80000" oninput="this.value = this.value.replace(/[^0-9]/g, '')" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ACTION BAR -->
+    <div style="display:flex;justify-content:space-between;gap:10px;margin-top:20px;" class="anim-fade-in-up">
+        <div>
+            <button type="button" class="btn btn-ghost" id="btnPrev" style="display:none;" onclick="prevStep()">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+                Previous
+            </button>
+        </div>
+        <div style="display:flex; gap:10px;">
+            <a class="btn btn-ghost" asp-action="Index">Cancel</a>
+            <button type="button" class="btn btn-primary" id="btnNext" onclick="nextStep()">
+                Next Step
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+            <button type="submit" class="btn btn-success" id="btnRegister" style="display:none;">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                Complete Onboarding
+            </button>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+<script src="~/js/modals.js" asp-append-version="true"></script>
+<script>
+    let currentStep = 1;
+    const totalSteps = 3;
+
+    function updateSteps() {
+        // Update display
+        document.querySelectorAll('.form-step').forEach(s => s.style.display = 'none');
+        document.getElementById(`step-${currentStep}`).style.display = 'block';
+
+        // Update progress bar
+        const progress = ((currentStep - 1) / (totalSteps - 1)) * 100;
+        document.getElementById('stepProgress').style.width = progress + '%';
+
+        // Update indicators
+        document.querySelectorAll('.step-item').forEach((item, idx) => {
+            const stepNum = idx + 1;
+            const dot = item.querySelector('.step-dot');
+            const label = item.querySelector('div:last-child');
+            
+            if (stepNum < currentStep) {
+                item.classList.add('completed');
+                dot.style.borderColor = 'var(--accent2)';
+                dot.style.color = 'var(--accent2)';
+                dot.innerHTML = '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>';
+            } else if (stepNum === currentStep) {
+                item.classList.add('active');
+                dot.style.borderColor = 'var(--accent)';
+                dot.style.color = 'var(--accent)';
+                dot.textContent = stepNum;
+                label.style.color = 'var(--accent)';
+            } else {
+                item.classList.remove('active', 'completed');
+                dot.style.borderColor = 'var(--surface3)';
+                dot.style.color = 'var(--muted)';
+                dot.textContent = stepNum;
+                label.style.color = 'var(--muted)';
+            }
+        });
+
+        // Update buttons
+        document.getElementById('btnPrev').style.display = currentStep === 1 ? 'none' : 'flex';
+        document.getElementById('btnNext').style.display = currentStep === totalSteps ? 'none' : 'flex';
+        document.getElementById('btnRegister').style.display = currentStep === totalSteps ? 'flex' : 'none';
+    }
+
+    function nextStep() {
+        // Validation check for current step
+        const currentStepDiv = document.getElementById(`step-${currentStep}`);
+        const requiredFields = currentStepDiv.querySelectorAll('[required]');
+        let allValid = true;
+        
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+                field.style.borderColor = 'var(--accent4)';
+                allValid = false;
+            } else {
+                field.style.borderColor = '';
+            }
+        });
+
+        if (!allValid) {
+            showToast('Please fill all required fields', 'error');
+            return;
+        }
+
+        if (currentStep < totalSteps) {
+            currentStep++;
+            updateSteps();
+        }
+    }
+
+    function prevStep() {
+        if (currentStep > 1) {
+            currentStep--;
+            updateSteps();
+        }
+    }
+
+    (async function initOnboarding() {
+        updateSteps();
+        // Load all config dropdowns
+        const load = async (entity, elId, valueKey, labelKey) => {
+            const el = document.getElementById(elId);
+            const res = await EmsApi.config.get(entity);
+            if (res.success && Array.isArray(res.data)) {
+                el.innerHTML = '<option value="">Select ' + entity.charAt(0).toUpperCase() + entity.slice(1).replace("-"," ") + '</option>';
+                res.data.forEach(item => {
+                    const opt = document.createElement('option');
+                    opt.value = item[valueKey] || item.id;
+                    opt.textContent = item[labelKey] || item.name;
+                    el.appendChild(opt);
+                });
+            } else {
+                el.innerHTML = '<option value="">Error loading</option>';
+            }
+        };
+
+        await Promise.allSettled([
+            load('departments', 'department_id', 'id', 'department_name'),
+            load('designations', 'designation_id', 'id', 'title'),
+            load('work-locations', 'location_id', 'id', 'location_name'),
+            load('employment-types', 'employee_type_id', 'id', 'type_name'),
+            load('work-modes', 'work_mode_id', 'id', 'mode_name'),
+            load('shifts', 'shift_id', 'id', 'shift_name'),
+            load('job-statuses', 'job_status_id', 'id', 'status_name')
+        ]);
+
+        // Load Managers (Employees with special roles or just list of employees)
+        const mgrRes = await EmsApi.employees.list();
+        const mgrEl = document.getElementById('manager_id');
+        if (mgrRes.success && Array.isArray(mgrRes.data)) {
+            mgrRes.data.forEach(emp => {
+                const opt = document.createElement('option');
+                opt.value = emp.id || emp.employee_id;
+                opt.textContent = emp.name + ' (' + (emp.designation_title || emp.designation_name || '') + ')';
+                mgrEl.appendChild(opt);
+            });
+        }
+    })();
+
+    async function handleOnboarding(e) {
+        e.preventDefault();
+        const btn = document.getElementById('btnRegister');
+        const form = document.getElementById('onboardingForm');
+        const formData = new FormData(form);
+        const data = {};
+        formData.forEach((value, key) => {
+            if (value) data[key] = value;
+        });
+
+        const payload = {
+            personalInfo: {
+                name: `${data.first_name} ${data.last_name}`,
+                father_name: data.father_name,
+                cnic: data.cnic,
+                date_of_birth: data.dob
+            },
+            jobInfo: {
+                department_id: data.department_id,
+                designation_id: data.designation_id,
+                employment_type_id: data.employee_type_id,
+                job_status_id: data.job_status_id,
+                work_mode_id: data.work_mode_id,
+                work_location_id: data.location_id,
+                shift_id: data.shift_id,
+                date_of_joining: data.joining_date
+            },
+            salaryInfo: {
+                base_salary: data.basic_salary ? Number(data.basic_salary) : 0
+            },
+            accountInfo: {
+                email: data.email,
+                password: data.password,
+                phone: data.phone,
+                role_id: null // Assigned by backend
+            },
+            emergencyContacts: {
+                contact_1: data.phone,
+                contact_2: null,
+                perment_address: data.address || '',
+                postal_address: data.address || '',
+                e_contact_1_relation: 'other',
+                e_contact_1_full_name: 'Emergency Contact',
+                e_contact_1_phone: data.phone,
+                e_contact_1_phone_country_code: '+92',
+                e_contact_1_email: data.email || null,
+                e_contact_2_relation: null,
+                e_contact_2_full_name: null,
+                e_contact_2_phone: null,
+                e_contact_2_phone_country_code: null,
+                e_contact_2_email: null,
+                primary_contact: 1
+            }
+        };
+
+        if (data.bank_name && data.bank_account_title && data.bank_account_no) {
+            payload.bankInfo = {
+                bank_name: data.bank_name,
+                account_title: data.bank_account_title,
+                account_number: data.bank_account_no,
+                iban: data.bank_account_no
+            };
+        }
+
+        if (data.blood_group || data.gender) {
+            payload.medicalInfo = {
+                blood_group: data.blood_group || null,
+                gender: data.gender || null
+            };
+        }
+
+        btn.disabled = true;
+        btn.textContent = 'Registering...';
+
+        const res = await EmsApi.employees.create(payload);
+        if (res.success) {
+            showToast('Employee registered successfully!', 'success');
+            setTimeout(() => window.location.href = '/Employees', 1500);
+        } else {
+            btn.disabled = false;
+            btn.innerHTML = '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Register Employee';
+            showToast(res.error || 'Failed to register employee', 'error');
+            if (res.issues) {
+                console.error('Validation issues:', res.issues);
+            }
+        }
+        return false;
+    }
+</script>
+}

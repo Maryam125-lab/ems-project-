@@ -1,0 +1,73 @@
+@{ ViewData["Title"] = "My Attendance"; }
+
+<div class="page-header anim-fade-in-up">
+    <div>
+        <h1 class="page-title"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> My Attendance Log</h1>
+        <div class="page-date">View your check-in and check-out history</div>
+    </div>
+</div>
+
+<div class="table-container anim-fade-in-up">
+    <div class="table-scroll-wrapper">
+        <table class="data-table" id="attendanceTable">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Check In</th>
+                    <th>Check Out</th>
+                    <th>Work Hours</th>
+                </tr>
+            </thead>
+            <tbody id="attendanceBody">
+                <tr><td colspan="5" style="text-align:center; padding:40px; color:var(--muted);">Loading your attendance...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    async function loadAttendance() {
+        const res = await EmsApi.dashboard.getMyMetrics();
+        const tbody = document.getElementById('attendanceBody');
+        
+        if (res.success && res.data && res.data.recent_attendance) {
+            const logs = res.data.recent_attendance;
+            if (logs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:40px; color:var(--muted);">No attendance records found yet.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = logs.map(l => {
+                const status = l.status.toLowerCase();
+                const statusClass = status === 'present' ? 'approved' : status === 'absent' ? 'rejected' : 'pending';
+                const statusLabel = status.charAt(0).toUpperCase() + status.slice(1);
+                
+                // Calculate work hours if both check_in and check_out exist
+                let workHours = '—';
+                if (l.check_in && l.check_out) {
+                    const start = new Date(`1970-01-01T${l.check_in}`);
+                    const end = new Date(`1970-01-01T${l.check_out}`);
+                    const diff = (end - start) / (1000 * 60 * 60);
+                    workHours = diff.toFixed(2) + ' hrs';
+                }
+
+                return `
+                    <tr>
+                        <td class="cell-mono">${new Date(l.date).toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}</td>
+                        <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
+                        <td class="cell-mono">${l.check_in || '—'}</td>
+                        <td class="cell-mono">${l.check_out || '—'}</td>
+                        <td class="cell-mono" style="font-weight:600;">${workHours}</td>
+                    </tr>
+                `;
+            }).join('');
+        } else {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:40px; color:var(--muted);">Failed to load attendance records.</td></tr>';
+        }
+    }
+
+    loadAttendance();
+</script>
+}

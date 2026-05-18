@@ -1,0 +1,148 @@
+@{ ViewData["Title"] = "My Profile"; }
+
+<div class="page-header anim-fade-in-up">
+    <div>
+        <h1 class="page-title"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> My Profile</h1>
+        <div class="page-date">View and verify your official information</div>
+    </div>
+</div>
+
+<div class="profile-layout anim-fade-in-up">
+    <div class="profile-sidebar">
+        <div class="card" style="text-align:center; padding:30px;">
+            <div id="profAvatar" class="profile-avatar-large blue" style="margin:0 auto 16px;">U</div>
+            <div id="profName" style="font-size:20px; font-weight:700; color:var(--text);">Loading...</div>
+            <div id="profDesg" style="font-size:13px; color:var(--accent); font-weight:600; margin-top:4px;">Loading...</div>
+            <div id="profDept" style="font-size:11px; color:var(--muted); margin-top:2px;">Loading...</div>
+            
+            <div class="form-divider" style="margin:20px 0;"></div>
+            
+            <div style="display:flex; flex-direction:column; gap:12px; text-align:left;">
+                <div class="info-item">
+                    <label style="font-size:10px; text-transform:uppercase; color:var(--muted); font-weight:600;">Employee ID</label>
+                    <div id="profId" style="font-size:13px; font-weight:600;">--</div>
+                </div>
+                <div class="info-item">
+                    <label style="font-size:10px; text-transform:uppercase; color:var(--muted); font-weight:600;">Joining Date</label>
+                    <div id="profJoin" style="font-size:13px; font-weight:600;">--</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="profile-main">
+        <div class="card">
+            <div class="tabs">
+                <div class="tab-header">
+                    <button class="tab-btn active" onclick="showTab('personal')">Personal</button>
+                    <button class="tab-btn" onclick="showTab('job')">Job & Salary</button>
+                    <button class="tab-btn" onclick="showTab('bank')">Bank Info</button>
+                </div>
+                
+                <div class="tab-content" id="personal">
+                    <div class="info-grid">
+                        <div class="info-group"><label>Father's Name</label><div id="valFather">--</div></div>
+                        <div class="info-group"><label>CNIC / National ID</label><div id="valCnic">--</div></div>
+                        <div class="info-group"><label>Date of Birth</label><div id="valDob">--</div></div>
+                        <div class="info-group"><label>Gender</label><div id="valGender">--</div></div>
+                        <div class="info-group"><label>Blood Group</label><div id="valBlood">--</div></div>
+                        <div class="info-group"><label>Personal Email</label><div id="valEmail">--</div></div>
+                        <div class="info-group"><label>Phone</label><div id="valPhone">--</div></div>
+                        <div class="info-group"><label>Marital Status</label><div id="valMarital">--</div></div>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="job" style="display:none;">
+                    <div class="info-grid">
+                        <div class="info-group"><label>Department</label><div id="valDept">--</div></div>
+                        <div class="info-group"><label>Designation</label><div id="valDesg">--</div></div>
+                        <div class="info-group"><label>Employment Type</label><div id="valEmpType">--</div></div>
+                        <div class="info-group"><label>Work Mode</label><div id="valMode">--</div></div>
+                        <div class="info-group"><label>Shift</label><div id="valShift">--</div></div>
+                        <div class="info-group"><label>Basic Salary (PKR)</label><div id="valSalary">--</div></div>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="bank" style="display:none;">
+                    <div class="info-grid">
+                        <div class="info-group"><label>Bank Name</label><div id="valBank">--</div></div>
+                        <div class="info-group"><label>Account Title</label><div id="valAccTitle">--</div></div>
+                        <div class="info-group"><label>IBAN</label><div id="valIban">--</div></div>
+                        <div class="info-group"><label>Verification Status</label><div><span class="status-badge approved">Verified</span></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    async function loadProfile() {
+        const empId = EmsApi.getEmployeeId();
+        if (!empId) return;
+
+        const res = await EmsApi.employees.getById(empId);
+        if (res.success && res.data) {
+            const d = res.data;
+            
+            // Sidebar
+            document.getElementById('profName').textContent = d.name;
+            document.getElementById('profDesg').textContent = d.designation_title || 'Team Member';
+            document.getElementById('profDept').textContent = d.department_name || 'General';
+            document.getElementById('profId').textContent = d.employee_id;
+            document.getElementById('profJoin').textContent = d.date_of_joining ? new Date(d.date_of_joining).toLocaleDateString() : '--';
+            document.getElementById('profAvatar').textContent = d.name.split(' ').map(w => w[0]).join('').substring(0,2).toUpperCase();
+
+            // Personal
+            document.getElementById('valFather').textContent = d.father_name || '--';
+            document.getElementById('valCnic').textContent = d.cnic || '--';
+            document.getElementById('valDob').textContent = d.date_of_birth ? new Date(d.date_of_birth).toLocaleDateString() : '--';
+            document.getElementById('valGender').textContent = d.gender || '--';
+            document.getElementById('valBlood').textContent = d.blood_group || '--';
+            document.getElementById('valEmail').textContent = d.email || '--';
+            document.getElementById('valPhone').textContent = d.phone || '--';
+            document.getElementById('valMarital').textContent = d.marital_status || '--';
+
+            // Job
+            document.getElementById('valDept').textContent = d.department_name || '--';
+            document.getElementById('valDesg').textContent = d.designation_title || '--';
+            document.getElementById('valEmpType').textContent = d.employment_type_name || '--';
+            document.getElementById('valMode').textContent = d.work_mode_name || '--';
+            document.getElementById('valShift').textContent = d.shift_name || '--';
+            document.getElementById('valSalary').textContent = d.basic_salary ? Number(d.basic_salary).toLocaleString() : '--';
+
+            // Bank
+            if (d.bankInfo) {
+                document.getElementById('valBank').textContent = d.bankInfo.bank_name || '--';
+                document.getElementById('valAccTitle').textContent = d.bankInfo.account_title || '--';
+                document.getElementById('valIban').textContent = d.bankInfo.iban || '--';
+            }
+        }
+    }
+
+    function showTab(id) {
+        document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(id).style.display = 'block';
+        event.currentTarget.classList.add('active');
+    }
+
+    loadProfile();
+</script>
+}
+
+<style>
+    .profile-layout { display: grid; grid-template-columns: 280px 1fr; gap: 24px; }
+    .profile-avatar-large { width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 700; color: white; }
+    .profile-avatar-large.blue { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+    
+    .tab-header { display: flex; gap: 8px; border-bottom: 1px solid var(--surface3); margin-bottom: 24px; }
+    .tab-btn { padding: 12px 20px; border: none; background: none; color: var(--muted); font-size: 13px; font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent; transition: 0.2s; }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+    
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .info-group label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 4px; font-weight: 600; }
+    .info-group div { font-size: 14px; font-weight: 500; color: var(--text); }
+</style>

@@ -1,0 +1,153 @@
+@{
+    ViewData["Title"] = "Announcements";
+    ViewData["Active"] = "Announcements";
+}
+
+<div class="page-header anim-fade-in-up">
+    <div>
+        <h1 class="page-title">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            Announcements & Notice Board
+        </h1>
+        <div class="page-date">Publish and manage company-wide notifications</div>
+    </div>
+    <button class="btn btn-primary" onclick="openModal('announceModal')">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Create Announcement
+    </button>
+</div>
+
+<!-- ANNOUNCEMENT FEED -->
+<div id="announceFeed" class="stagger" style="display:flex;flex-direction:column;gap:14px;">
+    <div style="text-align:center;padding:40px;color:var(--muted);">Loading announcements...</div>
+</div>
+
+<!-- CREATE ANNOUNCEMENT MODAL -->
+<div class="modal-backdrop" id="announceModal">
+    <div class="modal-dialog wide">
+        <div class="modal-header">
+            <div class="modal-title">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/></svg>
+                Create Announcement
+            </div>
+            <button class="modal-close" onclick="closeModal('announceModal')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+        <div class="modal-body">
+            <div class="form-grid">
+                <div class="field-group">
+                    <label class="field-label">Title <span class="field-required">*</span></label>
+                    <input type="text" class="field-input" id="annTitle" placeholder="Announcement headline" />
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Content <span class="field-required">*</span></label>
+                    <textarea class="field-textarea" id="annContent" rows="5" placeholder="Write the full announcement message"></textarea>
+                </div>
+                <div class="field-group" style="display:flex;gap:20px;">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="annIsPinned" checked />
+                        <span class="toggle-track"></span>
+                        <span class="toggle-label">Pin to top</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModal('announceModal')">Cancel</button>
+            <button class="btn btn-primary" id="btnPublishAnn" onclick="publishAnnouncement()">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                Publish
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="~/js/modals.js" asp-append-version="true"></script>
+<script>
+    let allAnnouncements = [];
+
+    async function loadAnnouncements() {
+        const feed = document.getElementById('announceFeed');
+        feed.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);">Loading...</div>';
+        const res = await EmsApi.announcements.list();
+
+        if (res.success && res.data) {
+            allAnnouncements = Array.isArray(res.data) ? res.data : (res.data.data || []);
+            renderFeed(allAnnouncements);
+        } else {
+            feed.innerHTML = '<div style="text-align:center;padding:60px;color:var(--muted);"><div style="font-size:40px;opacity:0.3;margin-bottom:12px;">📢</div><div>No announcements yet.</div><div style="font-size:12px;margin-top:6px;">Click "Create Announcement" to publish the first one.</div></div>';
+        }
+    }
+
+    function renderFeed(data) {
+        const feed = document.getElementById('announceFeed');
+        if (!data.length) {
+            feed.innerHTML = '<div style="text-align:center;padding:60px;color:var(--muted);">No announcements found.</div>';
+            return;
+        }
+        const sorted = [...data].sort((a,b) => (b.is_pinned?1:0) - (a.is_pinned?1:0));
+        feed.innerHTML = sorted.map(ann => `
+            <div class="card hover-lift" style="cursor:default;position:relative;">
+                ${ann.is_pinned ? '<div style="position:absolute;top:16px;right:16px;"><span class="tag tag-amber">⭐ Pinned</span></div>' : ''}
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+                    <div class="cell-avatar blue" style="width:36px;height:36px;border-radius:10px;">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/></svg>
+                    </div>
+                    <div style="flex:1;">
+                        <div style="font-size:15px;font-weight:700;">${ann.title}</div>
+                        <div style="font-size:11px;color:var(--muted);margin-top:2px;">${ann.author_name || 'Management'} · ${new Date(ann.created_at||Date.now()).toLocaleDateString()}</div>
+                    </div>
+                </div>
+                <p style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:12px;">${ann.content}</p>
+                <div style="display:flex;align-items:center;justify-content:space-between;">
+                    <span style="font-size:11px;color:var(--muted);">${ann.read_count||0} views</span>
+                    <div style="display:flex;gap:6px;">
+                        <button class="btn btn-sm btn-ghost" onclick="togglePin('${ann.id}',${!ann.is_pinned})">${ann.is_pinned?'Unpin':'Pin'}</button>
+                        <button class="btn btn-sm btn-ghost" style="color:var(--accent4);" onclick="deleteAnn('${ann.id}')">Delete</button>
+                    </div>
+                </div>
+            </div>`).join('');
+    }
+
+    async function publishAnnouncement() {
+        const title = document.getElementById('annTitle').value.trim();
+        const content = document.getElementById('annContent').value.trim();
+        const is_pinned = document.getElementById('annIsPinned').checked;
+        if (!title) { showToast('Please enter a title', 'error'); return; }
+        if (!content) { showToast('Please enter content', 'error'); return; }
+        const btn = document.getElementById('btnPublishAnn');
+        btn.disabled = true; btn.textContent = 'Publishing...';
+        const res = await EmsApi.announcements.create({ title, content, is_pinned });
+        btn.disabled = false; btn.innerHTML = '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Publish';
+        if (res.success) { showToast('Announcement published!', 'success'); loadAnnouncements(); }
+        else {
+            allAnnouncements.unshift({ id: 'local_'+Date.now(), title, content, is_pinned, author_name: 'You', created_at: new Date().toISOString(), read_count: 0 });
+            renderFeed(allAnnouncements);
+            showToast('Published (preview mode)', 'success');
+        }
+        closeModal('announceModal');
+        document.getElementById('annTitle').value = '';
+        document.getElementById('annContent').value = '';
+    }
+
+    async function togglePin(id, pin) {
+        const ann = allAnnouncements.find(a => String(a.id) === String(id));
+        if (ann) { ann.is_pinned = pin; renderFeed(allAnnouncements); }
+        pin ? await EmsApi.announcements.pin(id) : await EmsApi.announcements.unpin(id);
+        showToast(pin ? 'Pinned to top' : 'Unpinned', 'success');
+    }
+
+    async function deleteAnn(id) {
+        showConfirm({ title: 'Delete Announcement?', message: 'This will remove this announcement.', type: 'danger', confirmText: 'Delete',
+            onConfirm: async () => {
+                await EmsApi.announcements.delete(id);
+                allAnnouncements = allAnnouncements.filter(a => String(a.id) !== String(id));
+                renderFeed(allAnnouncements);
+                showToast('Announcement deleted', 'success');
+            }
+        });
+    }
+
+    loadAnnouncements();
+</script>
+}

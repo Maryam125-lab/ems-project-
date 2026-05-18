@@ -1,0 +1,122 @@
+@{ ViewData["Title"] = "My Dashboard"; }
+<div class="page-header anim-fade-in-up">
+    <div>
+        <h1 class="page-title"><i class="fa-solid fa-hand" aria-hidden="true"></i> Welcome, <span id="dashEmpName">Employee</span></h1>
+        <div class="page-date">@DateTime.Now.ToString("dddd, dd MMMM yyyy") · Employee Self-Service Portal</div>
+    </div>
+</div>
+<div class="kpi-grid stagger" style="grid-template-columns:repeat(4,1fr);">
+    <div class="stat-card green">
+        <div class="kpi-label"><span class="status-dot online"></span> Today's Status</div>
+        <div class="kpi-num" style="color:var(--accent2)" id="dashTodayStatus">--</div>
+        <div class="kpi-sub" id="dashTodaySub">Loading...</div>
+    </div>
+    <div class="stat-card blue">
+        <div class="kpi-label">Leave Balance</div>
+        <div class="kpi-num" id="dashLeaveBal">--</div>
+        <div class="kpi-sub" id="dashLeaveSub">Loading...</div>
+    </div>
+    <div class="stat-card amber">
+        <div class="kpi-label">Pending Penalties</div>
+        <div class="kpi-num" style="color:var(--accent3)" id="dashPenalties">--</div>
+        <div class="kpi-sub" id="dashPenaltiesSub">Loading...</div>
+    </div>
+    <div class="stat-card purple">
+        <div class="kpi-label">This Month Salary</div>
+        <div class="kpi-num" style="color:var(--purple)" id="dashSalary">--</div>
+        <div class="kpi-sub" id="dashSalarySub">Loading...</div>
+    </div>
+</div>
+<div class="two-col">
+    <div class="card anim-fade-in-up">
+        <div class="card-title"><i class="fa-solid fa-chart-simple" aria-hidden="true"></i> Quick Actions</div>
+        <div class="action-grid">
+            <a class="action-btn" asp-action="ApplyLeave"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/></svg> Apply for Leave</a>
+            <a class="action-btn" asp-action="Attendance"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> My Attendance</a>
+            <a class="action-btn" asp-action="Payslips"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> View Payslips</a>
+            <a class="action-btn" asp-action="Profile"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> My Profile</a>
+        </div>
+    </div>
+    <div class="card anim-fade-in-up">
+        <div class="card-title"><i class="fa-solid fa-bullhorn" aria-hidden="true"></i> Recent Announcements</div>
+        <div style="display:flex;flex-direction:column;gap:10px;" id="dashAnnouncements">
+            <div style="padding:10px;text-align:center;color:var(--muted);">Loading announcements...</div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    (async function loadEmployeeDashboard() {
+        try {
+            // 1. Get user context
+            let user = EmsApi.getUser();
+            if (!user || !user.employee_name) {
+                const s = await EmsApi.getSession();
+                if (s.success) user = s.data;
+            }
+            if (user && user.employee_name) {
+                document.getElementById('dashEmpName').textContent = user.employee_name.split(' ')[0];
+            }
+
+            // 2. Fetch Dashboard Metrics
+            const res = await EmsApi.dashboard.getMyMetrics();
+            if (res.success && res.data) {
+                const d = res.data;
+                
+                // Attendance Summary
+                const att = d.attendance_summary || {};
+                const todayStatus = (d.recent_attendance && d.recent_attendance[0]?.date === new Date().toISOString().split('T')[0]) 
+                    ? d.recent_attendance[0].status 
+                    : 'Not Checked In';
+                
+                const statusEl = document.getElementById('dashTodayStatus');
+                statusEl.textContent = todayStatus.charAt(0).toUpperCase() + todayStatus.slice(1);
+                statusEl.style.color = todayStatus.toLowerCase() === 'present' ? 'var(--accent2)' : 'var(--accent4)';
+                document.getElementById('dashTodaySub').textContent = `This month: ${att.presents || 0}P · ${att.lates || 0}L · ${att.absents || 0}A`;
+
+                // Leave Balance
+                const leave = d.leave_balances && d.leave_balances[0] ? d.leave_balances[0] : { remaining: 0 };
+                document.getElementById('dashLeaveBal').textContent = leave.remaining || '0';
+                document.getElementById('dashLeaveSub').textContent = d.leave_balances ? d.leave_balances.map(b => `${b.name.split(' ')[0]}: ${b.remaining}`).join(' · ') : 'No balance found';
+
+                // Penalties
+                const penCount = d.active_penalties ? d.active_penalties.length : 0;
+                document.getElementById('dashPenalties').textContent = penCount;
+                document.getElementById('dashPenaltiesSub').textContent = penCount > 0 ? `${penCount} pending acknowledgment` : 'Clear record! Good job.';
+            }
+
+            // 3. Fetch Salary Info
+            const payRes = await EmsApi.payroll.getMine();
+            if (payRes.success && payRes.data && payRes.data.length > 0) {
+                const latest = payRes.data[0];
+                document.getElementById('dashSalary').textContent = `PKR ${Number(latest.net_salary).toLocaleString()}`;
+                document.getElementById('dashSalarySub').textContent = `Last paid: ${latest.month}/${latest.year}`;
+            } else {
+                document.getElementById('dashSalary').textContent = 'PKR --';
+                document.getElementById('dashSalarySub').textContent = 'No payroll records yet';
+            }
+
+            // 4. Load Announcements
+            const annRes = await EmsApi.announcements.list({ limit: 3 });
+            const container = document.getElementById('dashAnnouncements');
+            if (annRes.success && annRes.data && annRes.data.length > 0) {
+                container.innerHTML = annRes.data.map(a => `
+                    <div style="padding:10px;background:var(--surface2);border-radius:8px; border-left: 3px solid var(--accent);">
+                        <div style="font-size:13px;font-weight:600; display:flex; justify-content:space-between;">
+                            ${a.title}
+                            <span style="font-size:10px; font-weight:400; color:var(--muted);">${new Date(a.created_at).toLocaleDateString()}</span>
+                        </div>
+                        <div style="font-size:11px;color:var(--muted);margin-top:3px; line-height:1.4;">${a.content ? a.content.substring(0, 80) + '...' : ''}</div>
+                    </div>
+                `).join('');
+            } else {
+                container.innerHTML = '<div style="padding:10px;text-align:center;color:var(--muted);">No recent announcements</div>';
+            }
+
+        } catch (e) {
+            console.error('Dashboard load error', e);
+        }
+    })();
+</script>
+}
