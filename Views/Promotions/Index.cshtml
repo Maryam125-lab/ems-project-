@@ -235,7 +235,7 @@
             closeModal('promoModal');
             loadPromotions();
         } else {
-            alert('Backend Error: ' + (res.error || 'Failed to save promotion. Please check terminal logs.'));
+            showToast('Backend Error: ' + (res.error || 'Failed to save promotion. Please check terminal logs.'), 'error');
             // Local fallback for demo
             const empSel = document.getElementById('promoEmployeeId');
             const empName = empSel.options[empSel.selectedIndex]?.textContent || 'Employee';
@@ -265,7 +265,7 @@
             if (p) { p.status = 'approved'; renderPromotions(allPromotions); }
             showToast('Promotion approved', 'success');
         } else {
-            alert('Approve Error: ' + (res.error || 'Failed to approve'));
+            showToast('Approve Error: ' + (res.error || 'Failed to approve'), 'error');
         }
     }
 
@@ -278,7 +278,7 @@
                     if (p) { p.status = 'rejected'; renderPromotions(allPromotions); }
                     showToast('Promotion rejected', 'success');
                 } else {
-                    alert('Reject Error: ' + (res.error || 'Failed to reject'));
+                    showToast('Reject Error: ' + (res.error || 'Failed to reject'), 'error');
                 }
             }
         });

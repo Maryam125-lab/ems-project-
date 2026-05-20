@@ -58,3 +58,4 @@ final-reset.js
 *.cjs
 *.mjs
 
+.vercel

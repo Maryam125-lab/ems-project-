@@ -109,7 +109,7 @@
             const statusLabel = status.charAt(0).toUpperCase() + status.slice(1);
             const colors = ['blue','green','amber','purple','teal','red'];
             const ci = name.charCodeAt(0) % colors.length;
-            const typeClass = (lv.leave_type_name || '').toLowerCase().includes('sick') ? 'tag-red' : (lv.leave_type_name || '').toLowerCase().includes('annual') ? 'tag-blue' : (lv.leave_type_name || '').toLowerCase().includes('emergency') ? 'tag-amber' : 'tag-green';
+            const typeClass = (lv.leave_type_name || lv.leave_type || '').toLowerCase().includes('sick') ? 'tag-red' : (lv.leave_type_name || lv.leave_type || '').toLowerCase().includes('annual') ? 'tag-blue' : (lv.leave_type_name || lv.leave_type || '').toLowerCase().includes('emergency') ? 'tag-amber' : 'tag-green';
             const start = lv.start_date ? new Date(lv.start_date).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '—';
             const end = lv.end_date ? new Date(lv.end_date).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '—';
             const days = lv.total_days || (lv.start_date && lv.end_date ? Math.ceil((new Date(lv.end_date)-new Date(lv.start_date))/(86400000))+1 : '—');
@@ -118,7 +118,7 @@
                 <td><div class="cell-employee"><div class="cell-avatar ${colors[ci]}">${initials}</div><div class="cell-name">${name}</div></div></td>
                 <td><span class="cell-mono">${lv.employee_id || '—'}</span></td>
                 <td>${lv.department_name || '—'}</td>
-                <td><span class="tag ${typeClass}">${lv.leave_type_name || '—'}</span></td>
+                <td><span class="tag ${typeClass}">${lv.leave_type_name || lv.leave_type || '—'}</span></td>
                 <td><div style="white-space:nowrap;font-size:12px;">${start} – ${end}</div><div class="cell-sub">${days} day(s)</div></td>
                 <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
                 <td><span style="font-size:12px;color:var(--muted);max-width:140px;display:inline-block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${lv.reason || '—'}</span></td>

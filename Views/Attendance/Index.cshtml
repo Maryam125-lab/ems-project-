@@ -14,7 +14,7 @@
         <div class="page-date"><i class="fa-regular fa-calendar" aria-hidden="true"></i> @DateTime.Now.ToString("dddd, dd MMMM yyyy")</div>
     </div>
     <div style="display:flex;gap:8px;">
-        <button class="btn btn-ghost" onclick="showToast('Exported to Excel','success')">
+        <button class="btn btn-ghost" onclick="exportAttendanceCSV()">
             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             Export
         </button>
@@ -219,5 +219,38 @@
         
         loadAttendance();
     })();
+
+    function exportAttendanceCSV() {
+        if (!attData || attData.length === 0) {
+            showToast('No attendance data to export', 'warning');
+            return;
+        }
+
+        const date = document.getElementById('attDate').value || new Date().toISOString().split('T')[0];
+        let csv = 'Employee Name,Employee ID,Department,Shift,Status,Check In,Check Out,Verified\r\n';
+
+        attData.forEach(a => {
+            const name = (a.name || a.employee_name || a.employee_id || 'Employee').replace(/,/g, ' ');
+            const empId = a.employee_id || '—';
+            const dept = (a.department_name || a.designation || '—').replace(/,/g, ' ');
+            const shift = ((a.shift && a.shift.name) || a.shift_name || '—').replace(/,/g, ' ');
+            const status = (a.status || 'present').replace('_', ' ');
+            const checkIn = a.check_in || '—';
+            const checkOut = a.check_out || '—';
+            const verified = (a.employee_ack || a.ack) ? 'Yes' : 'No';
+            csv += `${name},${empId},${dept},${shift},${status},${checkIn},${checkOut},${verified}\r\n`;
+        });
+
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `Attendance_${date}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        showToast(`Attendance exported for ${date}`, 'success');
+    }
 </script>
 }

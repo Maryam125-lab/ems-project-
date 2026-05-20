@@ -8,3 +8,22 @@
 *.userosscache
 *.sln.docstates
 
+# .NET publish output
+out/
+publish/
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+project.lock.json
+
+# Rider
+.idea/
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+logs/

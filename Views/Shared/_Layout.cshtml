@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="~/css/tables.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/forms.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <script>window.__EMS_API_BASE = '@(Configuration["ApiBaseUrl"] ?? "http://localhost:3000")';</script>
+    <script>window.__EMS_API_BASE = '@(Configuration["ApiBaseUrl"] ?? "http://localhost:3001")';</script>
     <script src="~/js/api.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Styles", required: false)
 </head>
@@ -329,34 +329,8 @@
             <span style="font-weight:700;font-size:14px;">Notifications</span>
             <button class="notif-mark-all" onclick="markAllRead()">Mark All Read</button>
         </div>
-        <div class="notif-list">
-            <div class="notif-item unread">
-                <div class="notif-icon green">
-                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-                </div>
-                <div>
-                    <div class="notif-text">Your leave request has been <strong>approved</strong></div>
-                    <div class="notif-time">2 minutes ago</div>
-                </div>
-            </div>
-            <div class="notif-item unread">
-                <div class="notif-icon amber">
-                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                </div>
-                <div>
-                    <div class="notif-text">New penalty applied: <strong>Late Arrival</strong></div>
-                    <div class="notif-time">1 hour ago</div>
-                </div>
-            </div>
-            <div class="notif-item">
-                <div class="notif-icon blue">
-                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/></svg>
-                </div>
-                <div>
-                    <div class="notif-text">HR posted a new <strong>announcement</strong></div>
-                    <div class="notif-time">Yesterday</div>
-                </div>
-            </div>
+        <div class="notif-list" id="notifListContainer">
+            <div style="text-align:center;padding:30px;color:var(--muted);font-size:12px;">Loading notifications...</div>
         </div>
     </div>
 
@@ -438,7 +412,7 @@
         // ── Load Notifications from API ──
         (async function loadNotifications() {
             const res = await EmsApi.notifications.list();
-            const notifList = document.querySelector('.notif-list');
+            const notifList = document.getElementById('notifListContainer');
             const notifDot = document.getElementById('notifDot');
             if (res.success && Array.isArray(res.data) && res.data.length > 0) {
                 const unread = res.data.filter(n => !n.is_read);
@@ -455,6 +429,9 @@
                             </div>
                         </div>`).join('');
                 }
+            } else {
+                if (notifList) notifList.innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted);font-size:12px;">No new notifications</div>';
+                if (notifDot) notifDot.style.display = 'none';
             }
         })();
 
