@@ -6,6 +6,10 @@ builder.Services.AddControllersWithViews();
 // Make IConfiguration available to Razor views via @inject
 builder.Services.AddSingleton(builder.Configuration);
 
+// Railway uses PORT env variable
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -15,17 +19,14 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+app.UseStaticFiles();
 app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapStaticAssets();
-
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}")
-    .WithStaticAssets();
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 
-app.Run();
+app.Run(); 
