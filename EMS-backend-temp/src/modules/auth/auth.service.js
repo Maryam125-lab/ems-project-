@@ -37,7 +37,6 @@ export function generateTempPassword() {
 }
 
 export async function login(email, password) {
-  console.log(`[LOGIN DEBUG] Attempt for: "${email}"`);
   const result = await pool.query(
     `
       SELECT u.id, u.email, u.employee_id, u.role_id, u.password, u.must_change_password, e.name as employee_name
@@ -51,27 +50,10 @@ export async function login(email, password) {
 
   const user = result.rows[0];
   if (!user) {
-    console.log(`[LOGIN DEBUG] User "${email}" not found.`);
     throw new AppError(401, 'INVALID_CREDENTIALS', 'Invalid email or password.');
   }
 
-  // EMERGENCY BYPASS for debugging
-  const isDemoEmail = email.includes('superadmin@esspl.com') || email.includes('hr@esspl.com') || email.includes('employee@esspl.com');
-  if (isDemoEmail && (password === 'Admin@1234' || password === 'Hr@12345' || password === 'Emp@12345')) {
-      console.log(`[LOGIN DEBUG] Emergency bypass triggered for ${email}`);
-      return {
-        user_id: user.id,
-        employee_id: user.employee_id,
-        role_id: user.role_id,
-        must_change_password: false,
-        email: user.email,
-        employee_name: user.employee_name || 'Demo User',
-        id: user.id,
-      };
-  }
-
   const validPassword = await bcrypt.compare(password, user.password);
-  console.log(`[LOGIN DEBUG] User found. Password match: ${validPassword}`);
   if (!validPassword) {
     throw new AppError(401, 'INVALID_CREDENTIALS', 'Invalid email or password.');
   }

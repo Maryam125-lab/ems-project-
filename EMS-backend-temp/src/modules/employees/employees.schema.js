@@ -93,10 +93,22 @@ export const createEmployeeSchema = z.object({
   medicalInfo: medicalInfoSchema.optional(),
 });
 
-export const updatePersonalInfoSchema = personalInfoSchema.partial();
+export const updatePersonalInfoSchema = personalInfoSchema.partial().extend({
+  dob: z.string().min(4).max(15).optional().nullable(),
+  marital_status: z.string().max(50).optional().nullable(),
+  gender: z.enum(['male', 'female', 'other']).optional().nullable(),
+  blood_group: z.enum(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', 'unknown']).optional().nullable(),
+  phone: z.string().min(7).max(20).optional().nullable(),
+  address: z.string().max(300).optional().nullable(),
+  email: z.string().email().optional().nullable(),
+  bank_name: z.string().min(2).max(150).optional().nullable(),
+  bank_account_title: z.string().min(2).max(200).optional().nullable(),
+  bank_account_no: z.string().min(10).max(34).optional().nullable(),
+});
 
 export const updateJobInfoSchema = jobInfoSchema.partial().extend({
   manager_emp_id: z.string().max(10).optional().nullable(),
+  location_id: z.string().uuid().optional().nullable(),
 });
 
 export const updateEmergencyContactsSchema = emergencyContactsSchema.partial();

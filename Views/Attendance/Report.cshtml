@@ -1,0 +1,329 @@
+@{
+    ViewData["Title"] = "Attendance Report";
+    ViewData["Active"] = "AttendanceReport";
+}
+
+<!-- PAGE HEADER -->
+<div class="page-header anim-fade-in-up">
+    <div>
+        <h1 class="page-title">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+            </svg>
+            Attendance Report
+        </h1>
+        <div class="page-date">Monthly attendance summary by employee and department</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+        <button class="btn btn-primary" onclick="exportCSV()">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            Export CSV
+        </button>
+        <button class="btn btn-primary" onclick="window.print()">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <polyline points="6 9 6 2 18 2 18 9" />
+                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                <rect x="6" y="14" width="12" height="8" />
+            </svg>
+            Print
+        </button>
+    </div>
+</div>
+
+<!-- FILTERS -->
+<div class="card anim-fade-in-up" style="margin-bottom:20px;">
+    <div class="card-body" style="padding:16px 20px;">
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;align-items:end;">
+            <div>
+                <label class="form-label">Month</label>
+                <select class="form-select" id="filterMonth">
+                    <option value="1">January</option>
+                    <option value="2">February</option>
+                    <option value="3">March</option>
+                    <option value="4">April</option>
+                    <option value="5">May</option>
+                    <option value="6">June</option>
+                    <option value="7">July</option>
+                    <option value="8">August</option>
+                    <option value="9">September</option>
+                    <option value="10">October</option>
+                    <option value="11">November</option>
+                    <option value="12">December</option>
+                </select>
+            </div>
+            <div>
+                <label class="form-label">Year</label>
+                <select class="form-select" id="filterYear">
+                    <option value="2026">2026</option>
+                    <option value="2025">2025</option>
+                    <option value="2024">2024</option>
+                </select>
+            </div>
+            <div>
+                <label class="form-label">Department</label>
+                <select class="form-select" id="filterDept">
+                    <option value="">All Departments</option>
+                </select>
+            </div>
+            <div>
+                <label class="form-label">Status</label>
+                <select class="form-select" id="filterStatus">
+                    <option value="">All</option>
+                    <option value="present">Present</option>
+                    <option value="absent">Absent</option>
+                    <option value="late">Late</option>
+                    <option value="half_day">Half Day</option>
+                    <option value="on_leave">On Leave</option>
+                </select>
+            </div>
+            <div>
+                <button class="btn btn-primary" style="width:100%;" onclick="loadReport()">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <circle cx="11" cy="11" r="8" />
+                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                    </svg>
+                    Generate Report
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- KPI CARDS -->
+<div class="kpi-grid stagger" id="kpiSection"
+     style="display:none;grid-template-columns:repeat(6,1fr);margin-bottom:20px;">
+    <div class="stat-card blue">
+        <div class="kpi-label">Total Records</div>
+        <div class="kpi-num" id="kpiTotal">--</div>
+        <div class="kpi-sub">This period</div>
+    </div>
+    <div class="stat-card green">
+        <div class="kpi-label">Present</div>
+        <div class="kpi-num" id="kpiPresent">--</div>
+        <div class="kpi-sub" id="kpiPresentPct">--</div>
+    </div>
+    <div class="stat-card amber">
+        <div class="kpi-label">Late</div>
+        <div class="kpi-num" id="kpiLate">--</div>
+        <div class="kpi-sub" id="kpiLatePct">--</div>
+    </div>
+    <div class="stat-card red">
+        <div class="kpi-label">Absent</div>
+        <div class="kpi-num" id="kpiAbsent">--</div>
+        <div class="kpi-sub" id="kpiAbsentPct">--</div>
+    </div>
+    <div class="stat-card purple">
+        <div class="kpi-label">Half Day</div>
+        <div class="kpi-num" id="kpiHalf">--</div>
+        <div class="kpi-sub" id="kpiHalfPct">--</div>
+    </div>
+    <div class="stat-card blue">
+        <div class="kpi-label">On Leave</div>
+        <div class="kpi-num" id="kpiLeave">--</div>
+        <div class="kpi-sub" id="kpiLeavePct">--</div>
+    </div>
+</div>
+
+<!-- REPORT TABLE -->
+<div class="card anim-fade-in-up" id="reportSection" style="display:none;">
+    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-weight:600;font-size:14px;">Attendance Details</span>
+        <span style="font-size:12px;color:var(--muted);" id="reportMeta"></span>
+    </div>
+    <div class="table-wrap">
+        <table class="data-table" id="reportTable">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Date</th>
+                    <th>Employee ID</th>
+                    <th>Employee Name</th>
+                    <th>Department</th>
+                    <th>Check In</th>
+                    <th>Check Out</th>
+                    <th style="text-align:center;">Status</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody id="reportBody">
+                <tr>
+                    <td colspan="9" style="text-align:center;padding:40px;color:var(--muted);">
+                        Select filters and click Generate Report
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- EMPTY STATE -->
+<div id="emptyState" style="display:none;text-align:center;padding:60px 20px;">
+    <svg width="48" height="48" fill="none" stroke="var(--muted)" stroke-width="1.5" viewBox="0 0 24 24"
+         style="margin-bottom:12px;">
+        <circle cx="12" cy="12" r="10" />
+        <polyline points="12 6 12 12 16 14" />
+    </svg>
+    <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:6px;">No Records Found</div>
+    <div style="font-size:13px;color:var(--muted);">No attendance records for selected period.</div>
+</div>
+
+@section Scripts {
+    <script>
+        EmsApi.requireAuth();
+        const _role = EmsApi.getRoleName();
+        if (_role === 'employee') { window.location.href = '/MyPortal/Dashboard'; }
+
+        const MONTHS = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+        function statusBadge(s) {
+            const map = {
+                'present': ['rgba(5,150,105,0.1)', '#059669', 'Present'],
+                'absent': ['rgba(220,38,38,0.1)', '#dc2626', 'Absent'],
+                'late': ['rgba(217,119,6,0.1)', '#d97706', 'Late'],
+                'half_day': ['rgba(124,58,237,0.1)', '#7c3aed', 'Half Day'],
+                'on_leave': ['rgba(37,99,235,0.1)', '#2563eb', 'On Leave'],
+            };
+            const [bg, color, label] = map[s] || ['rgba(100,100,100,0.1)', '#666', s];
+            return `<span style="background:${bg};color:${color};padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;">${label}</span>`;
+        }
+
+        function formatTime(t) {
+            if (!t) return '--';
+            return t.substring(0, 5);
+        }
+
+        function formatDate(d) {
+            if (!d) return '--';
+            return new Date(d).toLocaleDateString('en-PK', { day: '2-digit', month: 'short', year: 'numeric' });
+        }
+
+        function pct(val, total) {
+            if (!total) return '0%';
+            return ((val / total) * 100).toFixed(1) + '%';
+        }
+
+        async function loadDepts() {
+            const res = await EmsApi.config.get('departments');
+            const sel = document.getElementById('filterDept');
+            if (res.success && Array.isArray(res.data)) {
+                res.data.forEach(d => {
+                    const opt = document.createElement('option');
+                    opt.value = d.id;
+                    opt.textContent = d.department_name;
+                    sel.appendChild(opt);
+                });
+            }
+        }
+
+        function setDefaults() {
+            const now = new Date();
+            document.getElementById('filterMonth').value = now.getMonth() + 1;
+            document.getElementById('filterYear').value = now.getFullYear();
+        }
+
+        async function loadReport() {
+            const month = document.getElementById('filterMonth').value;
+            const year = document.getElementById('filterYear').value;
+            const dept = document.getElementById('filterDept').value;
+            const status = document.getElementById('filterStatus').value;
+
+            const tbody = document.getElementById('reportBody');
+            tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--muted);">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="animation:spin 1s linear infinite;"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                Loading...
+            </td></tr>`;
+
+            let url = `/api/attendance/report?month=${month}&year=${year}`;
+            if (dept) url += `&department_id=${dept}`;
+            if (status) url += `&status=${status}`;
+
+            const res = await EmsApi.get(url);
+
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('reportSection').style.display = 'none';
+            document.getElementById('kpiSection').style.display = 'none';
+
+            if (!res.success) {
+                tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--accent4);">Error: ${res.error}</td></tr>`;
+                return;
+            }
+
+            const records = Array.isArray(res.data) ? res.data : (res.data?.records || []);
+
+            if (!records.length) {
+                document.getElementById('emptyState').style.display = 'block';
+                return;
+            }
+
+            // KPI counts
+            const total = records.length;
+            const present = records.filter(r => r.status === 'present').length;
+            const late = records.filter(r => r.status === 'late').length;
+            const absent = records.filter(r => r.status === 'absent').length;
+            const half = records.filter(r => r.status === 'half_day').length;
+            const onLeave = records.filter(r => r.status === 'on_leave').length;
+
+            document.getElementById('kpiSection').style.display = 'grid';
+            document.getElementById('kpiTotal').textContent = total;
+            document.getElementById('kpiPresent').textContent = present;
+            document.getElementById('kpiLate').textContent = late;
+            document.getElementById('kpiAbsent').textContent = absent;
+            document.getElementById('kpiHalf').textContent = half;
+            document.getElementById('kpiLeave').textContent = onLeave;
+            document.getElementById('kpiPresentPct').textContent = pct(present, total);
+            document.getElementById('kpiLatePct').textContent = pct(late, total);
+            document.getElementById('kpiAbsentPct').textContent = pct(absent, total);
+            document.getElementById('kpiHalfPct').textContent = pct(half, total);
+            document.getElementById('kpiLeavePct').textContent = pct(onLeave, total);
+
+            // Table
+            document.getElementById('reportSection').style.display = 'block';
+            document.getElementById('reportMeta').textContent = `${MONTHS[month]} ${year} — ${records.length} records`;
+
+            tbody.innerHTML = records.map((r, i) => `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td>${formatDate(r.date)}</td>
+                    <td><span style="font-family:monospace;font-size:12px;">${r.employee_id || '--'}</span></td>
+                    <td style="font-weight:500;">${r.employee_name || '--'}</td>
+                    <td>${r.department_name || '--'}</td>
+                    <td>${formatTime(r.check_in)}</td>
+                    <td>${formatTime(r.check_out)}</td>
+                    <td style="text-align:center;">${statusBadge(r.status)}</td>
+                    <td style="color:var(--muted);font-size:12px;">${r.notes || '--'}</td>
+                </tr>
+            `).join('');
+        }
+
+        function exportCSV() {
+            const rows = document.querySelectorAll('#reportTable tbody tr');
+            if (!rows.length || rows[0].cells.length === 1) {
+                alert('Pehle report generate karein.');
+                return;
+            }
+            const month = document.getElementById('filterMonth').value;
+            const year = document.getElementById('filterYear').value;
+
+            let csv = 'Sr,Date,Employee ID,Employee Name,Department,Check In,Check Out,Status,Notes\n';
+            rows.forEach(row => {
+                const cells = Array.from(row.cells).map(c => `"${c.innerText.trim()}"`);
+                csv += cells.join(',') + '\n';
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `Attendance_Report_${MONTHS[month]}_${year}.csv`;
+            a.click();
+        }
+
+        setDefaults();
+        loadDepts();
+    </script>
+}
+

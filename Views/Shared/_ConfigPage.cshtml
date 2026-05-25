@@ -8,7 +8,8 @@
     </div>
     <button class="btn btn-primary" onclick="openModal('configModal')">
         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
         </svg>
         Add @ViewData["ItemName"]
     </button>
@@ -16,9 +17,10 @@
 
 <div class="table-container anim-fade-in-up">
     <div class="filter-bar">
-        <input class="filter-search" type="text" placeholder="Search @ViewData["Title"]…" id="configSearch" oninput="filterTable('configTable','configSearch')" />
+        <input class="filter-search" type="text" placeholder="Search @ViewData["Title"]…" id="configSearch"
+               oninput="filterTable('configTable','configSearch')" />
         <div style="margin-left:auto;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:4px;">
-            <strong id="configTable-count" style="color:var(--text);">@ViewData["Count"]</strong> records
+            <strong id="configTable-count" style="color:var(--text);">0</strong> records
         </div>
     </div>
     <div class="table-scroll-wrapper">
@@ -28,13 +30,15 @@
                     @Html.Raw(ViewData["TableHeaders"]?.ToString())
                 </tr>
             </thead>
-            <tbody>
-                @Html.Raw(ViewData["TableBody"]?.ToString())
+            <tbody id="configTableBody">
+                <tr>
+                    <td colspan="10" style="text-align:center;padding:40px;color:var(--muted)">Loading...</td>
+                </tr>
             </tbody>
         </table>
     </div>
     <div class="table-pagination">
-        <div class="pagination-info">Showing all <strong>@ViewData["Count"]</strong> records</div>
+        <div class="pagination-info" id="configPagInfo">Showing all <strong>0</strong> records</div>
         <div class="pagination-controls"><button class="page-btn active">1</button></div>
     </div>
 </div>
@@ -42,15 +46,20 @@
 <div class="modal-backdrop" id="configModal">
     <div class="modal-dialog">
         <div class="modal-header">
-            <div class="modal-title">@Html.Raw(ViewData["Icon"]) Add @ViewData["ItemName"]</div>
-            <button class="modal-close" onclick="closeModal('configModal')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+            <div class="modal-title" id="configModalTitle">@Html.Raw(ViewData["Icon"]) Add @ViewData["ItemName"]</div>
+            <button class="modal-close" onclick="closeModal('configModal')">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+            </button>
         </div>
         <div class="modal-body">
             @Html.Raw(ViewData["ModalFields"]?.ToString())
         </div>
         <div class="modal-footer">
             <button class="btn btn-ghost" onclick="closeModal('configModal')">Cancel</button>
-            <button class="btn btn-primary" onclick="closeModal('configModal'); showToast('@ViewData["ItemName"] saved successfully','success')">Save</button>
+            <button class="btn btn-primary" onclick="if(window.saveConfigRecord) saveConfigRecord()">Save</button>
         </div>
     </div>
-</div>
+</div> 

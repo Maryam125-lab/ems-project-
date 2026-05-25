@@ -10,5 +10,12 @@ namespace EMS.Web.Controllers
             ViewData["Active"] = "Attendance";
             return View();
         }
+
+        public IActionResult Report()
+        {
+            ViewData["Title"] = "Attendance Report";
+            ViewData["Active"] = "AttendanceReport";
+            return View();
+        }
     }
-}
+}   

@@ -6,17 +6,31 @@
 
 <div class="page-header anim-fade-in-up">
     <div>
-        <a asp-action="Index" style="font-size:12px;color:var(--accent);text-decoration:none;display:flex;align-items:center;gap:4px;margin-bottom:8px;">
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        <a asp-action="Index"
+           style="font-size:12px;color:var(--accent);text-decoration:none;display:flex;align-items:center;gap:4px;margin-bottom:8px;">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <line x1="19" y1="12" x2="5" y2="12" />
+                <polyline points="12 19 5 12 12 5" />
+            </svg>
             Back to Directory
         </a>
         <h1 class="page-title">Employee Profile</h1>
     </div>
     <div style="display:flex;gap:8px;">
-        <button class="btn btn-ghost" onclick="showToast('Edit mode activated','info')">
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        <button class="btn btn-ghost" id="btnEdit" onclick="toggleEdit()">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+            </svg>
             Edit
         </button>
+        <button class="btn btn-primary" id="btnSave" onclick="saveEmployee()" style="display:none;">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <polyline points="20 6 9 17 4 12" />
+            </svg>
+            Save Changes
+        </button>
+        <button class="btn btn-ghost" id="btnCancel" onclick="cancelEdit()" style="display:none;">Cancel</button>
         <button class="btn btn-outline" onclick="window.print()">Download Profile</button>
     </div>
 </div>
@@ -26,240 +40,505 @@
 </div>
 
 <div id="detailsContent" style="display:none;">
-    <!-- PROFILE HEADER CARD -->
     <div class="card anim-fade-in-up" style="margin-bottom:20px;">
         <div style="display:flex;align-items:center;gap:20px;">
-            <div id="pAvatar" style="width:72px;height:72px;border-radius:16px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;color:#fff;">??</div>
-            <div style="flex:1;">
-                <div id="pName" style="font-size:20px;font-weight:800;">Loading...</div>
-                <div id="pTitle" style="font-size:13px;color:var(--muted);margin-top:2px;">— · —</div>
-                <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
-                    <span class="tag tag-blue" id="pType">—</span>
-                    <span class="status-badge" id="pStatus">—</span>
-                    <span class="tag tag-purple" id="pMode">—</span>
-                    <span class="cell-mono" id="pEmpId" style="font-size:11px;color:var(--muted);">—</span>
-                </div>
-            </div>
-            <div style="text-align:right;">
-                <div style="font-size:12px;color:var(--muted);">Joined</div>
-                <div id="pJoinDate" style="font-size:14px;font-weight:600;">—</div>
-                <div style="font-size:12px;color:var(--muted);margin-top:4px;">Tenure</div>
-                <div id="pTenure" style="font-size:14px;font-weight:600;">—</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- TABS -->
-    <div id="employeeTabGroup" class="anim-fade-in-up">
-        <div class="tab-bar">
-            <button class="tab-btn active" data-tab="overview" onclick="switchTab('employeeTabGroup','overview')">Overview</button>
-            <button class="tab-btn" data-tab="attendance" onclick="switchTab('employeeTabGroup','attendance')">Attendance</button>
-            <button class="tab-btn" data-tab="leave" onclick="switchTab('employeeTabGroup','leave')">Leave</button>
-            <button class="tab-btn" data-tab="salary" onclick="switchTab('employeeTabGroup','salary')">Salary</button>
-        </div>
-
-        <!-- OVERVIEW TAB -->
-        <div class="tab-content active" id="tab-overview">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-                <div class="card">
-                    <div class="card-title">
-                        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color:var(--accent)"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                        Personal Details
-                    </div>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:13px;">
-                        <div><span style="color:var(--muted);font-size:11px;display:block;">Email</span><span id="dEmail">—</span></div>
-                        <div><span style="color:var(--muted);font-size:11px;display:block;">Phone</span><span id="dPhone">—</span></div>
-                        <div><span style="color:var(--muted);font-size:11px;display:block;">CNIC</span><span id="dCnic">—</span></div>
-                        <div><span style="color:var(--muted);font-size:11px;display:block;">Date of Birth</span><span id="dDob">—</span></div>
-                        <div><span style="color:var(--muted);font-size:11px;display:block;">Gender</span><span id="dGender">—</span></div>
-                        <div><span style="color:var(--muted);font-size:11px;display:block;">Blood Group</span><span id="dBlood">—</span></div>
-                        <div><span style="color:var(--muted);font-size:11px;display:block;">Marital Status</span><span id="dMarital">—</span></div>
-                        <div style="grid-column:1/-1;"><span style="color:var(--muted);font-size:11px;display:block;">Address</span><span id="dAddress">—</span></div>
+            <div id="pAvatar"
+                 style="width:72px;height:72px;border-radius:16px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;color:#fff;">
+                ??</div>
+                <div style="flex:1;">
+                    <div id="pName" style="font-size:20px;font-weight:800;">Loading...</div>
+                    <div id="pTitle" style="font-size:13px;color:var(--muted);margin-top:2px;">— · —</div>
+                    <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+                        <span class="tag tag-blue" id="pType">—</span>
+                        <span class="status-badge" id="pStatus">—</span>
+                        <span class="tag tag-purple" id="pMode">—</span>
+                        <span class="cell-mono" id="pEmpId" style="font-size:11px;color:var(--muted);">—</span>
                     </div>
                 </div>
-                <div class="card">
-                    <div class="card-title">
-                        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color:var(--accent)"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
-                        Job Details
-                    </div>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:13px;">
-                        <div><span style="color:var(--muted);font-size:11px;display:block;">Department</span><span id="dDept">—</span></div>
-                        <div><span style="color:var(--muted);font-size:11px;display:block;">Designation</span><span id="dDesg">—</span></div>
-                        <div><span style="color:var(--muted);font-size:11px;display:block;">Branch</span><span id="dLoc">—</span></div>
-                        <div><span style="color:var(--muted);font-size:11px;display:block;">Work Mode</span><span id="dMode">—</span></div>
-                        <div><span style="color:var(--muted);font-size:11px;display:block;">Shift</span><span id="dShift">—</span></div>
-                        <div><span style="color:var(--muted);font-size:11px;display:block;">Reporting To</span><span id="dManager">—</span></div>
-                    </div>
-                </div>
-                <div class="card">
-                    <div class="card-title">
-                        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color:var(--accent)"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-                        Bank Details
-                    </div>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:13px;">
-                        <div><span style="color:var(--muted);font-size:11px;display:block;">Bank</span><span id="dBank">—</span></div>
-                        <div><span style="color:var(--muted);font-size:11px;display:block;">A/C Title</span><span id="dAccTitle">—</span></div>
-                        <div style="grid-column:1/-1;"><span style="color:var(--muted);font-size:11px;display:block;">Account No / IBAN</span><span class="cell-mono" id="dIban">—</span></div>
-                    </div>
+                <div style="text-align:right;">
+                    <div style="font-size:12px;color:var(--muted);">Joined</div>
+                    <div id="pJoinDate" style="font-size:14px;font-weight:600;">—</div>
+                    <div style="font-size:12px;color:var(--muted);margin-top:4px;">Tenure</div>
+                    <div id="pTenure" style="font-size:14px;font-weight:600;">—</div>
                 </div>
             </div>
         </div>
 
-        <!-- ATTENDANCE TAB -->
-        <div class="tab-content" id="tab-attendance">
-            <div id="attLoading" style="text-align:center;padding:40px;color:var(--muted);">Loading attendance logs...</div>
-            <div id="attContent" style="display:none;">
-                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px;">
-                    <div class="stat-card green"><div class="kpi-label">Present</div><div class="kpi-num" style="color:var(--accent2)" id="attPresCount">0</div></div>
-                    <div class="stat-card amber"><div class="kpi-label">Late</div><div class="kpi-num" style="color:var(--accent3)" id="attLateCount">0</div></div>
-                    <div class="stat-card red"><div class="kpi-label">Absent</div><div class="kpi-num" style="color:var(--accent4)" id="attAbsCount">0</div></div>
+        <div id="employeeTabGroup" class="anim-fade-in-up">
+            <div class="tab-bar">
+                <button class="tab-btn active" data-tab="overview"
+                        onclick="switchTab('employeeTabGroup','overview')">Overview</button>
+                <button class="tab-btn" data-tab="attendance"
+                        onclick="switchTab('employeeTabGroup','attendance')">Attendance</button>
+                <button class="tab-btn" data-tab="leave" onclick="switchTab('employeeTabGroup','leave')">Leave</button>
+                <button class="tab-btn" data-tab="salary" onclick="switchTab('employeeTabGroup','salary')">Salary</button>
+            </div>
+
+            <div class="tab-content active" id="tab-overview">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                    <div class="card">
+                        <div class="card-title">
+                            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"
+                                 viewBox="0 0 24 24" style="color:var(--accent)">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                                <circle cx="12" cy="7" r="4" />
+                            </svg>
+                            Personal Details
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:13px;">
+                            <div>
+                                <span style="color:var(--muted);font-size:11px;display:block;">Email</span>
+                                <span id="dEmail" class="view-field">—</span>
+                                <input id="eEmail" class="form-input edit-field" style="display:none;" type="email"
+                                       placeholder="Email address" />
+                            </div>
+                            <div>
+                                <span style="color:var(--muted);font-size:11px;display:block;">Phone</span>
+                                <span id="dPhone" class="view-field">—</span>
+                                <input id="ePhone" class="form-input edit-field" style="display:none;" type="text"
+                                       placeholder="03XXXXXXXXX" maxlength="11" pattern="[0-9]{11}" />
+                            </div>
+                            <div>
+                                <span style="color:var(--muted);font-size:11px;display:block;">CNIC</span>
+                                <span id="dCnic" class="view-field">—</span>
+                                <input id="eCnic" class="form-input edit-field" style="display:none;" type="text"
+                                       placeholder="XXXXX-XXXXXXX-X" maxlength="15" />
+                            </div>
+                            <div>
+                                <span style="color:var(--muted);font-size:11px;display:block;">Date of Birth</span>
+                                <span id="dDob" class="view-field">—</span>
+                                <input id="eDob" class="form-input edit-field" style="display:none;" type="date" />
+                            </div>
+                            <div>
+                                <span style="color:var(--muted);font-size:11px;display:block;">Gender</span>
+                                <span id="dGender" class="view-field">—</span>
+                                <select id="eGender" class="form-select edit-field" style="display:none;">
+                                    <option value="">Select</option>
+                                    <option value="male">Male</option>
+                                    <option value="female">Female</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div>
+                                <span style="color:var(--muted);font-size:11px;display:block;">Blood Group</span>
+                                <span id="dBlood" class="view-field">—</span>
+                                <select id="eBlood" class="form-select edit-field" style="display:none;">
+                                    <option value="">Select</option>
+                                    <option value="A+">A+</option>
+                                    <option value="A-">A-</option>
+                                    <option value="B+">B+</option>
+                                    <option value="B-">B-</option>
+                                    <option value="AB+">AB+</option>
+                                    <option value="AB-">AB-</option>
+                                    <option value="O+">O+</option>
+                                    <option value="O-">O-</option>
+                                </select>
+                            </div>
+                            <div>
+                                <span style="color:var(--muted);font-size:11px;display:block;">Marital Status</span>
+                                <span id="dMarital" class="view-field">—</span>
+                                <select id="eMarital" class="form-select edit-field" style="display:none;">
+                                    <option value="">Select</option>
+                                    <option value="single">Single</option>
+                                    <option value="married">Married</option>
+                                    <option value="divorced">Divorced</option>
+                                    <option value="widowed">Widowed</option>
+                                </select>
+                            </div>
+                            <div style="grid-column:1/-1;">
+                                <span style="color:var(--muted);font-size:11px;display:block;">Address</span>
+                                <span id="dAddress" class="view-field">—</span>
+                                <input id="eAddress" class="form-input edit-field" style="display:none;" type="text"
+                                       placeholder="Full address" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-title">
+                            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"
+                                 viewBox="0 0 24 24" style="color:var(--accent)">
+                                <rect x="2" y="7" width="20" height="14" rx="2" />
+                                <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
+                            </svg>
+                            Job Details
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:13px;">
+                            <div>
+                                <span style="color:var(--muted);font-size:11px;display:block;">Department</span>
+                                <span id="dDept" class="view-field">—</span>
+                                <select id="eDept" class="form-select edit-field" style="display:none;"></select>
+                            </div>
+                            <div>
+                                <span style="color:var(--muted);font-size:11px;display:block;">Designation</span>
+                                <span id="dDesg" class="view-field">—</span>
+                                <select id="eDesg" class="form-select edit-field" style="display:none;"></select>
+                            </div>
+                            <div>
+                                <span style="color:var(--muted);font-size:11px;display:block;">Branch</span>
+                                <span id="dLoc" class="view-field">—</span>
+                                <select id="eLoc" class="form-select edit-field" style="display:none;"></select>
+                            </div>
+                            <div>
+                                <span style="color:var(--muted);font-size:11px;display:block;">Work Mode</span>
+                                <span id="dMode" class="view-field">—</span>
+                                <select id="eMode" class="form-select edit-field" style="display:none;"></select>
+                            </div>
+                            <div>
+                                <span style="color:var(--muted);font-size:11px;display:block;">Shift</span>
+                                <span id="dShift" class="view-field">—</span>
+                                <select id="eShift" class="form-select edit-field" style="display:none;"></select>
+                            </div>
+                            <div>
+                                <span style="color:var(--muted);font-size:11px;display:block;">Reporting To</span>
+                                <span id="dManager" class="view-field">—</span>
+                                <select id="eManager" class="form-select edit-field" style="display:none;"></select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-title">
+                            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"
+                                 viewBox="0 0 24 24" style="color:var(--accent)">
+                                <rect x="1" y="4" width="22" height="16" rx="2" />
+                                <line x1="1" y1="10" x2="23" y2="10" />
+                            </svg>
+                            Bank Details
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:13px;">
+                            <div>
+                                <span style="color:var(--muted);font-size:11px;display:block;">Bank</span>
+                                <span id="dBank" class="view-field">—</span>
+                                <input id="eBank" class="form-input edit-field" style="display:none;" type="text"
+                                       placeholder="Bank name" />
+                            </div>
+                            <div>
+                                <span style="color:var(--muted);font-size:11px;display:block;">A/C Title</span>
+                                <span id="dAccTitle" class="view-field">—</span>
+                                <input id="eAccTitle" class="form-input edit-field" style="display:none;" type="text"
+                                       placeholder="Account title" />
+                            </div>
+                            <div style="grid-column:1/-1;">
+                                <span style="color:var(--muted);font-size:11px;display:block;">Account No / IBAN</span>
+                                <span class="cell-mono view-field" id="dIban">—</span>
+                                <input id="eIban" class="form-input edit-field" style="display:none;" type="text"
+                                       placeholder="PK00XXXX000000000000" maxlength="24" />
+                            </div>
+                        </div>
+                    </div>
                 </div>
+            </div>
+
+            <div class="tab-content" id="tab-attendance">
+                <div id="attLoading" style="text-align:center;padding:40px;color:var(--muted);">Loading attendance logs...
+                </div>
+                <div id="attContent" style="display:none;">
+                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px;">
+                        <div class="stat-card green">
+                            <div class="kpi-label">Present</div>
+                            <div class="kpi-num" style="color:var(--accent2)" id="attPresCount">0</div>
+                        </div>
+                        <div class="stat-card amber">
+                            <div class="kpi-label">Late</div>
+                            <div class="kpi-num" style="color:var(--accent3)" id="attLateCount">0</div>
+                        </div>
+                        <div class="stat-card red">
+                            <div class="kpi-label">Absent</div>
+                            <div class="kpi-num" style="color:var(--accent4)" id="attAbsCount">0</div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">Recent Attendance History</div>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Check-In</th>
+                                    <th>Check-Out</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="attLogBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="tab-leave">
+                <div id="leaveLoading" style="text-align:center;padding:40px;color:var(--muted);">Loading leave balance...
+                </div>
+                <div id="leaveContent" style="display:none;">
+                    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px;"
+                         id="leaveBalanceGrid"></div>
+                    <div class="card">
+                        <div class="card-title">Leave History</div>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Dates</th>
+                                    <th>Days</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="leaveHistoryBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="tab-salary">
                 <div class="card">
-                    <div class="card-title">Recent Attendance History</div>
-                    <table class="data-table">
-                        <thead><tr><th>Date</th><th>Check-In</th><th>Check-Out</th><th>Status</th></tr></thead>
-                        <tbody id="attLogBody"></tbody>
-                    </table>
+                    <div class="card-title">Salary Information</div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;font-size:13px;">
+                        <div><span style="color:var(--muted);font-size:11px;display:block;">Basic Salary</span><strong
+                            class="cell-mono" id="dSalary">PKR 0</strong></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- LEAVE TAB -->
-        <div class="tab-content" id="tab-leave">
-             <div id="leaveLoading" style="text-align:center;padding:40px;color:var(--muted);">Loading leave balance...</div>
-             <div id="leaveContent" style="display:none;">
-                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px;" id="leaveBalanceGrid"></div>
-                <div class="card">
-                    <div class="card-title">Leave History</div>
-                    <table class="data-table">
-                        <thead><tr><th>Type</th><th>Dates</th><th>Days</th><th>Status</th></tr></thead>
-                        <tbody id="leaveHistoryBody"></tbody>
-                    </table>
-                </div>
-             </div>
-        </div>
+        @section Scripts {
+            <script src="~/js/modals.js" asp-append-version="true"></script>
+            <script>
+                const EMP_ID = '@empId';
+                let _empData = {};
 
-        <!-- SALARY TAB -->
-        <div class="tab-content" id="tab-salary">
-            <div class="card">
-                <div class="card-title">Salary Information</div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;font-size:13px;">
-                    <div><span style="color:var(--muted);font-size:11px;display:block;">Basic Salary</span><strong class="cell-mono" id="dSalary">PKR 0</strong></div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+                (async function initDetails() {
+                if (!EMP_ID) {
+                document.getElementById('loadingOverlay').innerHTML = '<div style="color:var(--accent4)">Invalid Employee ID</div>';
+                return;
+                }
+                loadDropdowns();
+                const res = await EmsApi.employees.get(EMP_ID);
+                if (res.success && res.data) {
+                _empData = res.data;
+                renderEmployee(_empData);
+                loadAttendanceTab();
+                loadLeaveTab();
+                } else {
+                document.getElementById('loadingOverlay').innerHTML = '<div style="color:var(--accent4)">' + (res.error || 'Employee not found') + '</div>';
+                }
+                })();
 
-@section Scripts {
-<script src="~/js/modals.js" asp-append-version="true"></script>
-<script>
-    const EMP_ID = '@empId';
+                function renderEmployee(e) {
+                document.getElementById('loadingOverlay').style.display = 'none';
+                document.getElementById('detailsContent').style.display = 'block';
 
-    (async function initDetails() {
-        if (!EMP_ID) {
-            document.getElementById('loadingOverlay').innerHTML = '<div style="color:var(--accent4)">Invalid Employee ID</div>';
-            return;
-        }
+                const name = e.name || '';
+                const initials = name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+                document.getElementById('pAvatar').textContent = initials;
+                document.getElementById('pName').textContent = name;
+                document.getElementById('pTitle').textContent = (e.designation_title || '—') + ' · ' + (e.department_name || '—');
+                document.getElementById('pType').textContent = e.employee_type_name || '—';
+                document.getElementById('pMode').textContent = e.work_mode_name || '—';
+                document.getElementById('pEmpId').textContent = e.employee_id || '';
 
-        const res = await EmsApi.employees.get(EMP_ID);
-        if (res.success && res.data) {
-            const e = res.data;
-            document.getElementById('loadingOverlay').style.display = 'none';
-            document.getElementById('detailsContent').style.display = 'block';
+                const status = (e.job_status_name || e.status || '').toLowerCase();
+                const statusEl = document.getElementById('pStatus');
+                statusEl.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+                statusEl.className = 'status-badge ' + (status.includes('active') ? 'present' : status.includes('probat') ? 'pending' : 'absent');
 
-            // Header
-            const name = e.name || (e.first_name + ' ' + e.last_name);
-            const initials = name.split(' ').map(w => w[0]).join('').substring(0,2).toUpperCase();
-            document.getElementById('pAvatar').textContent = initials;
-            document.getElementById('pName').textContent = name;
-            document.getElementById('pTitle').textContent = (e.designation_title || e.designation_name || '—') + ' · ' + (e.department_name || '—');
-            document.getElementById('pType').textContent = e.employee_type_name || '—';
-            document.getElementById('pMode').textContent = e.work_mode_name || '—';
-            document.getElementById('pEmpId').textContent = e.employee_id || e.id;
-
-            const status = (e.job_status_name || e.status || '').toLowerCase();
-            const statusEl = document.getElementById('pStatus');
-            statusEl.textContent = status.charAt(0).toUpperCase() + status.slice(1);
-            statusEl.className = 'status-badge ' + (status.includes('active') ? 'present' : status.includes('probat') ? 'pending' : 'absent');
-
-            if (e.joining_date) {
+                if (e.joining_date) {
                 const jd = new Date(e.joining_date);
-                document.getElementById('pJoinDate').textContent = jd.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+                document.getElementById('pJoinDate').textContent = jd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
                 const diff = new Date() - jd;
                 const years = Math.floor(diff / (1000 * 60 * 60 * 24 * 365));
                 const months = Math.floor((diff % (1000 * 60 * 60 * 24 * 365)) / (1000 * 60 * 60 * 24 * 30));
                 document.getElementById('pTenure').textContent = (years > 0 ? years + 'y ' : '') + months + 'm';
-            }
+                }
 
-            // Overview Tab
-            document.getElementById('dEmail').textContent = e.email || '—';
-            document.getElementById('dPhone').textContent = e.phone || '—';
-            document.getElementById('dCnic').textContent = e.cnic || '—';
-            document.getElementById('dDob').textContent = e.dob ? new Date(e.dob).toLocaleDateString() : '—';
-            document.getElementById('dGender').textContent = e.gender || '—';
-            document.getElementById('dBlood').textContent = e.blood_group || '—';
-            document.getElementById('dMarital').textContent = e.marital_status || '—';
-            document.getElementById('dAddress').textContent = e.address || '—';
+                document.getElementById('dEmail').textContent = e.email || '—';
+                document.getElementById('dPhone').textContent = e.phone || '—';
+                document.getElementById('dCnic').textContent = e.cnic || '—';
+                document.getElementById('dDob').textContent = e.dob ? new Date(e.dob).toLocaleDateString() : '—';
+                document.getElementById('dGender').textContent = e.gender || '—';
+                document.getElementById('dBlood').textContent = e.blood_group || '—';
+                document.getElementById('dMarital').textContent = e.marital_status || '—';
+                document.getElementById('dAddress').textContent = e.address || '—';
+                document.getElementById('dDept').textContent = e.department_name || '—';
+                document.getElementById('dDesg').textContent = e.designation_title || '—';
+                document.getElementById('dLoc').textContent = e.location_name || '—';
+                document.getElementById('dMode').textContent = e.work_mode_name || '—';
+                document.getElementById('dShift').textContent = e.shift_name || '—';
+                document.getElementById('dManager').textContent = e.manager_name || '—';
+                document.getElementById('dBank').textContent = e.bank_name || '—';
+                document.getElementById('dAccTitle').textContent = e.bank_account_title || '—';
+                document.getElementById('dIban').textContent = e.bank_account_no || '—';
+                document.getElementById('dSalary').textContent = 'PKR ' + (e.basic_salary ? Number(e.basic_salary).toLocaleString() : '0');
+                }
 
-            document.getElementById('dDept').textContent = e.department_name || '—';
-            document.getElementById('dDesg').textContent = e.designation_title || e.designation_name || '—';
-            document.getElementById('dLoc').textContent = e.location_name || '—';
-            document.getElementById('dMode').textContent = e.work_mode_name || '—';
-            document.getElementById('dShift').textContent = e.shift_name || '—';
-            document.getElementById('dManager').textContent = e.manager_name || '—';
+                function toggleEdit() {
+                const e = _empData;
+                document.getElementById('eEmail').value = e.email || '';
+                document.getElementById('ePhone').value = e.phone || '';
+                document.getElementById('eCnic').value = e.cnic || '';
+                document.getElementById('eDob').value = e.dob ? e.dob.substring(0, 10) : '';
+                document.getElementById('eGender').value = e.gender || '';
+                document.getElementById('eBlood').value = e.blood_group || '';
+                document.getElementById('eMarital').value = e.marital_status || '';
+                document.getElementById('eAddress').value = e.address || '';
+                document.getElementById('eBank').value = e.bank_name || '';
+                document.getElementById('eAccTitle').value = e.bank_account_title || '';
+                document.getElementById('eIban').value = e.bank_account_no || '';
 
-            document.getElementById('dBank').textContent = e.bank_name || '—';
-            document.getElementById('dAccTitle').textContent = e.bank_account_title || '—';
-            document.getElementById('dIban').textContent = e.bank_account_no || '—';
-            document.getElementById('dSalary').textContent = 'PKR ' + (e.basic_salary ? e.basic_salary.toLocaleString() : '0');
+                setSelectValue('eDept', e.department_id);
+                setSelectValue('eDesg', e.designation_id);
+                setSelectValue('eLoc', e.work_location_id);
+                setSelectValue('eMode', e.work_mode_id);
+                setSelectValue('eShift', e.shift_id);
 
-            // Load extra data (Attendance, Leave) lazily or here
-            loadAttendanceTab();
-            loadLeaveTab();
-        } else {
-            document.getElementById('loadingOverlay').innerHTML = '<div style="color:var(--accent4)">' + (res.error || 'Employee not found') + '</div>';
-        }
-    })();
+                document.querySelectorAll('.view-field').forEach(el => el.style.display = 'none');
+                document.querySelectorAll('.edit-field').forEach(el => el.style.display = 'block');
+                document.getElementById('btnEdit').style.display = 'none';
+                document.getElementById('btnSave').style.display = 'inline-flex';
+                document.getElementById('btnCancel').style.display = 'inline-flex';
+                }
 
-    async function loadAttendanceTab() {
-        const res = await EmsApi.attendance.getLog(EMP_ID);
-        document.getElementById('attLoading').style.display = 'none';
-        document.getElementById('attContent').style.display = 'block';
-        if (res.success && Array.isArray(res.data)) {
-            const logs = res.data;
-            document.getElementById('attPresCount').textContent = logs.filter(l => l.status === 'present').length;
-            document.getElementById('attLateCount').textContent = logs.filter(l => l.status === 'late').length;
-            document.getElementById('attAbsCount').textContent = logs.filter(l => l.status === 'absent').length;
+                function cancelEdit() {
+                document.querySelectorAll('.view-field').forEach(el => el.style.display = '');
+                document.querySelectorAll('.edit-field').forEach(el => el.style.display = 'none');
+                document.getElementById('btnEdit').style.display = 'inline-flex';
+                document.getElementById('btnSave').style.display = 'none';
+                document.getElementById('btnCancel').style.display = 'none';
+                }
 
-            document.getElementById('attLogBody').innerHTML = logs.slice(0, 15).map(l => {
+                async function saveEmployee() {
+                const btnSave = document.getElementById('btnSave');
+                btnSave.textContent = 'Saving...';
+                btnSave.disabled = true;
+
+                const phone = document.getElementById('ePhone').value.trim();
+                if (phone && !/^[0-9]{11}$/.test(phone)) {
+                showToast('Phone must be 11 digits (e.g. 03001234567)', 'error');
+                btnSave.textContent = 'Save Changes'; btnSave.disabled = false; return;
+                }
+
+                const cnic = document.getElementById('eCnic').value.trim();
+                if (cnic && !/^[0-9]{5}-[0-9]{7}-[0-9]{1}$/.test(cnic)) {
+                showToast('CNIC format: XXXXX-XXXXXXX-X', 'error');
+                btnSave.textContent = 'Save Changes'; btnSave.disabled = false; return;
+                }
+
+                const personalData = {
+                email: document.getElementById('eEmail').value.trim(),
+                phone: phone,
+                cnic: cnic,
+                dob: document.getElementById('eDob').value || null,
+                gender: document.getElementById('eGender').value || null,
+                blood_group: document.getElementById('eBlood').value || null,
+                marital_status: document.getElementById('eMarital').value || null,
+                address: document.getElementById('eAddress').value.trim() || null,
+                bank_name: document.getElementById('eBank').value.trim() || null,
+                bank_account_title: document.getElementById('eAccTitle').value.trim() || null,
+                bank_account_no: document.getElementById('eIban').value.trim() || null,
+                };
+
+                const jobData = {
+                department_id: document.getElementById('eDept').value || null,
+                designation_id: document.getElementById('eDesg').value || null,
+                location_id: document.getElementById('eLoc').value || null,
+                work_mode_id: document.getElementById('eMode').value || null,
+                shift_id: document.getElementById('eShift').value || null,
+                };
+
+                const [r1, r2] = await Promise.all([
+                EmsApi.employees.updatePersonal(EMP_ID, personalData),
+                EmsApi.employees.updateJob(EMP_ID, jobData),
+                ]);
+
+                btnSave.textContent = 'Save Changes';
+                btnSave.disabled = false;
+
+                if (r1.success && r2.success) {
+                showToast('Employee updated successfully!', 'success');
+                const res = await EmsApi.employees.get(EMP_ID);
+                if (res.success) { _empData = res.data; renderEmployee(_empData); }
+                cancelEdit();
+                } else {
+                showToast(r1.error || r2.error || 'Update failed.', 'error');
+                }
+                }
+
+                async function loadDropdowns() {
+                try {
+                const [depts, desgs, locs, modes, shifts] = await Promise.all([
+                EmsApi.config.get('departments'),
+                EmsApi.config.get('designations'),
+                EmsApi.config.get('work-locations'),
+                EmsApi.config.get('work-modes'),
+                EmsApi.config.get('shifts'),
+                ]);
+
+                fillSelect('eDept', depts.data, 'id', 'department_name');
+                fillSelect('eDesg', desgs.data, 'id', 'designation_title');
+                fillSelect('eLoc', locs.data, 'id', 'location_name');
+                fillSelect('eMode', modes.data, 'id', 'mode_name', 'name');
+                fillSelect('eShift', shifts.data, 'id', 'shift_name', 'name');
+
+                // Reporting To — employees list se
+                const emps = await EmsApi.employees.list();
+                fillSelect('eManager', emps.data?.data || emps.data || [], 'employee_id', 'name');
+                } catch (e) {
+                console.log('Dropdown load error:', e);
+                }
+                }
+
+                function fillSelect(id, data, valKey, labelKey, fallbackKey) {
+                const sel = document.getElementById(id);
+                if (!sel || !Array.isArray(data)) return;
+                sel.innerHTML = '<option value="">Select</option>';
+                data.forEach(item => {
+                const opt = document.createElement('option');
+                opt.value = item[valKey] || '';
+                opt.textContent = item[labelKey] || item[fallbackKey] || item.name || item.title || '—';
+                sel.appendChild(opt);
+                });
+                }
+
+                function setSelectValue(id, val) {
+                const sel = document.getElementById(id);
+                if (sel && val) sel.value = val;
+                }
+
+                async function loadAttendanceTab() {
+                const res = await EmsApi.attendance.getLog(EMP_ID);
+                document.getElementById('attLoading').style.display = 'none';
+                document.getElementById('attContent').style.display = 'block';
+                if (res.success && Array.isArray(res.data)) {
+                const logs = res.data;
+                document.getElementById('attPresCount').textContent = logs.filter(l => l.status === 'present').length;
+                document.getElementById('attLateCount').textContent = logs.filter(l => l.status === 'late').length;
+                document.getElementById('attAbsCount').textContent = logs.filter(l => l.status === 'absent').length;
+                document.getElementById('attLogBody').innerHTML = logs.slice(0, 15).map(l => {
                 const sClass = l.status === 'present' ? 'present' : l.status === 'late' ? 'pending' : 'absent';
                 return `<tr>
-                    <td class="cell-mono">${new Date(l.date).toLocaleDateString()}</td>
-                    <td>${l.check_in || '—'}</td>
-                    <td>${l.check_out || '—'}</td>
-                    <td><span class="status-badge ${sClass}">${l.status}</span></td>
+                <td class="cell-mono">${new Date(l.date).toLocaleDateString()}</td>
+                <td>${l.check_in || '—'}</td>
+                <td>${l.check_out || '—'}</td>
+                <td><span class="status-badge ${sClass}">${l.status}</span></td>
                 </tr>`;
-            }).join('');
-        }
-    }
+                }).join('');
+                }
+                }
 
-    async function loadLeaveTab() {
-        const res = await EmsApi.leave.list({ employee_id: EMP_ID });
-        document.getElementById('leaveLoading').style.display = 'none';
-        document.getElementById('leaveContent').style.display = 'block';
-        if (res.success && Array.isArray(res.data)) {
-            const history = res.data;
-            document.getElementById('leaveHistoryBody').innerHTML = history.map(lv => {
+                async function loadLeaveTab() {
+                const res = await EmsApi.leave.list({ employee_id: EMP_ID });
+                document.getElementById('leaveLoading').style.display = 'none';
+                document.getElementById('leaveContent').style.display = 'block';
+                if (res.success && Array.isArray(res.data)) {
+                document.getElementById('leaveHistoryBody').innerHTML = res.data.map(lv => {
                 const sClass = lv.status === 'approved' ? 'approved' : lv.status === 'rejected' ? 'rejected' : 'pending';
                 return `<tr>
-                    <td>${lv.leave_type_name}</td>
-                    <td>${new Date(lv.start_date).toLocaleDateString()} - ${new Date(lv.end_date).toLocaleDateString()}</td>
-                    <td>${lv.total_days}</td>
-                    <td><span class="status-badge ${sClass}">${lv.status}</span></td>
+                <td>${lv.leave_type_name || '—'}</td>
+                <td>${new Date(lv.start_date).toLocaleDateString()} - ${new Date(lv.end_date).toLocaleDateString()}</td>
+                <td>${lv.total_days}</td>
+                <td><span class="status-badge ${sClass}">${lv.status}</span></td>
                 </tr>`;
-            }).join('');
-        }
-    }
-</script>
-}
+                }).join('');
+                } 
+                }
+            </script>
+        }               

@@ -65,7 +65,7 @@
                 </div>
             </div>
 
-                <button type="submit" class="login-btn" id="loginBtn">
+            <button type="submit" class="login-btn" id="loginBtn">
                 <span class="btn-text">Sign In</span>
                 <svg class="btn-spinner" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                     <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
@@ -81,16 +81,16 @@
                 </svg>
                 Demo Accounts
             </div>
-            <div class="demo-row" onclick="fillCredentials('superadmin@esspl.com', 'Admin@1234')">
-                <div class="demo-creds">superadmin&#64;esspl.com <span>/</span> Admin&#64;1234</div>
+            <div class="demo-row" onclick="fillCredentials('superadmin@esspl.com.pk', 'Admin@1234')">
+                <div class="demo-creds">superadmin&#64;esspl.com.pk <span>/</span> Admin&#64;1234</div>
                 <div class="demo-role admin">Super Admin</div>
             </div>
-            <div class="demo-row" onclick="fillCredentials('hr@esspl.com', 'Hr@12345')">
-                <div class="demo-creds">hr&#64;esspl.com <span>/</span> Hr&#64;12345</div>
+            <div class="demo-row" onclick="fillCredentials('hr@esspl.com.pk', 'Hr@12345')">
+                <div class="demo-creds">hr&#64;esspl.com.pk <span>/</span> Hr&#64;12345</div>
                 <div class="demo-role hr">HR Admin</div>
             </div>
-            <div class="demo-row" onclick="fillCredentials('employee@esspl.com', 'Emp@12345')">
-                <div class="demo-creds">employee&#64;esspl.com <span>/</span> Emp&#64;12345</div>
+            <div class="demo-row" onclick="fillCredentials('employee@esspl.com.pk', 'Emp@12345')">
+                <div class="demo-creds">employee&#64;esspl.com.pk <span>/</span> Emp&#64;12345</div>
                 <div class="demo-role employee">Employee</div>
             </div>
         </div>
@@ -125,7 +125,6 @@
     @@keyframes pulse-dot { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
 </style>
 <script>
-    // ── Check backend connectivity on page load ──
     (async function checkBackend() {
         const statusEl = document.getElementById('connectionStatus');
         const textEl = document.getElementById('connectionText');
@@ -149,19 +148,16 @@
         }
     })();
 
-    // ── If already logged in, redirect ──
     if (EmsApi.isLoggedIn()) {
         window.location.href = '/Dashboard';
     }
 
-    // Fill credentials from demo account click
     function fillCredentials(email, pass) {
         document.getElementById('email').value = email;
         document.getElementById('password').value = pass;
         document.getElementById('email').focus();
     }
 
-    // Toggle password visibility
     function togglePassword() {
         const input = document.getElementById('password');
         const icon = document.getElementById('eyeIcon');
@@ -174,7 +170,6 @@
         }
     }
 
-    // Handle login — calls real backend API
     async function handleLogin(e) {
         e.preventDefault();
         const btn = document.getElementById('loginBtn');
@@ -182,34 +177,28 @@
         const email = document.getElementById('email').value.trim();
         const pass = document.getElementById('password').value;
 
-        // Hide previous error
         errorEl.classList.remove('show');
 
-        // Validate
         if (!email || !pass) {
             errorEl.classList.add('show');
             document.getElementById('loginErrorText').textContent = 'Please enter both email and password.';
             return false;
         }
 
-        // Show loading
         btn.classList.add('loading');
 
         try {
             const result = await EmsApi.login(email, pass);
 
             if (result.success) {
-                // Get session to determine role
                 const session = await EmsApi.getSession();
                 if (session.success && session.data) {
-                    // Store role info
                     const userData = EmsApi.getUser() || {};
                     userData.role_name = session.data.role_name || session.data.role_id;
                     userData.is_super_admin = session.data.is_super_admin || false;
                     userData.permissions = session.data.permissions || [];
                     localStorage.setItem('ems_user_data', JSON.stringify(userData));
 
-                    // Redirect based on role
                     const isSuperAdmin = session.data.is_super_admin;
                     const roleName = (session.data.role_name || '').toLowerCase();
                     if (isSuperAdmin || roleName.includes('admin') || roleName.includes('hr')) {
@@ -218,7 +207,6 @@
                         window.location.href = '/MyPortal/Dashboard';
                     }
                 } else {
-                    // Session fetch failed but login succeeded, redirect to dashboard
                     window.location.href = '/Dashboard';
                 }
             } else {

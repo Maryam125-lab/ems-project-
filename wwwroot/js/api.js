@@ -94,7 +94,15 @@ const EmsApi = (function () {
         if (res.success && res.data) {
             const token = res.data.token;
             if (token) setToken(token);
-            if (res.data.user) setUser(res.data.user);
+            if (res.data.user) {
+                // role_name bhi fetch karo session se
+                const sessionRes = await get('/api/auth/session');
+                if (sessionRes.success && sessionRes.data) {
+                    setUser({ ...res.data.user, role_name: sessionRes.data.role_name });
+                } else {
+                    setUser(res.data.user);
+                }
+            }
         }
         return res;
     }
@@ -129,7 +137,7 @@ const EmsApi = (function () {
     const employees = {
         list: (search) => get(`/api/employees${search ? '?search=' + encodeURIComponent(search) : ''}`),
         getById: (id) => get(`/api/employees/${id}`),
-        get: (id) => get(`/api/employees/${id}`), // Alias for Details view
+        get: (id) => get(`/api/employees/${id}`),
         create: (data) => post('/api/employees', data),
         updatePersonal: (id, data) => patch(`/api/employees/${id}/personal`, data),
         updateJob: (id, data) => patch(`/api/employees/${id}/job`, data),
@@ -177,7 +185,7 @@ const EmsApi = (function () {
         }
     };
 
-    // ── Config (Departments, Designations, Shifts, etc.) ──────────
+    // ── Config ────────────────────────────────────────────────────
     const config = {
         get: (entity) => get(`/api/config/${entity}`),
         create: (entity, data) => post(`/api/config/${entity}`, data),
@@ -262,7 +270,7 @@ const EmsApi = (function () {
         create: (data) => post('/api/calendar-events', data)
     };
 
-    // ── Audit Logs ──────────────────────────────────────────────────
+    // ── Audit Logs ─────────────────────────────────────────────────
     const audit = {
         list: () => get('/api/audit-logs')
     };
@@ -272,7 +280,6 @@ const EmsApi = (function () {
         const payload = getTokenPayload();
         if (!payload) return 'guest';
         const user = getUser();
-        // role_id mapping will come from session
         return user?.role_name || payload.role_id || 'employee';
     }
 
@@ -287,7 +294,6 @@ const EmsApi = (function () {
         return payload?.employee_id || getUser()?.employee_id || null;
     }
 
-    // Auth guard — call on pages that require login
     function requireAuth() {
         if (!isLoggedIn()) {
             window.location.href = '/';
@@ -299,16 +305,13 @@ const EmsApi = (function () {
     // ── Public API ─────────────────────────────────────────────────
     return {
         API_BASE,
-        // Auth
         login, logout, getSession, changePassword,
         isLoggedIn, requireAuth,
         getToken, getUser, getTokenPayload,
         getRoleName, getUserInitials, getEmployeeId,
-        // HTTP
         get, post, put, patch, del,
-        // Modules
         dashboard, employees, attendance, leave,
         config, penalties, announcements, promotions, payroll,
         directory, notifications, calendar, audit
     };
-})();
+})();    
