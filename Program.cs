@@ -6,9 +6,12 @@ builder.Services.AddControllersWithViews();
 // Make IConfiguration available to Razor views via @inject
 builder.Services.AddSingleton(builder.Configuration);
 
-// Railway uses PORT env variable
-var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
-builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+// Railway uses PORT env variable — only override URL in production
+var railwayPort = Environment.GetEnvironmentVariable("PORT");
+if (!string.IsNullOrEmpty(railwayPort))
+{
+    builder.WebHost.UseUrls($"http://0.0.0.0:{railwayPort}");
+}
 
 var app = builder.Build();
 

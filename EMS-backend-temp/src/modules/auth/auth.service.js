@@ -36,26 +36,26 @@ export function generateTempPassword() {
   return passwordChars.join('');
 }
 
-export async function login(email, password) {
+export async function login(emailOrEmpId, password) {
   const result = await pool.query(
     `
       SELECT u.id, u.email, u.employee_id, u.role_id, u.password, u.must_change_password, e.name as employee_name
       FROM public.users u
       LEFT JOIN public.employee_info e ON u.employee_id = e.employee_id
-      WHERE u.email = $1
+      WHERE LOWER(u.email) = LOWER($1) OR LOWER(u.employee_id) = LOWER($1)
       LIMIT 1
     `,
-    [email]
+    [emailOrEmpId]
   );
 
   const user = result.rows[0];
   if (!user) {
-    throw new AppError(401, 'INVALID_CREDENTIALS', 'Invalid email or password.');
+    throw new AppError(401, 'INVALID_CREDENTIALS', 'Invalid Employee ID/Email or password.');
   }
 
   const validPassword = await bcrypt.compare(password, user.password);
   if (!validPassword) {
-    throw new AppError(401, 'INVALID_CREDENTIALS', 'Invalid email or password.');
+    throw new AppError(401, 'INVALID_CREDENTIALS', 'Invalid Employee ID/Email or password.');
   }
 
   return {

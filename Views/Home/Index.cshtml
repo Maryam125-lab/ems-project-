@@ -43,10 +43,10 @@
         <!-- Form -->
         <form class="login-form" id="loginForm" onsubmit="return handleLogin(event)">
             <div class="form-group">
-                <label class="form-label" for="email">Email Address</label>
+                <label class="form-label" for="email">Employee ID / Email Address</label>
                 <div class="form-input-wrapper">
-                    <input type="email" class="form-input" id="email" name="email"
-                           placeholder="Enter your email" autocomplete="email" required />
+                    <input type="text" class="form-input" id="email" name="email"
+                           placeholder="Enter your Employee ID or email" autocomplete="username" required />
                 </div>
             </div>
 
@@ -81,16 +81,16 @@
                 </svg>
                 Demo Accounts
             </div>
-            <div class="demo-row" onclick="fillCredentials('superadmin@esspl.com.pk', 'Admin@1234')">
-                <div class="demo-creds">superadmin&#64;esspl.com.pk <span>/</span> Admin&#64;1234</div>
+            <div class="demo-row" onclick="fillCredentials('EMP001', 'Admin@1234')">
+                <div class="demo-creds">EMP001 <span>/</span> Admin&#64;1234</div>
                 <div class="demo-role admin">Super Admin</div>
             </div>
-            <div class="demo-row" onclick="fillCredentials('hr@esspl.com.pk', 'Hr@12345')">
-                <div class="demo-creds">hr&#64;esspl.com.pk <span>/</span> Hr&#64;12345</div>
-                <div class="demo-role hr">HR Admin</div>
+            <div class="demo-row" onclick="fillCredentials('EMP016', 'password123')">
+                <div class="demo-creds">EMP016 <span>/</span> password123</div>
+                <div class="demo-role hr">HR Manager</div>
             </div>
-            <div class="demo-row" onclick="fillCredentials('employee@esspl.com.pk', 'Emp@12345')">
-                <div class="demo-creds">employee&#64;esspl.com.pk <span>/</span> Emp&#64;12345</div>
+            <div class="demo-row" onclick="fillCredentials('EMP002', 'password123')">
+                <div class="demo-creds">EMP002 <span>/</span> password123</div>
                 <div class="demo-role employee">Employee</div>
             </div>
         </div>

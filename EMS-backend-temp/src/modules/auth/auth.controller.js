@@ -8,7 +8,7 @@ import pool from '../../config/db.js';
 const passwordPolicy = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
 
 export const loginSchema = z.object({
-  email: z.string().email(),
+  email: z.string().min(1, 'Email or Employee ID is required.'),
   password: z.string().min(1),
 });
 
