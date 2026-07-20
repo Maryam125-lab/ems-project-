@@ -97,6 +97,23 @@ public sealed class HrOperationsApiController : ControllerBase
         return Ok(ApiResponse<object>.Ok(rows));
     }
 
+    [HttpGet("api/attendance/mine")]
+    public async Task<IActionResult> MyAttendance(CancellationToken cancellationToken)
+    {
+        var current = CurrentUser.FromPrincipal(User);
+        if (current is null) return Unauthorized(ApiResponse<object>.Fail("UNAUTHORIZED", "Authentication required."));
+
+        await using var connection = await _db.OpenConnectionAsync(cancellationToken);
+        var rows = await connection.QueryAsync("""
+            SELECT a.*
+            FROM public.attendance a
+            WHERE a.employee_id = @EmployeeId
+            ORDER BY a.date DESC
+            LIMIT 200
+            """, new { current.EmployeeId });
+        return Ok(ApiResponse<object>.Ok(rows));
+    }
+
     [HttpPost("api/attendance/unlock-request")]
     public IActionResult RequestUnlock([FromBody] JsonElement body) => Ok(ApiResponse<object>.Ok(new { requested = true, date = Text(body, "date"), reason = Text(body, "reason") }));
 

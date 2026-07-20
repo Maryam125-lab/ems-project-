@@ -154,6 +154,7 @@ const EmsApi = (function () {
             return get(`/api/attendance${qs ? '?' + qs : ''}`);
         },
         getLog: (id) => get(`/api/attendance/employee/${id}`),
+        getMine: () => get('/api/attendance/mine'),
         save: (data) => put('/api/attendance/save', data),
         submit: (data) => post('/api/attendance/submit', data),
         acknowledge: (id) => patch(`/api/attendance/${id}/ack`, {}),

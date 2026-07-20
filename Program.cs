@@ -134,6 +134,7 @@ app.Use(async (context, next) =>
                 || path.StartsWithSegments("/api/erp/modules")
                 || path.StartsWithSegments("/api/notifications")
                 || (path.StartsWithSegments("/api/dashboard/me") && HttpMethods.IsGet(method))
+                || (path.StartsWithSegments("/api/attendance/mine") && HttpMethods.IsGet(method))
                 || (path.StartsWithSegments("/api/announcements") && HttpMethods.IsGet(method))
                 || (path.StartsWithSegments("/api/employees") && HttpMethods.IsGet(method))
                 || (path.StartsWithSegments("/api/leave-requests") && (

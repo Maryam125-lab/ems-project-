@@ -5,6 +5,7 @@
         <h1 class="page-title"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> My Attendance Log</h1>
         <div class="page-date">View your check-in and check-out history</div>
     </div>
+    <button class="btn btn-ghost" onclick="downloadMyAttendanceCsv()">Download CSV</button>
 </div>
 
 <div class="table-container anim-fade-in-up">
@@ -28,12 +29,15 @@
 
 @section Scripts {
 <script>
+    let myAttendanceLogs = [];
+
     async function loadAttendance() {
-        const res = await EmsApi.dashboard.getMyMetrics();
+        const res = await EmsApi.attendance.getMine();
         const tbody = document.getElementById('attendanceBody');
         
-        if (res.success && res.data && res.data.recent_attendance) {
-            const logs = res.data.recent_attendance;
+        if (res.success && res.data) {
+            const logs = Array.isArray(res.data) ? res.data : [];
+            myAttendanceLogs = logs;
             if (logs.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:40px; color:var(--muted);">No attendance records found yet.</td></tr>';
                 return;
@@ -66,6 +70,46 @@
         } else {
             tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:40px; color:var(--muted);">Failed to load attendance records.</td></tr>';
         }
+    }
+
+    function csvValue(value) {
+        const text = String(value ?? '').replace(/"/g, '""');
+        return `"${text}"`;
+    }
+
+    function calculateWorkHours(row) {
+        if (!row.check_in || !row.check_out) return '-';
+        const start = new Date(`1970-01-01T${row.check_in}`);
+        const end = new Date(`1970-01-01T${row.check_out}`);
+        const diff = (end - start) / (1000 * 60 * 60);
+        return Number.isFinite(diff) ? `${diff.toFixed(2)} hrs` : '-';
+    }
+
+    function downloadMyAttendanceCsv() {
+        if (!myAttendanceLogs.length) {
+            showToast('No attendance data available to download', 'warning');
+            return;
+        }
+
+        const header = ['Date', 'Status', 'Check In', 'Check Out', 'Work Hours'];
+        const rows = myAttendanceLogs.map(row => [
+            row.date,
+            row.status,
+            row.check_in || '-',
+            row.check_out || '-',
+            calculateWorkHours(row)
+        ].map(csvValue).join(','));
+
+        const csv = [header.map(csvValue).join(','), ...rows].join('\r\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `My_Attendance_${new Date().toISOString().slice(0, 10)}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(link.href);
+        showToast('Attendance file downloaded', 'success');
     }
 
     loadAttendance();

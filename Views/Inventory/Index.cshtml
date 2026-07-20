@@ -255,7 +255,10 @@
                     <span>Incoming and outgoing invoices</span>
                     <h2>All Invoices Ledger</h2>
                 </div>
-                <span class="inv-pill live">Purchase + Sales</span>
+                <div class="inv-head-actions">
+                    <span class="inv-pill live">Purchase + Sales</span>
+                    <button type="button" class="inv-action-btn ghost-action" onclick="downloadInvoiceLedgerCsv()">Export Ledger</button>
+                </div>
             </div>
             <div class="inv-table-wrap">
                 <table class="inv-table">
@@ -1600,6 +1603,43 @@
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
         link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(link.href);
+    }
+
+    function csvValue(value) {
+        const text = String(value ?? '').replace(/"/g, '""');
+        return `"${text}"`;
+    }
+
+    function downloadInvoiceLedgerCsv() {
+        const rows = invState.invoiceLedgerRows || [];
+        if (!rows.length) {
+            alert('No invoice ledger data available to export.');
+            return;
+        }
+
+        const header = ['Direction', 'Invoice No', 'Reference No', 'Party', 'Type', 'Workflow Status', 'Approval Status', 'Payment Status', 'Amount', 'Created At'];
+        const csvRows = rows.map(row => [
+            row.invoice_direction,
+            row.invoice_no,
+            row.reference_no,
+            row.party_name,
+            row.invoice_type,
+            row.workflow_status,
+            row.approval_status,
+            row.payment_status,
+            row.total_amount,
+            formatDate(row.created_at)
+        ].map(csvValue).join(','));
+
+        const csv = [header.map(csvValue).join(','), ...csvRows].join('\r\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `TRACK360_Invoice_Ledger_${new Date().toISOString().slice(0, 10)}.csv`;
         document.body.appendChild(link);
         link.click();
         link.remove();
