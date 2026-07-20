@@ -1,13 +1,13 @@
 /**
  * EMS API Service Layer
- * Centralized client for communicating with the Node.js/Express backend.
+ * Centralized client for communicating with the ASP.NET Core backend.
  * All API calls go through this module.
  */
 const EmsApi = (function () {
     'use strict';
 
     // ── Configuration ──────────────────────────────────────────────
-    const API_BASE = window.__EMS_API_BASE || 'http://localhost:3001';
+    const API_BASE = window.__EMS_API_BASE ?? '';
     const TOKEN_KEY = 'ems_jwt_token';
     const USER_KEY = 'ems_user_data';
 
@@ -59,7 +59,7 @@ const EmsApi = (function () {
             const data = await res.json().catch(() => ({}));
 
             if (!res.ok) {
-                let errorMsg = data.error || data.message || `Request failed (${res.status})`;
+                let errorMsg = data.error?.message || data.message || data.error || `Request failed (${res.status})`;
                 if (typeof errorMsg === 'object') errorMsg = JSON.stringify(errorMsg);
                 return {
                     success: false,
@@ -141,6 +141,8 @@ const EmsApi = (function () {
         create: (data) => post('/api/employees', data),
         updatePersonal: (id, data) => patch(`/api/employees/${id}/personal`, data),
         updateJob: (id, data) => patch(`/api/employees/${id}/job`, data),
+        reportingManagers: () => get('/api/employees/reporting-managers'),
+        updateManager: (id, managerEmpId) => patch(`/api/employees/${id}/manager`, { manager_emp_id: managerEmpId }),
         updateExtra: (id, data) => patch(`/api/employees/${id}/extra`, data),
         resendCredentials: (id) => post(`/api/employees/${id}/resend-credentials`)
     };
@@ -275,12 +277,85 @@ const EmsApi = (function () {
         list: () => get('/api/audit-logs')
     };
 
+    const accounts = {
+        list: () => get('/api/accounts'),
+        roles: () => get('/api/accounts/roles'),
+        create: (data) => post('/api/accounts', data),
+        update: (id, data) => patch(`/api/accounts/${id}`, data),
+        forcePasswordChange: (id) => patch(`/api/accounts/${id}`, { must_change_password: true })
+    };
+
+    const erp = {
+        modules: () => get('/api/erp/modules')
+    };
+
+    const inventory = {
+        status: () => get('/api/inventory/status'),
+        summary: () => get('/api/inventory/summary'),
+        categories: () => get('/api/inventory/categories'),
+        products: (params = {}) => get(`/api/inventory/products${new URLSearchParams(params).toString() ? '?' + new URLSearchParams(params).toString() : ''}`),
+        serials: (params = {}) => get(`/api/inventory/serials${new URLSearchParams(params).toString() ? '?' + new URLSearchParams(params).toString() : ''}`),
+        customers: (params = {}) => get(`/api/inventory/customers${new URLSearchParams(params).toString() ? '?' + new URLSearchParams(params).toString() : ''}`),
+        vendors: (params = {}) => get(`/api/inventory/vendors${new URLSearchParams(params).toString() ? '?' + new URLSearchParams(params).toString() : ''}`),
+        purchaseFlow: () => get('/api/inventory/purchase-flow'),
+        purchaseOrders: () => get('/api/inventory/purchase-orders'),
+        salesFlow: () => get('/api/inventory/sales-flow'),
+        invoiceLedger: () => get('/api/inventory/invoice-ledger'),
+        createPurchaseRequest: (data) => post('/api/inventory/purchase-requests', data),
+        approvePurchaseRequest: (id, data = {}) => patch(`/api/inventory/purchase-requests/${id}/approve`, data),
+        rejectPurchaseRequest: (id, data = {}) => patch(`/api/inventory/purchase-requests/${id}/reject`, data),
+        createPurchaseOrder: (data) => post('/api/inventory/purchase-orders', data),
+        createGrn: (data) => post('/api/inventory/grns', data),
+        createQuotation: (data) => post('/api/inventory/quotations', data),
+        approveQuotation: (id, data = {}) => patch(`/api/inventory/quotations/${id}/approve`, data),
+        rejectQuotation: (id, data = {}) => patch(`/api/inventory/quotations/${id}/reject`, data),
+        createDeliveryOrder: (data) => post('/api/inventory/delivery-orders', data),
+        approveDeliveryOrder: (id, data = {}) => patch(`/api/inventory/delivery-orders/${id}/approve`, data),
+        rejectDeliveryOrder: (id, data = {}) => patch(`/api/inventory/delivery-orders/${id}/reject`, data),
+        createInvoice: (data) => post('/api/inventory/invoices', data),
+        approveInvoice: (id, data = {}) => patch(`/api/inventory/invoices/${id}/approve`, data),
+        rejectInvoice: (id, data = {}) => patch(`/api/inventory/invoices/${id}/reject`, data),
+        markInvoicePaid: (id, data = {}) => patch(`/api/inventory/invoices/${id}/mark-paid`, data),
+        installationFlow: () => get('/api/inventory/installation-flow'),
+        createInstallation: (data) => post('/api/inventory/installations', data),
+        assignInstallationTracker: (id, data = {}) => patch(`/api/inventory/installations/${id}/assign-tracker`, data),
+        completeInstallation: (id, data = {}) => patch(`/api/inventory/installations/${id}/complete`, data),
+        cancelInstallation: (id, data = {}) => patch(`/api/inventory/installations/${id}/cancel`, data),
+        supportFlow: () => get('/api/inventory/support-flow'),
+        createComplaint: (data) => post('/api/inventory/complaints', data),
+        resolveComplaint: (id, data = {}) => patch(`/api/inventory/complaints/${id}/resolve`, data),
+        createReplacement: (data) => post('/api/inventory/replacements', data),
+        createCategory: (data) => post('/api/inventory/categories', data),
+        updateCategory: (id, data) => patch(`/api/inventory/categories/${id}`, data),
+        deleteCategory: (id) => del(`/api/inventory/categories/${id}`),
+        createProduct: (data) => post('/api/inventory/products', data),
+        updateProduct: (id, data) => patch(`/api/inventory/products/${id}`, data),
+        deleteProduct: (id) => del(`/api/inventory/products/${id}`),
+        createSerial: (data) => post('/api/inventory/serials', data),
+        updateSerial: (id, data) => patch(`/api/inventory/serials/${id}`, data),
+        deleteSerial: (id) => del(`/api/inventory/serials/${id}`),
+        createCustomer: (data) => post('/api/inventory/customers', data),
+        updateCustomer: (id, data) => patch(`/api/inventory/customers/${id}`, data),
+        deleteCustomer: (id) => del(`/api/inventory/customers/${id}`),
+        createVendor: (data) => post('/api/inventory/vendors', data),
+        updateVendor: (id, data) => patch(`/api/inventory/vendors/${id}`, data),
+        deleteVendor: (id) => del(`/api/inventory/vendors/${id}`)
+    };
+
+    const projects = {
+        status: () => get('/api/projects/status'),
+        list: () => get('/api/projects'),
+        create: (data) => post('/api/projects', data),
+        tasks: (id) => get(`/api/projects/${id}/tasks`),
+        createTask: (id, data) => post(`/api/projects/${id}/tasks`, data)
+    };
+
     // ── UI Helpers ─────────────────────────────────────────────────
     function getRoleName() {
         const payload = getTokenPayload();
         if (!payload) return 'guest';
         const user = getUser();
-        return user?.role_name || payload.role_id || 'employee';
+        return user?.role_name || payload.role_name || payload.role_id || 'employee';
     }
 
     function getUserInitials() {
@@ -312,6 +387,7 @@ const EmsApi = (function () {
         get, post, put, patch, del,
         dashboard, employees, attendance, leave,
         config, penalties, announcements, promotions, payroll,
-        directory, notifications, calendar, audit
+        directory, notifications, calendar, audit, accounts, erp,
+        inventory, projects
     };
 })();    

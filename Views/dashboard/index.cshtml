@@ -3,178 +3,706 @@
     ViewData["Active"] = "Dashboard";
 }
 
-<!-- PAGE HEADER -->
-<div class="page-header" id="dashHeader">
-    <div>
-        <div class="page-title" id="greetingText">
-            Good afternoon, Admin <i class="fa-solid fa-fire" aria-hidden="true"></i>
-            <span class="live-dot">LIVE</span>
+<section class="dash-shell">
+    <div class="dash-hero" id="dashHeader">
+        <div class="dash-hero-copy">
+            <div class="dash-eyebrow">
+                <span class="dash-pulse"></span>
+                HR Command Center
+            </div>
+            <h1 class="page-title dash-title" id="greetingText">
+                Welcome Admin
+            </h1>
+            <div class="page-date dash-date">
+                <i class="fa-regular fa-calendar" aria-hidden="true"></i>
+                @DateTime.Now.ToString("dddd, dd MMMM yyyy") - TRACK360 ERP overview
+            </div>
         </div>
-        <div class="page-date"><i class="fa-regular fa-calendar" aria-hidden="true"></i> @DateTime.Now.ToString("dddd, dd MMMM yyyy") · EMS Dashboard</div>
-    </div>
-    <a href="/Employees/Create" class="btn-primary">
-        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-            <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-        </svg>
-        Add Employee
-    </a>
-</div>
-
-<!-- KPI CARDS -->
-<div class="kpi-grid" id="kpiGrid">
-    <div class="kpi-card blue" id="kpiTotal">
-        <div class="kpi-label">
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-            Total Payroll
-            <span class="kpi-badge up" id="kpiBadgeTotal">↑ --</span>
-        </div>
-        <div class="kpi-num" id="kpiTotalNum"><span class="shimmer-text">---</span></div>
-        <div class="kpi-sub" id="kpiTotalSub">Loading...</div>
-    </div>
-    <div class="kpi-card green" id="kpiPresent">
-        <div class="kpi-label">
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-            Present Today
-            <span class="kpi-badge up" id="kpiBadgePresent">↑ --</span>
-        </div>
-        <div class="kpi-num" style="color:var(--accent2)" id="kpiPresentNum"><span class="shimmer-text">---</span></div>
-        <div class="kpi-sub" id="kpiPresentSub">Loading...</div>
-    </div>
-    <div class="kpi-card amber" id="kpiLeave">
-        <div class="kpi-label">
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            On Leave Today
-            <span class="kpi-badge down" id="kpiBadgeLeave">–</span>
-        </div>
-        <div class="kpi-num" style="color:var(--accent3)" id="kpiLeaveNum"><span class="shimmer-text">---</span></div>
-        <div class="kpi-sub" id="kpiLeaveSub">Loading...</div>
-    </div>
-</div>
-
-<!-- PENDING ACTIONS + PERFORMANCE -->
-<div class="two-col">
-    <div class="card" id="pendingCard">
-        <div class="card-title">
-            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color:var(--accent)"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            Pending Actions
-        </div>
-        <div class="action-grid" id="pendingActions">
-            <a href="/Leave" class="action-btn">
-                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
-                Approve Leaves
-                <span class="badge-red" id="pendingLeaveCount">-</span>
-            </a>
-            <a href="/Attendance" class="action-btn">
-                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <div class="dash-hero-actions">
+            <a href="/Attendance" class="dash-btn dash-btn-ghost">
+                <i class="fa-regular fa-clock" aria-hidden="true"></i>
                 Mark Attendance
             </a>
-            <a href="/Employees/Create" class="action-btn">
-                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <a href="/Employees/Create" class="btn-primary dash-btn">
+                <i class="fa-solid fa-plus" aria-hidden="true"></i>
                 Add Employee
             </a>
-            <a href="/Penalties" class="action-btn">
-                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
-                Review Penalties
-                <span class="badge-red" id="pendingPenaltyCount" style="display:none;">-</span>
-            </a>
+        </div>
+        <div class="dash-hero-panel">
+            <span class="dash-panel-label">System readiness</span>
+            <strong>HR Active</strong>
+            <small>Inventory and Projects are staged for ERP expansion.</small>
         </div>
     </div>
-    <div class="card">
-        <div class="card-title">
-            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color:var(--accent)"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-            Performance Metrics
-        </div>
-        <div class="metrics-grid" id="metricsGrid">
-            <div class="metric"><div class="metric-num blue" id="metricAttendance">--%</div><div class="metric-label">Attendance</div></div>
-            <div class="metric"><div class="metric-num green" id="metricLeaveUsed">--%</div><div class="metric-label">Leave Used</div></div>
-            <div class="metric"><div class="metric-num amber" id="metricOnTime">--%</div><div class="metric-label">On-time</div></div>
-        </div>
-    </div>
-</div>
 
-<!-- DONUT CHARTS -->
-<div class="three-col" style="margin-top:16px;">
-    <div class="card">
-        <div class="card-title">
-            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color:var(--accent)"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-            Employees by Department
+    <div class="dash-module-strip" aria-label="ERP module status">
+        <a href="/Dashboard" class="dash-module active">
+            <span class="dash-module-icon blue"><i class="fa-solid fa-users" aria-hidden="true"></i></span>
+            <span>
+                <strong>Human Resource</strong>
+                <small>Live workspace</small>
+            </span>
+        </a>
+        <a href="/Inventory" class="dash-module">
+            <span class="dash-module-icon green"><i class="fa-solid fa-cubes-stacked" aria-hidden="true"></i></span>
+            <span>
+                <strong>Inventory</strong>
+                <small>Live inventory control</small>
+            </span>
+        </a>
+        <a href="/Projects" class="dash-module">
+            <span class="dash-module-icon amber"><i class="fa-solid fa-diagram-project" aria-hidden="true"></i></span>
+            <span>
+                <strong>Projects</strong>
+                <small>Coming soon</small>
+            </span>
+        </a>
+    </div>
+
+    <div class="kpi-grid dash-kpis" id="kpiGrid">
+        <div class="kpi-card dash-kpi blue" id="kpiTotal">
+            <div class="dash-kpi-top">
+                <span class="dash-kpi-icon"><i class="fa-solid fa-wallet" aria-hidden="true"></i></span>
+                <span class="kpi-badge up" id="kpiBadgeTotal">Updated</span>
+            </div>
+            <div class="kpi-label">Total Payroll</div>
+            <div class="kpi-num" id="kpiTotalNum"><span class="shimmer-text">---</span></div>
+            <div class="kpi-sub" id="kpiTotalSub">Loading payroll...</div>
+            <div class="dash-progress"><span style="width:72%"></span></div>
         </div>
-        <div style="display:flex;align-items:center;gap:20px;" id="deptChartArea">
-            <svg width="110" height="110" viewBox="0 0 100 100" id="deptDonut">
-                <circle cx="50" cy="50" r="38" fill="none" stroke="#1e2436" stroke-width="18"/>
-                <text x="50" y="46" text-anchor="middle" font-family="DM Mono" font-size="14" font-weight="800" fill="#e2e8f0" id="deptDonutTotal">--</text>
-                <text x="50" y="58" text-anchor="middle" font-family="DM Sans" font-size="7" fill="#64748b">HEADCOUNT</text>
-            </svg>
-            <div style="display:flex;flex-direction:column;gap:7px;flex:1;" id="deptLegend">
-                <div style="font-size:12px;color:var(--muted);">Loading...</div>
+
+        <div class="kpi-card dash-kpi green" id="kpiPresent">
+            <div class="dash-kpi-top">
+                <span class="dash-kpi-icon"><i class="fa-solid fa-user-check" aria-hidden="true"></i></span>
+                <span class="kpi-badge up" id="kpiBadgePresent">Live</span>
+            </div>
+            <div class="kpi-label">Present Today</div>
+            <div class="kpi-num" id="kpiPresentNum"><span class="shimmer-text">---</span></div>
+            <div class="kpi-sub" id="kpiPresentSub">Loading attendance...</div>
+            <div class="dash-progress green"><span style="width:82%"></span></div>
+        </div>
+
+        <div class="kpi-card dash-kpi amber" id="kpiLeave">
+            <div class="dash-kpi-top">
+                <span class="dash-kpi-icon"><i class="fa-solid fa-calendar-minus" aria-hidden="true"></i></span>
+                <span class="kpi-badge down" id="kpiBadgeLeave">Review</span>
+            </div>
+            <div class="kpi-label">On Leave Today</div>
+            <div class="kpi-num" id="kpiLeaveNum"><span class="shimmer-text">---</span></div>
+            <div class="kpi-sub" id="kpiLeaveSub">Loading leave status...</div>
+            <div class="dash-progress amber"><span style="width:34%"></span></div>
+        </div>
+    </div>
+
+    <div class="dash-grid-main">
+        <div class="card dash-card dash-actions" id="pendingCard">
+            <div class="dash-card-head">
+                <div>
+                    <span class="dash-card-kicker">Priority queue</span>
+                    <h2>Pending Actions</h2>
+                </div>
+                <span class="dash-chip">Admin tasks</span>
+            </div>
+            <div class="action-grid dash-action-grid" id="pendingActions">
+                <a href="/Leave" class="action-btn dash-action-btn">
+                    <span class="dash-action-icon"><i class="fa-regular fa-calendar-check" aria-hidden="true"></i></span>
+                    <span>Approve Leaves</span>
+                    <span class="badge-red" id="pendingLeaveCount">-</span>
+                </a>
+                <a href="/Attendance" class="action-btn dash-action-btn">
+                    <span class="dash-action-icon"><i class="fa-solid fa-fingerprint" aria-hidden="true"></i></span>
+                    <span>Mark Attendance</span>
+                </a>
+                <a href="/Employees/Create" class="action-btn dash-action-btn">
+                    <span class="dash-action-icon"><i class="fa-solid fa-user-plus" aria-hidden="true"></i></span>
+                    <span>Add Employee</span>
+                </a>
+                <a href="/Penalties" class="action-btn dash-action-btn">
+                    <span class="dash-action-icon danger"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i></span>
+                    <span>Review Penalties</span>
+                    <span class="badge-red" id="pendingPenaltyCount" style="display:none;">-</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="card dash-card dash-scorecard">
+            <div class="dash-card-head">
+                <div>
+                    <span class="dash-card-kicker">People health</span>
+                    <h2>Performance Metrics</h2>
+                </div>
+            </div>
+            <div class="metrics-grid dash-metrics" id="metricsGrid">
+                <div class="metric dash-metric">
+                    <div class="metric-num blue" id="metricAttendance">--%</div>
+                    <div class="metric-label">Attendance</div>
+                </div>
+                <div class="metric dash-metric">
+                    <div class="metric-num green" id="metricLeaveUsed">--%</div>
+                    <div class="metric-label">Leave Used</div>
+                </div>
+                <div class="metric dash-metric">
+                    <div class="metric-num amber" id="metricOnTime">--%</div>
+                    <div class="metric-label">On-time</div>
+                </div>
             </div>
         </div>
     </div>
-    <div class="card">
-        <div class="card-title">
-            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color:var(--accent2)"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-            Workforce Composition
-        </div>
-        <div id="genderChart" style="padding:10px 0;">
-            <div style="font-size:12px;color:var(--muted);text-align:center;">Loading distribution...</div>
-        </div>
-    </div>
-    <div class="card">
-        <div class="card-title">
-            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color:var(--accent3)"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-            Recent Activity
-        </div>
-        <div id="recentActivity" style="display:flex;flex-direction:column;gap:4px;">
-            <div style="font-size:12px;color:var(--muted);text-align:center;padding:16px 0;">Loading activity...</div>
-        </div>
-    </div>
-</div>
 
-<!-- BAR + LINE CHARTS -->
-<div class="two-col" style="margin-top:16px;">
-    <div class="card">
-        <div class="card-title">
-            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color:var(--accent)"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
-            Monthly Attendance
-        </div>
-        <div style="display:flex;align-items:flex-end;gap:8px;height:100px;" id="monthlyBars">
-            <div style="font-size:12px;color:var(--muted);width:100%;text-align:center;padding-top:30px;">Loading...</div>
-        </div>
-        <div style="display:flex;gap:12px;margin-top:8px;">
-            <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted);"><div style="width:8px;height:8px;background:var(--accent);border-radius:2px;"></div>Present</div>
-            <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted);"><div style="width:8px;height:8px;background:var(--accent4);border-radius:2px;"></div>Late/Absent</div>
-        </div>
-    </div>
-    <div class="card">
-        <div class="card-title" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-            <div style="display:flex; align-items:center; gap:6px;">
-                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" style="color:var(--accent)"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-                Notice Board & Announcements
+    <div class="dash-insight-grid">
+        <div class="card dash-card">
+            <div class="dash-card-head">
+                <div>
+                    <span class="dash-card-kicker">Headcount</span>
+                    <h2>Employees by Department</h2>
+                </div>
             </div>
-            <a href="/Announcements" style="font-size:11px; color:var(--accent); text-decoration:none; display:flex; align-items:center; gap:4px; font-weight:600;">Manage &rarr;</a>
+            <div class="dash-donut-wrap" id="deptChartArea">
+                <svg width="132" height="132" viewBox="0 0 100 100" id="deptDonut">
+                    <circle cx="50" cy="50" r="38" fill="none" stroke="#e9eef6" stroke-width="18" />
+                    <text x="50" y="46" text-anchor="middle" font-family="DM Mono" font-size="14" font-weight="800" fill="#0f172a" id="deptDonutTotal">--</text>
+                    <text x="50" y="59" text-anchor="middle" font-family="DM Sans" font-size="7" fill="#64748b">HEADCOUNT</text>
+                </svg>
+                <div class="dash-legend" id="deptLegend">
+                    <div class="dash-empty">Loading departments...</div>
+                </div>
+            </div>
         </div>
-        <div id="adminAnnouncements" style="display:flex;flex-direction:column;gap:8px;">
-            <div style="font-size:12px;color:var(--muted);padding:16px 0;text-align:center;">Loading announcements Notice Board...</div>
+
+        <div class="card dash-card">
+            <div class="dash-card-head">
+                <div>
+                    <span class="dash-card-kicker">Workforce</span>
+                    <h2>Composition</h2>
+                </div>
+            </div>
+            <div id="genderChart" class="dash-workforce">
+                <div class="dash-empty">Loading distribution...</div>
+            </div>
+        </div>
+
+        <div class="card dash-card">
+            <div class="dash-card-head">
+                <div>
+                    <span class="dash-card-kicker">Timeline</span>
+                    <h2>Recent Activity</h2>
+                </div>
+            </div>
+            <div id="recentActivity" class="dash-activity">
+                <div class="dash-empty">Loading activity...</div>
+            </div>
         </div>
     </div>
-</div>
+
+    <div class="dash-bottom-grid">
+        <div class="card dash-card">
+            <div class="dash-card-head">
+                <div>
+                    <span class="dash-card-kicker">Attendance rhythm</span>
+                    <h2>Monthly Attendance</h2>
+                </div>
+                <div class="dash-legend-mini">
+                    <span><i class="present"></i>Present</span>
+                    <span><i class="late"></i>Late/Absent</span>
+                </div>
+            </div>
+            <div class="dash-bars" id="monthlyBars">
+                <div class="dash-empty">Loading attendance...</div>
+            </div>
+        </div>
+
+        <div class="card dash-card">
+            <div class="dash-card-head">
+                <div>
+                    <span class="dash-card-kicker">Growth signal</span>
+                    <h2>Headcount Trend</h2>
+                </div>
+            </div>
+            <div class="dash-growth" id="growthChart">
+                <div class="dash-empty">Loading trend...</div>
+            </div>
+            <div class="dash-growth-labels" id="growthLabels"></div>
+        </div>
+
+        <div class="card dash-card dash-notice-card">
+            <div class="dash-card-head">
+                <div>
+                    <span class="dash-card-kicker">Notice board</span>
+                    <h2>Announcements</h2>
+                </div>
+                <a href="/Announcements" class="dash-link">Manage <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+            </div>
+            <div id="adminAnnouncements" class="dash-notices">
+                <div class="dash-empty">Loading announcements...</div>
+            </div>
+        </div>
+    </div>
+</section>
 
 @section Styles {
 <style>
-    .shimmer-text { background: linear-gradient(90deg,#1e2436 25%,#2a3050 50%,#1e2436 75%); background-size:200% 100%; animation: shimmer 1.5s infinite; -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-    @@keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
-    .alert-item { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:8px; font-size:12px; border:1px solid rgba(255,255,255,0.04); transition:all 0.2s; }
-    .alert-item:hover { background:rgba(255,255,255,0.03); }
-    .alert-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
-    .alert-dot.red { background:#ef4444; } .alert-dot.amber { background:#f59e0b; } .alert-dot.blue { background:#3b82f6; }
+    :root { --foreground: var(--text); }
+
+    .dash-shell {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .dash-hero {
+        position: relative;
+        overflow: hidden;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto 260px;
+        gap: 22px;
+        align-items: center;
+        padding: 24px;
+        border: 1px solid rgba(37, 99, 235, 0.16);
+        border-radius: 18px;
+        background:
+            radial-gradient(circle at 12% 20%, rgba(37, 99, 235, 0.16), transparent 30%),
+            radial-gradient(circle at 78% 15%, rgba(13, 148, 136, 0.12), transparent 28%),
+            linear-gradient(135deg, #ffffff 0%, #f8fbff 50%, #eef6ff 100%);
+        box-shadow: 0 18px 48px rgba(15, 23, 42, 0.08);
+    }
+
+    .dash-hero::after {
+        content: "";
+        position: absolute;
+        inset: auto -80px -110px auto;
+        width: 280px;
+        height: 280px;
+        border-radius: 999px;
+        background: rgba(37, 99, 235, 0.08);
+    }
+
+    .dash-hero-copy,
+    .dash-hero-actions,
+    .dash-hero-panel { position: relative; z-index: 1; }
+
+    .dash-eyebrow,
+    .dash-card-kicker,
+    .dash-panel-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+    }
+
+    .dash-pulse {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--accent2);
+        box-shadow: 0 0 0 6px rgba(5, 150, 105, 0.13);
+    }
+
+    .dash-title {
+        margin-top: 8px;
+        font-size: 28px;
+        line-height: 1.15;
+        color: #0f172a;
+    }
+
+    .dash-date { margin-top: 8px; color: var(--muted); }
+
+    .dash-hero-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+
+    .dash-btn {
+        min-height: 40px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border-radius: 10px;
+        white-space: nowrap;
+    }
+
+    .dash-btn-ghost {
+        padding: 10px 14px;
+        border: 1px solid var(--border);
+        background: rgba(255,255,255,0.76);
+        color: var(--text2);
+        font-weight: 800;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .dash-hero-panel {
+        padding: 16px;
+        border: 1px solid rgba(255,255,255,0.72);
+        border-radius: 14px;
+        background: rgba(255,255,255,0.68);
+        backdrop-filter: blur(12px);
+        box-shadow: var(--shadow-md);
+    }
+
+    .dash-hero-panel strong {
+        display: block;
+        margin-top: 8px;
+        color: #0f172a;
+        font-size: 18px;
+    }
+
+    .dash-hero-panel small {
+        display: block;
+        margin-top: 4px;
+        color: var(--muted);
+        line-height: 1.35;
+    }
+
+    .dash-module-strip {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+    .dash-module {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 13px 14px;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        background: var(--white);
+        box-shadow: var(--shadow-sm);
+        transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+    }
+
+    .dash-module:hover {
+        transform: translateY(-2px);
+        border-color: rgba(37, 99, 235, 0.28);
+        box-shadow: var(--shadow-md);
+    }
+
+    .dash-module.active {
+        border-color: rgba(37, 99, 235, 0.38);
+        background: linear-gradient(135deg, #ffffff, #eff6ff);
+    }
+
+    .dash-module-icon,
+    .dash-kpi-icon,
+    .dash-action-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 11px;
+        color: var(--accent);
+        background: var(--accent-light);
+        flex: 0 0 auto;
+    }
+
+    .dash-module-icon.green { color: var(--accent2); background: var(--accent2-light); }
+    .dash-module-icon.amber { color: var(--accent3); background: var(--accent3-light); }
+    .dash-module strong { display: block; color: var(--text); font-size: 13px; }
+    .dash-module small { display: block; color: var(--muted); font-size: 11px; margin-top: 2px; }
+
+    .dash-kpis { gap: 14px; }
+
+    .dash-kpi {
+        min-height: 170px;
+        padding: 18px;
+        border-radius: 16px;
+        background:
+            linear-gradient(145deg, rgba(255,255,255,0.98), rgba(248,250,252,0.96)),
+            var(--white);
+        box-shadow: 0 12px 32px rgba(15, 23, 42, 0.07);
+        transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+    }
+
+    .dash-kpi:hover {
+        transform: translateY(-3px);
+        border-color: rgba(37,99,235,.24);
+        box-shadow: 0 18px 44px rgba(15, 23, 42, 0.11);
+    }
+
+    .dash-kpi-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 14px;
+    }
+
+    .dash-kpi.green .dash-kpi-icon { color: var(--accent2); background: var(--accent2-light); }
+    .dash-kpi.amber .dash-kpi-icon { color: var(--accent3); background: var(--accent3-light); }
+    .dash-kpi .kpi-label { font-size: 12px; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+    .dash-kpi .kpi-num { margin-top: 8px; color: #0f172a; font-size: 34px; line-height: 1; }
+    .dash-kpi.green .kpi-num { color: var(--accent2); }
+    .dash-kpi.amber .kpi-num { color: var(--accent3); }
+    .dash-kpi .kpi-sub { margin-top: 8px; color: var(--muted); }
+
+    .dash-progress {
+        margin-top: 18px;
+        height: 7px;
+        border-radius: 99px;
+        overflow: hidden;
+        background: #e8eef8;
+    }
+
+    .dash-progress span {
+        display: block;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, var(--accent), #60a5fa);
+    }
+
+    .dash-progress.green span { background: linear-gradient(90deg, var(--accent2), #34d399); }
+    .dash-progress.amber span { background: linear-gradient(90deg, var(--accent3), #fbbf24); }
+
+    .dash-grid-main {
+        display: grid;
+        grid-template-columns: minmax(0, 1.35fr) minmax(340px, .65fr);
+        gap: 16px;
+    }
+
+    .dash-insight-grid {
+        display: grid;
+        grid-template-columns: 1.05fr 1fr 1fr;
+        gap: 16px;
+    }
+
+    .dash-bottom-grid {
+        display: grid;
+        grid-template-columns: 1.1fr .9fr 1fr;
+        gap: 16px;
+    }
+
+    .dash-card {
+        border-radius: 16px;
+        padding: 18px;
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+    }
+
+    .dash-card-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 14px;
+        margin-bottom: 16px;
+    }
+
+    .dash-card-head h2 {
+        margin: 4px 0 0;
+        color: #0f172a;
+        font-size: 16px;
+        line-height: 1.25;
+    }
+
+    .dash-chip {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: 6px 10px;
+        color: var(--accent);
+        background: var(--accent-light);
+        font-size: 11px;
+        font-weight: 800;
+    }
+
+    .dash-action-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+    .dash-action-btn {
+        position: relative;
+        min-height: 58px;
+        padding: 12px;
+        border-radius: 12px;
+        background: #f8fafc;
+        border: 1px solid var(--border);
+        color: var(--text);
+        font-weight: 800;
+        transition: transform .18s ease, background .18s ease, border-color .18s ease;
+    }
+
+    .dash-action-btn:hover {
+        transform: translateY(-2px);
+        background: #ffffff;
+        border-color: rgba(37,99,235,.28);
+    }
+
+    .dash-action-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 10px;
+    }
+
+    .dash-action-icon.danger { color: var(--accent4); background: var(--accent4-light); }
+
+    .dash-metrics {
+        gap: 12px;
+    }
+
+    .dash-metric {
+        padding: 16px 10px;
+        border-radius: 14px;
+        background: linear-gradient(180deg, #f8fafc, #ffffff);
+        border: 1px solid var(--border-light);
+    }
+
+    .dash-metric .metric-num {
+        font-size: 30px;
+        line-height: 1;
+    }
+
+    .dash-donut-wrap {
+        display: grid;
+        grid-template-columns: 140px minmax(0, 1fr);
+        gap: 18px;
+        align-items: center;
+    }
+
+    .dash-legend,
+    .dash-workforce,
+    .dash-activity,
+    .dash-notices {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .dash-workforce { padding-top: 4px; }
+    .dash-activity { min-height: 136px; }
+    .dash-notices { min-height: 132px; }
+
+    .dash-bars {
+        display: flex;
+        align-items: flex-end;
+        gap: 10px;
+        height: 128px;
+        padding: 8px 2px 0;
+    }
+
+    .dash-growth {
+        min-height: 128px;
+        display: flex;
+        align-items: center;
+    }
+
+    .dash-growth svg {
+        width: 100%;
+        min-height: 110px;
+        filter: drop-shadow(0 12px 16px rgba(16,185,129,.12));
+    }
+
+    .dash-growth-labels {
+        display: flex;
+        justify-content: space-between;
+        color: var(--muted);
+        font-size: 10px;
+        margin-top: 4px;
+        font-family: 'DM Mono', monospace;
+    }
+
+    .dash-legend-mini {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--muted);
+        font-size: 11px;
+        white-space: nowrap;
+    }
+
+    .dash-legend-mini span {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .dash-legend-mini i {
+        width: 8px;
+        height: 8px;
+        border-radius: 3px;
+        display: inline-block;
+    }
+
+    .dash-legend-mini .present { background: var(--accent); }
+    .dash-legend-mini .late { background: var(--accent4); }
+
+    .dash-link {
+        color: var(--accent);
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 12px;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .dash-empty {
+        width: 100%;
+        color: var(--muted);
+        text-align: center;
+        padding: 22px 8px;
+        font-size: 12px;
+    }
+
+    .shimmer-text {
+        background: linear-gradient(90deg,#dbe5f3 25%,#eef4fb 50%,#dbe5f3 75%);
+        background-size: 200% 100%;
+        animation: shimmer 1.5s infinite;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    @@keyframes shimmer {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+    }
+
+    .alert-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        background: #f8fafc;
+        border: 1px solid var(--border-light);
+        transition: all 0.2s;
+    }
+
+    .alert-item:hover { background: #ffffff; border-color: rgba(37,99,235,.22); }
+    .alert-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .alert-dot.red { background:#ef4444; }
+    .alert-dot.amber { background:#f59e0b; }
+    .alert-dot.blue { background:#3b82f6; }
     .alert-label { color:var(--muted); font-size:11px; }
-    .alert-value { font-weight:600; margin-left:auto; font-family:'DM Mono',monospace; font-size:12px; }
-    .kpi-grid .kpi-card { transition: transform 0.3s ease, box-shadow 0.3s ease; }
-    .kpi-grid .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+    .alert-value { font-weight:700; margin-left:auto; font-family:'DM Mono',monospace; font-size:12px; }
+
+    @@media (max-width: 1200px) {
+        .dash-hero { grid-template-columns: 1fr; }
+        .dash-hero-actions { justify-content: flex-start; }
+        .dash-grid-main,
+        .dash-insight-grid,
+        .dash-bottom-grid { grid-template-columns: 1fr; }
+    }
+
+    @@media (max-width: 760px) {
+        .dash-hero { padding: 18px; border-radius: 14px; }
+        .dash-title { font-size: 22px; }
+        .dash-module-strip,
+        .dash-kpis,
+        .dash-action-grid { grid-template-columns: 1fr; }
+        .dash-donut-wrap { grid-template-columns: 1fr; justify-items: center; }
+        .dash-legend { width: 100%; }
+        .dash-card-head { flex-direction: column; align-items: flex-start; }
+        .dash-legend-mini { flex-wrap: wrap; }
+    }
 </style>
 }
 
 @section Scripts {
-<script src="~/js/api.js" asp-append-version="true"></script>
 <script src="~/js/dashboard-loader.js" asp-append-version="true"></script>
-}       
+}

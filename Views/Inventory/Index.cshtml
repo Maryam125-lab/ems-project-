@@ -1,0 +1,2236 @@
+@{
+    ViewData["Title"] = "Inventory Control";
+    ViewData["Active"] = "Inventory";
+}
+
+<section class="inv-shell">
+    <div class="inv-hero">
+        <div>
+            <div class="inv-eyebrow">
+                <span class="inv-live-dot"></span>
+                ERP Module 02
+            </div>
+            <h1>Inventory & Invoicing Control</h1>
+            <p>Stock-in, stock-out, purchase approvals, quotations, delivery orders, invoices, tracker serials, vendors and customers in one operational workspace.</p>
+            <div class="inv-status-row">
+                <span class="inv-pill live" id="inventoryAuthStatus">Checking backend...</span>
+                <span class="inv-pill">HR auth connected</span>
+                <span class="inv-pill">Database live</span>
+            </div>
+        </div>
+        <div class="inv-hero-card">
+            <span>Office demo readiness</span>
+            <strong id="demoReadiness">Loading...</strong>
+            <small>Purchasing, sales, installations, complaints and replacements are connected with live ERP actions.</small>
+        </div>
+    </div>
+
+    <div class="inv-kpi-grid">
+        <div class="inv-kpi blue">
+            <span>Total Products</span>
+            <strong id="kpiProducts">--</strong>
+            <small id="kpiProductsSub">Loading...</small>
+        </div>
+        <div class="inv-kpi green">
+            <span>Available Serials</span>
+            <strong id="kpiAvailable">--</strong>
+            <small id="kpiAvailableSub">Ready stock</small>
+        </div>
+        <div class="inv-kpi amber">
+            <span>Pending Approvals</span>
+            <strong id="kpiPending">--</strong>
+            <small>Purchase and invoice queue</small>
+        </div>
+        <div class="inv-kpi red">
+            <span>Exceptions</span>
+            <strong id="kpiExceptions">--</strong>
+            <small>Damaged / returned stock</small>
+        </div>
+    </div>
+
+    <div class="inv-tabs" role="tablist" aria-label="Inventory views">
+        <button type="button" class="active" data-tab="overview" onclick="showInvTab('overview')">Overview</button>
+        <button type="button" data-tab="stock" onclick="showInvTab('stock')">Stock</button>
+        <button type="button" data-tab="purchase" onclick="showInvTab('purchase')">Purchasing</button>
+        <button type="button" data-tab="sales" onclick="showInvTab('sales')">Sales & Invoices</button>
+        <button type="button" data-tab="installations" onclick="showInvTab('installations')">Installations</button>
+        <button type="button" data-tab="support" onclick="showInvTab('support')">Support</button>
+        <button type="button" data-tab="parties" onclick="showInvTab('parties')">Customers & Vendors</button>
+        <button type="button" data-tab="masters" onclick="showInvTab('masters')">Master Setup</button>
+    </div>
+
+    <div class="inv-tab-panel active" id="inv-tab-overview">
+        <div class="inv-command-strip">
+            <button type="button" onclick="openWorkflowModal('purchaseRequest')"><span>Purchase</span><strong>New PR</strong></button>
+            <button type="button" onclick="openWorkflowModal('quotation')"><span>Sales</span><strong>New Quotation</strong></button>
+            <button type="button" onclick="openWorkflowModal('installation')"><span>Installations</span><strong>New Request</strong></button>
+            <button type="button" onclick="openWorkflowModal('complaint')"><span>Support</span><strong>New Complaint</strong></button>
+            <button type="button" onclick="openMasterModal('product')"><span>Master</span><strong>Add Product</strong></button>
+        </div>
+
+        <div class="inv-dashboard-grid">
+            <div class="inv-phase-card blue">
+                <span>Purchase Pipeline</span>
+                <strong id="dashPurchase">--</strong>
+                <small id="dashPurchaseSub">Loading...</small>
+                <button type="button" onclick="showInvTab('purchase')">Open Purchasing</button>
+            </div>
+            <div class="inv-phase-card green">
+                <span>Sales Pipeline</span>
+                <strong id="dashSales">--</strong>
+                <small id="dashSalesSub">Loading...</small>
+                <button type="button" onclick="showInvTab('sales')">Open Sales</button>
+            </div>
+            <div class="inv-phase-card amber">
+                <span>Tracker Installations</span>
+                <strong id="dashInstallations">--</strong>
+                <small id="dashInstallationsSub">Loading...</small>
+                <button type="button" onclick="showInvTab('installations')">Open Installations</button>
+            </div>
+            <div class="inv-phase-card red">
+                <span>Support Desk</span>
+                <strong id="dashSupport">--</strong>
+                <small id="dashSupportSub">Loading...</small>
+                <button type="button" onclick="showInvTab('support')">Open Support</button>
+            </div>
+        </div>
+
+        <div class="inv-panel inv-process-panel">
+            <div class="inv-panel-head">
+                <div>
+                    <span>Process map</span>
+                    <h2>ERP Flow Coverage</h2>
+                    <small>Click a step to start a new record or continue from the matching workflow table.</small>
+                </div>
+            </div>
+            <div class="inv-flow-board compact">
+                <div class="inv-flow-lane">
+                    <div class="inv-lane-title">Stock-In Purchase Flow</div>
+                    <button type="button" class="inv-flow-step done" onclick="openWorkflowModal('purchaseRequest')">1. Purchase Request</button>
+                    <button type="button" class="inv-flow-step active" onclick="showInvTab('purchase')">2. Manager Approval</button>
+                    <button type="button" class="inv-flow-step active" onclick="showInvTab('purchase')">3. Finance Approval</button>
+                    <button type="button" class="inv-flow-step" onclick="showInvTab('purchase')">4. Purchase Order</button>
+                    <button type="button" class="inv-flow-step" onclick="showInvTab('purchase')">5. GRN Receiving</button>
+                    <button type="button" class="inv-flow-step success" onclick="showInvTab('stock')">6. Add to Inventory</button>
+                </div>
+                <div class="inv-flow-lane">
+                    <div class="inv-lane-title">Stock-Out Supply & Services</div>
+                    <button type="button" class="inv-flow-step done" onclick="openWorkflowModal('quotation')">1. Generate Quotation</button>
+                    <button type="button" class="inv-flow-step active" onclick="showInvTab('sales')">2. Send to Client</button>
+                    <button type="button" class="inv-flow-step" onclick="showInvTab('sales')">3. Create Delivery Order</button>
+                    <button type="button" class="inv-flow-step" onclick="showInvTab('sales')">4. Generate Invoice</button>
+                    <button type="button" class="inv-flow-step success" onclick="showInvTab('sales')">5. Paid / Allocated</button>
+                </div>
+                <div class="inv-flow-lane">
+                    <div class="inv-lane-title">Tracker Installation Flow</div>
+                    <button type="button" class="inv-flow-step done" onclick="openWorkflowModal('installation')">1. Installation Request</button>
+                    <button type="button" class="inv-flow-step active" onclick="showInvTab('installations')">2. Assign Tracker</button>
+                    <button type="button" class="inv-flow-step" onclick="showInvTab('installations')">3. Vehicle Mapping</button>
+                    <button type="button" class="inv-flow-step success" onclick="showInvTab('installations')">4. Welcome Call & Billing</button>
+                </div>
+                <div class="inv-flow-lane">
+                    <div class="inv-lane-title">Customer Support</div>
+                    <button type="button" class="inv-flow-step done" onclick="openWorkflowModal('complaint')">Complaints</button>
+                    <button type="button" class="inv-flow-step active" onclick="showInvTab('support')">Replacement Tracking</button>
+                    <button type="button" class="inv-flow-step" onclick="showInvTab('support')">Serial Transfer</button>
+                    <button type="button" class="inv-flow-step success" onclick="showInvTab('support')">Resolved / Pending</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="inv-grid-two">
+            <div class="inv-panel">
+                <div class="inv-panel-head">
+                    <div>
+                        <span>Category intelligence</span>
+                        <h2>Products by Category</h2>
+                    </div>
+                </div>
+                <div class="inv-bars" id="categoryBars">
+                    <div class="inv-empty">Loading category distribution...</div>
+                </div>
+            </div>
+            <div class="inv-panel">
+                <div class="inv-panel-head">
+                    <div>
+                        <span>Recent stock activity</span>
+                        <h2>Inventory Movements</h2>
+                    </div>
+                </div>
+                <div class="inv-activity" id="recentMovements">
+                    <div class="inv-empty">Loading movements...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="inv-panel inv-readiness-panel">
+            <div class="inv-panel-head">
+                <div>
+                    <span>ERP readiness</span>
+                    <h2>Final Workflow Coverage</h2>
+                </div>
+                <strong id="workflowReadinessScore">--</strong>
+            </div>
+            <div class="inv-readiness-grid" id="workflowReadinessGrid">
+                <div>Loading coverage...</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="inv-tab-panel" id="inv-tab-stock">
+        <div class="inv-grid-two">
+            <div class="inv-panel">
+                <div class="inv-panel-head">
+                    <div>
+                        <span>Item master</span>
+                        <h2>Products & Services</h2>
+                    </div>
+                    <button type="button" class="inv-action-btn" onclick="openMasterModal('product')">Add Product</button>
+                </div>
+                <div class="inv-table-wrap">
+                    <table class="inv-table">
+                        <thead><tr><th>Product</th><th>Category</th><th>Type</th><th>Tracking</th><th>Available</th><th>Actions</th></tr></thead>
+                        <tbody id="productsBody"><tr><td colspan="5">Loading...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="inv-panel">
+                <div class="inv-panel-head">
+                    <div>
+                        <span>Serial control</span>
+                        <h2>Tracked Items</h2>
+                    </div>
+                    <button type="button" class="inv-action-btn" onclick="openMasterModal('serial')">Add Serial</button>
+                </div>
+                <div class="inv-table-wrap">
+                    <table class="inv-table">
+                        <thead><tr><th>Serial</th><th>Product</th><th>Category</th><th>Status</th><th>Actions</th></tr></thead>
+                        <tbody id="serialsBody"><tr><td colspan="4">Loading...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="inv-tab-panel" id="inv-tab-purchase">
+        <div class="inv-panel">
+            <div class="inv-panel-head">
+                <div>
+                    <span>Stock-in workflow</span>
+                    <h2>Purchase Requests</h2>
+                </div>
+                <div class="inv-head-actions">
+                    <button type="button" class="inv-action-btn" onclick="openWorkflowModal('purchaseRequest')">New PR</button>
+                    <button type="button" class="inv-action-btn ghost-action" onclick="openWorkflowModal('grn')">Receive GRN</button>
+                </div>
+            </div>
+            <div class="inv-table-wrap">
+                <table class="inv-table">
+                    <thead><tr><th>PR No.</th><th>Department</th><th>Requested By</th><th>Items</th><th>PO / GRN</th><th>Status</th><th>Actions</th></tr></thead>
+                    <tbody id="purchaseBody"><tr><td colspan="7">Loading...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="inv-tab-panel" id="inv-tab-sales">
+        <div class="inv-panel">
+            <div class="inv-panel-head">
+                <div>
+                    <span>Stock-out workflow</span>
+                    <h2>Quotations, Delivery & Invoices</h2>
+                </div>
+                <button type="button" class="inv-action-btn" onclick="openWorkflowModal('quotation')">New Quotation</button>
+            </div>
+            <div class="inv-table-wrap">
+                <table class="inv-table">
+                    <thead><tr><th>Quotation</th><th>Customer</th><th>Delivery</th><th>Invoice</th><th>Payment</th><th>Amount</th><th>Actions</th></tr></thead>
+                    <tbody id="salesBody"><tr><td colspan="7">Loading...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="inv-panel" style="margin-top:16px;">
+            <div class="inv-panel-head">
+                <div>
+                    <span>Incoming and outgoing invoices</span>
+                    <h2>All Invoices Ledger</h2>
+                </div>
+                <span class="inv-pill live">Purchase + Sales</span>
+            </div>
+            <div class="inv-table-wrap">
+                <table class="inv-table">
+                    <thead><tr><th>Direction</th><th>Invoice / Ref</th><th>Party</th><th>Type</th><th>Workflow</th><th>Payment</th><th>Amount</th></tr></thead>
+                    <tbody id="invoiceLedgerBody"><tr><td colspan="7">Loading...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="inv-tab-panel" id="inv-tab-installations">
+        <div class="inv-panel">
+            <div class="inv-panel-head">
+                <div>
+                    <span>Tracker installation workflow</span>
+                    <h2>Installation Requests, Vehicle Mapping & Billing</h2>
+                </div>
+                <button type="button" class="inv-action-btn" onclick="openWorkflowModal('installation')">New Installation</button>
+            </div>
+            <div class="inv-table-wrap">
+                <table class="inv-table">
+                    <thead><tr><th>Request</th><th>Customer</th><th>Vehicle</th><th>Tracker</th><th>Status</th><th>Notes</th><th>Actions</th></tr></thead>
+                    <tbody id="installationsBody"><tr><td colspan="7">Loading...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="inv-tab-panel" id="inv-tab-support">
+        <div class="inv-grid-two">
+            <div class="inv-panel">
+                <div class="inv-panel-head">
+                    <div>
+                        <span>Customer & complaint management</span>
+                        <h2>Complaints</h2>
+                    </div>
+                    <button type="button" class="inv-action-btn" onclick="openWorkflowModal('complaint')">New Complaint</button>
+                </div>
+                <div class="inv-table-wrap">
+                    <table class="inv-table">
+                        <thead><tr><th>Ticket</th><th>Customer</th><th>Issue</th><th>Priority</th><th>Status</th><th>Actions</th></tr></thead>
+                        <tbody id="complaintsBody"><tr><td colspan="6">Loading...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="inv-panel">
+                <div class="inv-panel-head">
+                    <div>
+                        <span>Item replacement tracking</span>
+                        <h2>Serial Transfers</h2>
+                    </div>
+                    <button type="button" class="inv-action-btn" onclick="openWorkflowModal('replacement')">New Replacement</button>
+                </div>
+                <div class="inv-table-wrap">
+                    <table class="inv-table">
+                        <thead><tr><th>Replacement</th><th>Customer</th><th>Vehicle</th><th>Old / New Serial</th><th>Status</th></tr></thead>
+                        <tbody id="replacementsBody"><tr><td colspan="5">Loading...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="inv-tab-panel" id="inv-tab-parties">
+        <div class="inv-grid-two">
+            <div class="inv-panel">
+                <div class="inv-panel-head">
+                    <div>
+                        <span>Client master</span>
+                        <h2>Customers</h2>
+                    </div>
+                    <button type="button" class="inv-action-btn" onclick="openMasterModal('customer')">Add Customer</button>
+                </div>
+                <div class="inv-list" id="customersList"><div class="inv-empty">Loading customers...</div></div>
+            </div>
+            <div class="inv-panel">
+                <div class="inv-panel-head">
+                    <div>
+                        <span>Supply master</span>
+                        <h2>Vendors</h2>
+                    </div>
+                    <button type="button" class="inv-action-btn" onclick="openMasterModal('vendor')">Add Vendor</button>
+                </div>
+                <div class="inv-list" id="vendorsList"><div class="inv-empty">Loading vendors...</div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="inv-tab-panel" id="inv-tab-masters">
+        <div class="inv-master-toolbar">
+            <button type="button" onclick="openMasterModal('category')">New Category</button>
+            <button type="button" onclick="openMasterModal('product')">New Product / Service</button>
+            <button type="button" onclick="openMasterModal('serial')">New Serial Item</button>
+            <button type="button" onclick="openMasterModal('customer')">New Customer</button>
+            <button type="button" onclick="openMasterModal('vendor')">New Vendor</button>
+        </div>
+        <div class="inv-grid-two">
+            <div class="inv-panel">
+                <div class="inv-panel-head">
+                    <div>
+                        <span>Config master</span>
+                        <h2>Categories</h2>
+                    </div>
+                </div>
+                <div class="inv-table-wrap">
+                    <table class="inv-table">
+                        <thead><tr><th>Category</th><th>Description</th><th>Products</th><th>Actions</th></tr></thead>
+                        <tbody id="categoriesBody"><tr><td colspan="4">Loading...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="inv-panel">
+                <div class="inv-panel-head">
+                    <div>
+                        <span>Action guide</span>
+                        <h2>Master Data Rules</h2>
+                    </div>
+                </div>
+                <div class="inv-rule-list">
+                    <div><strong>Products</strong><span>Create products before serial items.</span></div>
+                    <div><strong>Serials</strong><span>Use unique tracker/camera/device serial numbers.</span></div>
+                    <div><strong>Customers</strong><span>Customer IDs are generated automatically.</span></div>
+                    <div><strong>Vendors</strong><span>Vendor IDs are generated automatically.</span></div>
+                    <div><strong>Delete safety</strong><span>Records linked with purchase/sales history are protected.</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="inv-modal-backdrop" id="invMasterModal" aria-hidden="true">
+    <div class="inv-modal">
+        <div class="inv-modal-head">
+            <div>
+                <span id="masterModalKicker">Master setup</span>
+                <h2 id="masterModalTitle">Add Record</h2>
+            </div>
+            <button type="button" onclick="closeMasterModal()" aria-label="Close">x</button>
+        </div>
+        <form id="masterForm" onsubmit="return saveMasterRecord(event)">
+            <input type="hidden" name="master_type" id="masterType" />
+            <input type="hidden" name="record_id" id="masterRecordId" />
+            <div class="inv-form-grid" id="masterFields"></div>
+            <div class="inv-modal-actions">
+                <button type="button" class="inv-btn ghost" onclick="closeMasterModal()">Cancel</button>
+                <button type="submit" class="inv-btn primary" id="masterSaveBtn">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="inv-modal-backdrop" id="invWorkflowModal" aria-hidden="true">
+    <div class="inv-modal">
+        <div class="inv-modal-head">
+            <div>
+                <span id="workflowModalKicker">ERP workflow</span>
+                <h2 id="workflowModalTitle">Run Action</h2>
+            </div>
+            <button type="button" onclick="closeWorkflowModal()" aria-label="Close">x</button>
+        </div>
+        <form id="workflowForm" onsubmit="return saveWorkflowRecord(event)">
+            <input type="hidden" name="workflow_type" id="workflowType" />
+            <input type="hidden" name="record_id" id="workflowRecordId" />
+            <div class="inv-form-grid" id="workflowFields"></div>
+            <div class="inv-modal-actions">
+                <button type="button" class="inv-btn ghost" onclick="closeWorkflowModal()">Cancel</button>
+                <button type="submit" class="inv-btn primary" id="workflowSaveBtn">Run Action</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="inv-modal-backdrop" id="invInvoiceModal" aria-hidden="true">
+    <div class="inv-modal inv-invoice-modal">
+        <div class="inv-modal-head">
+            <div>
+                <span id="invoiceModalKicker">Invoice preview</span>
+                <h2 id="invoiceModalTitle">Invoice Details</h2>
+            </div>
+            <button type="button" onclick="closeInvoiceModal()" aria-label="Close">x</button>
+        </div>
+        <div id="invoiceDetailBody"></div>
+        <div class="inv-modal-actions">
+            <button type="button" class="inv-btn ghost" onclick="closeInvoiceModal()">Close</button>
+            <button type="button" class="inv-btn ghost" onclick="downloadInvoiceDetail()">Download Invoice</button>
+            <button type="button" class="inv-btn primary" onclick="printInvoiceDetail()">Print Invoice</button>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+<style>
+    .inv-shell { display: flex; flex-direction: column; gap: 16px; }
+
+    .inv-hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 280px;
+        gap: 20px;
+        align-items: center;
+        padding: 24px;
+        border: 1px solid rgba(37, 99, 235, .16);
+        border-radius: 18px;
+        background:
+            radial-gradient(circle at 12% 10%, rgba(37,99,235,.16), transparent 30%),
+            radial-gradient(circle at 88% 12%, rgba(5,150,105,.12), transparent 28%),
+            linear-gradient(135deg, #ffffff, #f8fbff 54%, #edf7ff);
+        box-shadow: 0 18px 48px rgba(15, 23, 42, .08);
+    }
+
+    .inv-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+    }
+
+    .inv-live-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: var(--accent2);
+        box-shadow: 0 0 0 6px rgba(5,150,105,.14);
+    }
+
+    .inv-hero h1 {
+        margin: 8px 0 8px;
+        color: #0f172a;
+        font-size: 30px;
+        line-height: 1.12;
+    }
+
+    .inv-hero p {
+        max-width: 860px;
+        color: var(--muted);
+        line-height: 1.55;
+        font-size: 14px;
+    }
+
+    .inv-status-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+
+    .inv-pill {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: 7px 10px;
+        background: #eef4ff;
+        color: var(--text2);
+        border: 1px solid var(--border);
+        font-size: 11px;
+        font-weight: 800;
+    }
+
+    .inv-pill.live { color: var(--accent2); background: var(--accent2-light); border-color: rgba(5,150,105,.16); }
+
+    .inv-hero-card {
+        padding: 18px;
+        border-radius: 16px;
+        background: rgba(255,255,255,.78);
+        border: 1px solid rgba(255,255,255,.86);
+        box-shadow: var(--shadow-md);
+    }
+
+    .inv-hero-card span,
+    .inv-panel-head span {
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+    }
+
+    .inv-hero-card strong {
+        display: block;
+        color: #0f172a;
+        font-size: 22px;
+        margin-top: 8px;
+    }
+
+    .inv-hero-card small { display: block; color: var(--muted); margin-top: 8px; line-height: 1.4; }
+
+    .inv-kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .inv-kpi {
+        border: 1px solid var(--border);
+        border-top: 4px solid var(--accent);
+        border-radius: 16px;
+        background: var(--white);
+        padding: 18px;
+        box-shadow: 0 10px 30px rgba(15, 23, 42, .06);
+    }
+
+    .inv-kpi.green { border-top-color: var(--accent2); }
+    .inv-kpi.amber { border-top-color: var(--accent3); }
+    .inv-kpi.red { border-top-color: var(--accent4); }
+    .inv-kpi span { color: var(--muted); font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: .04em; }
+    .inv-kpi strong { display: block; margin-top: 10px; color: #0f172a; font-family: 'DM Mono', monospace; font-size: 30px; }
+    .inv-kpi small { display: block; margin-top: 6px; color: var(--muted); }
+
+    .inv-flow-board {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .inv-flow-lane,
+    .inv-panel {
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        background: var(--white);
+        box-shadow: 0 10px 30px rgba(15,23,42,.06);
+    }
+
+    .inv-flow-lane { padding: 14px; }
+    .inv-lane-title { color: #0f172a; font-weight: 900; margin-bottom: 12px; font-size: 13px; }
+
+    .inv-flow-step {
+        width: 100%;
+        display: block;
+        text-align: left;
+        padding: 10px 11px;
+        border-radius: 11px;
+        background: #f8fafc;
+        border: 1px solid var(--border-light);
+        color: var(--text2);
+        font-size: 12px;
+        font-weight: 800;
+        margin-bottom: 8px;
+        cursor: pointer;
+        transition: transform .14s ease, box-shadow .14s ease, border-color .14s ease;
+    }
+
+    .inv-flow-step:hover {
+        transform: translateY(-1px);
+        border-color: rgba(37,99,235,.28);
+        box-shadow: 0 10px 22px rgba(15,23,42,.08);
+    }
+
+    .inv-flow-step.done { color: var(--accent); background: var(--accent-light); }
+    .inv-flow-step.active { color: var(--accent3); background: var(--accent3-light); }
+    .inv-flow-step.success { color: var(--accent2); background: var(--accent2-light); }
+    .inv-flow-step.muted { color: var(--muted); background: #f8fafc; }
+
+    .inv-tabs {
+        display: flex;
+        gap: 8px;
+        padding: 6px;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        background: var(--white);
+        overflow-x: auto;
+    }
+
+    .inv-tabs button {
+        border: 0;
+        border-radius: 10px;
+        padding: 10px 13px;
+        background: transparent;
+        color: var(--muted);
+        font-weight: 900;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+
+    .inv-tabs button.active { background: var(--accent); color: #fff; box-shadow: 0 8px 18px rgba(37,99,235,.24); }
+    .inv-tab-panel { display: none; }
+    .inv-tab-panel.active { display: block; }
+
+    .inv-command-strip {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 16px;
+    }
+
+    .inv-command-strip button {
+        border: 1px solid rgba(37,99,235,.14);
+        border-radius: 14px;
+        background: linear-gradient(135deg, #ffffff, #f5f8ff);
+        padding: 13px 14px;
+        text-align: left;
+        cursor: pointer;
+        box-shadow: 0 10px 24px rgba(15,23,42,.05);
+    }
+
+    .inv-command-strip span,
+    .inv-phase-card span {
+        display: block;
+        color: var(--muted);
+        font-size: 10px;
+        font-weight: 900;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+    }
+
+    .inv-command-strip strong {
+        display: block;
+        margin-top: 5px;
+        color: #0f172a;
+        font-size: 13px;
+    }
+
+    .inv-dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+        margin-bottom: 16px;
+    }
+
+    .inv-phase-card {
+        position: relative;
+        overflow: hidden;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        background: #fff;
+        padding: 18px;
+        box-shadow: 0 14px 34px rgba(15,23,42,.07);
+    }
+
+    .inv-phase-card::after {
+        content: "";
+        position: absolute;
+        width: 92px;
+        height: 92px;
+        right: -34px;
+        top: -34px;
+        border-radius: 999px;
+        background: rgba(37,99,235,.12);
+    }
+
+    .inv-phase-card.green::after { background: rgba(5,150,105,.12); }
+    .inv-phase-card.amber::after { background: rgba(217,119,6,.14); }
+    .inv-phase-card.red::after { background: rgba(220,38,38,.10); }
+
+    .inv-phase-card strong {
+        display: block;
+        margin-top: 10px;
+        color: #0f172a;
+        font-family: 'DM Mono', monospace;
+        font-size: 28px;
+    }
+
+    .inv-phase-card small {
+        display: block;
+        min-height: 34px;
+        margin-top: 6px;
+        color: var(--muted);
+        line-height: 1.35;
+    }
+
+    .inv-phase-card button {
+        margin-top: 12px;
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        background: #f8fafc;
+        color: var(--text2);
+        padding: 7px 10px;
+        font-size: 11px;
+        font-weight: 900;
+        cursor: pointer;
+    }
+
+    .inv-readiness-panel { margin-top: 16px; }
+    .inv-readiness-panel .inv-panel-head strong {
+        color: var(--accent2);
+        font-family: 'DM Mono', monospace;
+        font-size: 24px;
+    }
+
+    .inv-readiness-grid {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .inv-readiness-item {
+        border: 1px solid var(--border-light);
+        border-radius: 12px;
+        background: #f8fafc;
+        padding: 12px;
+    }
+
+    .inv-readiness-item strong {
+        display: block;
+        color: var(--text);
+        font-size: 12px;
+    }
+
+    .inv-readiness-item span {
+        display: block;
+        margin-top: 5px;
+        color: var(--accent2);
+        font-size: 11px;
+        font-weight: 900;
+    }
+
+    .inv-grid-two {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+    }
+
+    .inv-panel { padding: 18px; }
+    .inv-panel-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+    .inv-panel-head h2 { margin: 4px 0 0; font-size: 16px; color: #0f172a; }
+    .inv-panel-head small { display: block; margin-top: 5px; color: var(--muted); font-size: 12px; font-weight: 700; }
+
+    .inv-bars,
+    .inv-activity,
+    .inv-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .inv-bar-row { display: grid; grid-template-columns: 150px 1fr 42px; align-items: center; gap: 10px; color: var(--text); font-size: 12px; font-weight: 800; }
+    .inv-bar-track { height: 9px; border-radius: 99px; overflow: hidden; background: #edf2f8; }
+    .inv-bar-fill { height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--accent), #60a5fa); }
+    .inv-bar-count { color: var(--muted); text-align: right; font-family: 'DM Mono', monospace; }
+
+    .inv-activity-item,
+    .inv-party {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        padding: 11px 12px;
+        border: 1px solid var(--border-light);
+        border-radius: 12px;
+        background: #f8fafc;
+    }
+
+    .inv-dot { width: 9px; height: 9px; border-radius: 999px; background: var(--accent); flex: 0 0 auto; }
+    .inv-activity-item strong,
+    .inv-party strong { display: block; color: var(--text); font-size: 12px; }
+    .inv-activity-item span,
+    .inv-party span { display: block; color: var(--muted); font-size: 11px; margin-top: 2px; }
+
+    .inv-table-wrap { overflow-x: auto; }
+    .inv-table { width: 100%; border-collapse: collapse; min-width: 680px; }
+    .inv-table th {
+        color: var(--muted);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+        text-align: left;
+        padding: 0 10px 10px;
+        border-bottom: 1px solid var(--border);
+    }
+    .inv-table td {
+        padding: 12px 10px;
+        border-bottom: 1px solid var(--border-light);
+        color: var(--text2);
+        font-size: 12px;
+        vertical-align: middle;
+    }
+
+    .inv-link-btn {
+        border: 0;
+        background: transparent;
+        color: var(--accent);
+        padding: 0;
+        font: inherit;
+        font-weight: 900;
+        cursor: pointer;
+        text-align: left;
+    }
+
+    .inv-link-btn:hover { text-decoration: underline; }
+
+    .inv-status {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: 5px 8px;
+        font-size: 10px;
+        font-weight: 900;
+        color: var(--accent);
+        background: var(--accent-light);
+    }
+
+    .inv-status.green { color: var(--accent2); background: var(--accent2-light); }
+    .inv-status.amber { color: var(--accent3); background: var(--accent3-light); }
+    .inv-status.red { color: var(--accent4); background: var(--accent4-light); }
+    .inv-status.gray { color: var(--muted); background: #f1f5f9; }
+    .inv-money { font-family: 'DM Mono', monospace; color: #0f172a; font-weight: 900; }
+    .inv-empty { color: var(--muted); text-align: center; padding: 24px 8px; font-size: 12px; }
+
+    .inv-action-btn,
+    .inv-master-toolbar button,
+    .inv-btn {
+        border: 0;
+        border-radius: 10px;
+        background: var(--accent);
+        color: #fff;
+        padding: 9px 12px;
+        font-size: 12px;
+        font-weight: 900;
+        cursor: pointer;
+        box-shadow: 0 8px 18px rgba(37,99,235,.18);
+    }
+
+    .inv-action-btn { white-space: nowrap; }
+
+    .inv-head-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+
+    .inv-action-btn.ghost-action {
+        background: #fff;
+        color: var(--accent);
+        border: 1px solid rgba(37,99,235,.22);
+        box-shadow: none;
+    }
+
+    .inv-table-actions {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .inv-mini-btn {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: #fff;
+        color: var(--text2);
+        padding: 6px 8px;
+        font-size: 11px;
+        font-weight: 900;
+        cursor: pointer;
+    }
+
+    .inv-mini-btn.danger {
+        color: var(--accent4);
+        background: var(--accent4-light);
+        border-color: rgba(220,38,38,.16);
+    }
+
+    .inv-mini-btn.success {
+        color: #047857;
+        background: #dcfce7;
+        border-color: rgba(5,150,105,.18);
+    }
+
+    .inv-master-toolbar {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 16px;
+        padding: 14px;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        background: var(--white);
+        box-shadow: 0 10px 30px rgba(15,23,42,.06);
+    }
+
+    .inv-rule-list {
+        display: grid;
+        gap: 10px;
+    }
+
+    .inv-rule-list div {
+        border: 1px solid var(--border-light);
+        border-radius: 12px;
+        background: #f8fafc;
+        padding: 12px;
+    }
+
+    .inv-rule-list strong {
+        display: block;
+        color: var(--text);
+        font-size: 13px;
+    }
+
+    .inv-rule-list span {
+        display: block;
+        color: var(--muted);
+        font-size: 12px;
+        margin-top: 4px;
+    }
+
+    .inv-modal-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 999;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background: rgba(15, 23, 42, .42);
+        backdrop-filter: blur(8px);
+    }
+
+    .inv-modal-backdrop.open { display: flex; }
+
+    .inv-modal {
+        width: min(720px, 100%);
+        max-height: 88vh;
+        overflow: auto;
+        border-radius: 18px;
+        border: 1px solid rgba(255,255,255,.8);
+        background: #fff;
+        box-shadow: 0 30px 80px rgba(15,23,42,.26);
+        padding: 20px;
+    }
+
+    .inv-invoice-modal { width: min(860px, 100%); }
+
+    .inv-invoice-sheet {
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        overflow: hidden;
+        background: #fff;
+    }
+
+    .inv-invoice-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 18px;
+        padding: 18px;
+        background: linear-gradient(135deg, #f8fbff, #eef6ff);
+        border-bottom: 1px solid var(--border);
+    }
+
+    .inv-invoice-brand strong,
+    .inv-invoice-total strong {
+        display: block;
+        color: #0f172a;
+        font-size: 20px;
+    }
+
+    .inv-invoice-brand span,
+    .inv-invoice-total span {
+        display: block;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+    }
+
+    .inv-invoice-total { text-align: right; }
+
+    .inv-invoice-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        padding: 18px;
+    }
+
+    .inv-invoice-field {
+        border: 1px solid var(--border-light);
+        border-radius: 12px;
+        padding: 12px;
+        background: #f8fafc;
+    }
+
+    .inv-invoice-field span {
+        display: block;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+    }
+
+    .inv-invoice-field strong {
+        display: block;
+        margin-top: 5px;
+        color: var(--text);
+        font-size: 13px;
+    }
+
+    .inv-invoice-note {
+        margin: 0 18px 18px;
+        padding: 12px;
+        border-radius: 12px;
+        background: var(--accent-light);
+        color: var(--accent);
+        font-size: 12px;
+        font-weight: 800;
+    }
+
+    .inv-modal-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 14px;
+        align-items: flex-start;
+        margin-bottom: 18px;
+    }
+
+    .inv-modal-head span {
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+    }
+
+    .inv-modal-head h2 {
+        margin: 4px 0 0;
+        color: #0f172a;
+        font-size: 20px;
+    }
+
+    .inv-modal-head button {
+        width: 34px;
+        height: 34px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: #f8fafc;
+        color: var(--muted);
+        cursor: pointer;
+        font-weight: 900;
+    }
+
+    .inv-form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .inv-field { display: flex; flex-direction: column; gap: 6px; }
+    .inv-field.full { grid-column: 1 / -1; }
+    .inv-field label { color: var(--text2); font-size: 12px; font-weight: 900; }
+    .inv-field input,
+    .inv-field select,
+    .inv-field textarea {
+        width: 100%;
+        min-height: 40px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: #fff;
+        color: var(--text);
+        padding: 10px 11px;
+        font: inherit;
+    }
+
+    .inv-field textarea { min-height: 86px; resize: vertical; }
+
+    .inv-items-box {
+        grid-column: 1 / -1;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 12px;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        background: #f8fbff;
+    }
+
+    .inv-item-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1.4fr) 90px 110px 34px;
+        gap: 8px;
+        align-items: end;
+    }
+
+    .inv-item-row.purchase-item { grid-template-columns: minmax(0, 1.6fr) 90px 34px; }
+
+    .inv-item-row select,
+    .inv-item-row input {
+        min-height: 38px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 0 10px;
+        background: #fff;
+    }
+
+    .inv-row-remove {
+        height: 38px;
+        border: 1px solid rgba(220,38,38,.16);
+        border-radius: 10px;
+        color: var(--accent4);
+        background: var(--accent4-light);
+        font-weight: 900;
+    }
+
+    .inv-modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 18px;
+    }
+
+    .inv-btn.ghost {
+        background: #fff;
+        color: var(--text2);
+        border: 1px solid var(--border);
+        box-shadow: none;
+    }
+
+    .inv-btn.primary { background: var(--accent); }
+
+    @@media (max-width: 1200px) {
+        .inv-hero,
+        .inv-grid-two { grid-template-columns: 1fr; }
+        .inv-flow-board,
+        .inv-kpi-grid,
+        .inv-dashboard-grid,
+        .inv-command-strip,
+        .inv-readiness-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @@media (max-width: 720px) {
+        .inv-hero { padding: 18px; }
+        .inv-hero h1 { font-size: 24px; }
+        .inv-flow-board,
+        .inv-kpi-grid,
+        .inv-dashboard-grid,
+        .inv-command-strip,
+        .inv-readiness-grid { grid-template-columns: 1fr; }
+        .inv-bar-row { grid-template-columns: 1fr; }
+        .inv-bar-count { text-align: left; }
+        .inv-form-grid { grid-template-columns: 1fr; }
+    }
+</style>
+}
+
+@section Scripts {
+<script>
+    const money = new Intl.NumberFormat('en-PK', { style: 'currency', currency: 'PKR', maximumFractionDigits: 0 });
+    const invState = {
+        categories: [],
+        products: [],
+        serials: [],
+        customers: [],
+        vendors: [],
+        departments: [],
+        purchaseRows: [],
+        purchaseOrders: [],
+        salesRows: [],
+        invoiceLedgerRows: [],
+        installationRows: [],
+        complaints: [],
+        replacements: []
+    };
+
+    function showInvTab(tab) {
+        document.querySelectorAll('.inv-tabs button').forEach(btn => btn.classList.toggle('active', btn.dataset.tab === tab));
+        document.querySelectorAll('.inv-tab-panel').forEach(panel => panel.classList.toggle('active', panel.id === `inv-tab-${tab}`));
+    }
+
+    function safe(value, fallback = '-') {
+        return value === null || value === undefined || value === '' ? fallback : value;
+    }
+
+    function statusClass(status) {
+        const value = String(status || '').toUpperCase();
+        if (['AVAILABLE', 'APPROVED', 'PAID', 'COMPLETED', 'RESOLVED', 'REPLACED', 'INSTALLED', 'HIGH'].includes(value)) return 'green';
+        if (['PENDING', 'UNPAID', 'ALLOCATED', 'REQUESTED', 'TAKEN', 'MEDIUM', 'BILLING_READY', 'WELCOME_CALL'].includes(value)) return 'amber';
+        if (['REJECTED', 'DAMAGED', 'CANCELLED', 'LOW'].includes(value)) return 'red';
+        return 'gray';
+    }
+
+    function statusBadge(status) {
+        return `<span class="inv-status ${statusClass(status)}">${safe(status)}</span>`;
+    }
+
+    function escapeAttr(value) {
+        return String(value ?? '').replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+    }
+
+    function jsArg(value) {
+        return String(value ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\r?\n/g, ' ');
+    }
+
+    function formatDate(value) {
+        if (!value) return '-';
+        const parsed = new Date(value);
+        return Number.isNaN(parsed.getTime()) ? safe(value) : parsed.toLocaleDateString();
+    }
+
+    function actions(type, id) {
+        return `<div class="inv-table-actions">
+            <button type="button" class="inv-mini-btn" onclick="openMasterModal('${type}', '${id}')">Edit</button>
+            <button type="button" class="inv-mini-btn danger" onclick="deleteMasterRecord('${type}', '${id}')">Delete</button>
+        </div>`;
+    }
+
+    function renderSummary(summary) {
+        const products = summary.products || {};
+        const stock = summary.stock || {};
+        const purchase = summary.purchase || {};
+        const sales = summary.sales || {};
+        const installations = summary.installations || {};
+        const support = summary.support || {};
+        const parties = summary.parties || {};
+
+        document.getElementById('inventoryAuthStatus').textContent = 'Backend connected';
+        document.getElementById('demoReadiness').textContent = 'Final ERP ready';
+        document.getElementById('kpiProducts').textContent = products.total_products || 0;
+        document.getElementById('kpiProductsSub').textContent = `${products.assets || 0} assets, ${products.consumables || 0} consumables, ${products.services || 0} services`;
+        document.getElementById('kpiAvailable').textContent = stock.available || 0;
+        document.getElementById('kpiAvailableSub').textContent = `${stock.total_serials || 0} tracked serials`;
+        document.getElementById('kpiPending').textContent = Number(purchase.pending_pr || 0) + Number(sales.pending_invoices || 0) + Number(installations.requested || 0) + Number(support.open_complaints || 0);
+        document.getElementById('kpiExceptions').textContent = Number(stock.damaged || 0) + Number(stock.returned || 0) + Number(support.open_complaints || 0);
+
+        document.getElementById('dashPurchase').textContent = purchase.purchase_requests || 0;
+        document.getElementById('dashPurchaseSub').textContent = `${purchase.pending_pr || 0} pending, ${purchase.purchase_orders || 0} POs, ${purchase.grns || 0} GRNs`;
+        document.getElementById('dashSales').textContent = sales.quotations || 0;
+        document.getElementById('dashSalesSub').textContent = `${sales.delivery_orders || 0} deliveries, ${sales.invoices || 0} invoices, ${money.format(Number(sales.invoice_value || 0))}`;
+        document.getElementById('dashInstallations').textContent = installations.installation_requests || 0;
+        document.getElementById('dashInstallationsSub').textContent = `${installations.requested || 0} requested, ${installations.installed || 0} installed, ${installations.completed || 0} completed`;
+        document.getElementById('dashSupport').textContent = support.complaints || 0;
+        document.getElementById('dashSupportSub').textContent = `${support.open_complaints || 0} open, ${support.resolved_complaints || 0} resolved, ${support.replacements || 0} replacements`;
+
+        const coverage = [
+            ['Masters', Number(products.total_products || 0) > 0 && Number(parties.customers || 0) > 0 && Number(parties.vendors || 0) > 0],
+            ['Stock', Number(stock.total_serials || 0) >= 0],
+            ['Purchasing', true],
+            ['Sales', true],
+            ['Installations', true],
+            ['Support', true]
+        ];
+        const readyCount = coverage.filter(item => item[1]).length;
+        document.getElementById('workflowReadinessScore').textContent = `${Math.round((readyCount / coverage.length) * 100)}%`;
+        document.getElementById('workflowReadinessGrid').innerHTML = coverage.map(item => `<div class="inv-readiness-item">
+            <strong>${item[0]}</strong>
+            <span>${item[1] ? 'Connected' : 'Needs data'}</span>
+        </div>`).join('');
+
+        renderCategories(summary.categories || []);
+        renderMovements(summary.recent_movements || []);
+    }
+
+    function renderCategories(categories) {
+        invState.categories = categories;
+        const el = document.getElementById('categoryBars');
+        const table = document.getElementById('categoriesBody');
+        if (!categories.length) {
+            el.innerHTML = '<div class="inv-empty">No categories found.</div>';
+            if (table) table.innerHTML = '<tr><td colspan="4">No categories found.</td></tr>';
+            return;
+        }
+        const max = Math.max(...categories.map(c => Number(c.products || 0)), 1);
+        el.innerHTML = categories.map(c => {
+            const pct = Math.round((Number(c.products || 0) / max) * 100);
+            return `<div class="inv-bar-row">
+                <div>${safe(c.category_name)}</div>
+                <div class="inv-bar-track"><div class="inv-bar-fill" style="width:${pct}%"></div></div>
+                <div class="inv-bar-count">${c.products || 0}</div>
+            </div>`;
+        }).join('');
+        if (table) {
+            table.innerHTML = categories.map(c => `<tr>
+                <td><strong>${safe(c.category_name)}</strong></td>
+                <td>${safe(c.description)}</td>
+                <td>${c.products ?? c.product_count ?? 0}</td>
+                <td>${actions('category', c.id)}</td>
+            </tr>`).join('');
+        }
+    }
+
+    function renderMovements(rows) {
+        const el = document.getElementById('recentMovements');
+        if (!rows.length) {
+            el.innerHTML = '<div class="inv-empty">No recent inventory movements.</div>';
+            return;
+        }
+        el.innerHTML = rows.map(row => `<div class="inv-activity-item">
+            <span class="inv-dot"></span>
+            <div>
+                <strong>${safe(row.movement_type)} - ${safe(row.product_name, 'Item')}</strong>
+                <span>${safe(row.serial_number)} / ${safe(row.reference_type)} / ${new Date(row.created_at).toLocaleDateString()}</span>
+            </div>
+        </div>`).join('');
+    }
+
+    function renderProducts(rows) {
+        invState.products = rows;
+        const el = document.getElementById('productsBody');
+        if (!rows.length) {
+            el.innerHTML = '<tr><td colspan="6">No products found.</td></tr>';
+            return;
+        }
+        el.innerHTML = rows.map(row => `<tr>
+            <td><strong>${safe(row.product_name)}</strong></td>
+            <td>${safe(row.category_name)}</td>
+            <td>${statusBadge(row.product_type)}</td>
+            <td>${safe(row.tracking_type)}</td>
+            <td>${row.available_count || row.quantity || 0}</td>
+            <td>${actions('product', row.id)}</td>
+        </tr>`).join('');
+    }
+
+    function renderSerials(rows) {
+        invState.serials = rows;
+        const el = document.getElementById('serialsBody');
+        if (!rows.length) {
+            el.innerHTML = '<tr><td colspan="5">No tracked serials found.</td></tr>';
+            return;
+        }
+        el.innerHTML = rows.map(row => `<tr>
+            <td><strong>${safe(row.serial_number)}</strong></td>
+            <td>${safe(row.product_name)}</td>
+            <td>${safe(row.category_name)}</td>
+            <td>${statusBadge(row.current_status)}</td>
+            <td>${actions('serial', row.id)}</td>
+        </tr>`).join('');
+    }
+
+    function renderPurchase(rows) {
+        invState.purchaseRows = rows;
+        const el = document.getElementById('purchaseBody');
+        if (!rows.length) {
+            el.innerHTML = '<tr><td colspan="7">No purchase requests found.</td></tr>';
+            return;
+        }
+        el.innerHTML = rows.map(row => `<tr>
+            <td><strong>${safe(row.pr_id)}</strong></td>
+            <td>${safe(row.department_name)}</td>
+            <td>${safe(row.requested_by_name)}</td>
+            <td>${row.item_count || 0}<br><small>${row.requested_qty || 0} qty</small></td>
+            <td>${safe(row.po_id)}<br><small>${safe(row.grn_id, row.purchase_order_db_id ? 'GRN pending' : 'PO pending')}</small></td>
+            <td>${statusBadge(row.status)}</td>
+            <td>${purchaseActions(row)}</td>
+        </tr>`).join('');
+    }
+
+    function renderSales(rows) {
+        invState.salesRows = rows;
+        const el = document.getElementById('salesBody');
+        if (!rows.length) {
+            el.innerHTML = '<tr><td colspan="7">No sales records found.</td></tr>';
+            return;
+        }
+        el.innerHTML = rows.map(row => `<tr>
+            <td><strong>${safe(row.quotation_id)}</strong><br>${statusBadge(row.quotation_status)}</td>
+            <td>${safe(row.customer_name)}<br><small>${safe(row.company_name, '')}</small></td>
+            <td>${safe(row.do_id)}<br>${statusBadge(row.delivery_status)}</td>
+            <td>${row.invoice_id
+                ? `<button type="button" class="inv-link-btn" onclick="openInvoiceModal('${jsArg(row.invoice_db_id || row.invoice_id)}','OUTBOUND')">${safe(row.invoice_id)}</button>`
+                : safe(row.invoice_id)}<br>${statusBadge(row.approval_status)}</td>
+            <td>${statusBadge(row.payment_status)}</td>
+            <td class="inv-money">${money.format(Number(row.invoice_amount || row.quotation_amount || 0))}</td>
+            <td>${salesActions(row)}</td>
+        </tr>`).join('');
+    }
+
+    function purchaseActions(row) {
+        const status = String(row.status || '').toUpperCase();
+        const buttons = [];
+        if (status === 'PENDING') {
+            buttons.push(`<button type="button" class="inv-mini-btn success" onclick="quickWorkflow('approvePurchaseRequest','${row.id}')">Approve</button>`);
+            buttons.push(`<button type="button" class="inv-mini-btn danger" onclick="quickWorkflow('rejectPurchaseRequest','${row.id}')">Reject</button>`);
+        }
+        if (status === 'APPROVED' && !row.purchase_order_db_id) {
+            buttons.push(`<button type="button" class="inv-mini-btn" onclick="openWorkflowModal('purchaseOrder','${row.id}')">Create PO</button>`);
+        }
+        if (row.purchase_order_db_id && !row.grn_db_id) {
+            buttons.push(`<button type="button" class="inv-mini-btn success" onclick="openWorkflowModal('grn','${row.purchase_order_db_id}')">Receive GRN</button>`);
+        }
+        return buttons.length ? `<div class="inv-table-actions">${buttons.join('')}</div>` : '<span class="inv-status gray">Complete</span>';
+    }
+
+    function salesActions(row) {
+        const quote = String(row.quotation_status || '').toUpperCase();
+        const delivery = String(row.delivery_status || '').toUpperCase();
+        const invoice = String(row.approval_status || '').toUpperCase();
+        const payment = String(row.payment_status || '').toUpperCase();
+        const buttons = [];
+        if (quote === 'DRAFT' || quote === 'PENDING') {
+            buttons.push(`<button type="button" class="inv-mini-btn success" onclick="quickWorkflow('approveQuotation','${row.id}')">Approve</button>`);
+            buttons.push(`<button type="button" class="inv-mini-btn danger" onclick="quickWorkflow('rejectQuotation','${row.id}')">Reject</button>`);
+        }
+        if (quote === 'APPROVED' && !row.delivery_db_id) {
+            buttons.push(`<button type="button" class="inv-mini-btn" onclick="quickWorkflow('createDeliveryOrder','${row.id}')">Create DO</button>`);
+        }
+        if (row.delivery_db_id && delivery === 'PENDING') {
+            buttons.push(`<button type="button" class="inv-mini-btn success" onclick="quickWorkflow('approveDeliveryOrder','${row.delivery_db_id}')">Approve DO</button>`);
+            buttons.push(`<button type="button" class="inv-mini-btn danger" onclick="quickWorkflow('rejectDeliveryOrder','${row.delivery_db_id}')">Reject DO</button>`);
+        }
+        if (quote === 'APPROVED' && !row.invoice_db_id) {
+            buttons.push(`<button type="button" class="inv-mini-btn" onclick="quickWorkflow('createInvoice','${row.id}')">Create Inv</button>`);
+        }
+        if (row.invoice_db_id && invoice === 'PENDING') {
+            buttons.push(`<button type="button" class="inv-mini-btn success" onclick="quickWorkflow('approveInvoice','${row.invoice_db_id}')">Approve Inv</button>`);
+            buttons.push(`<button type="button" class="inv-mini-btn danger" onclick="quickWorkflow('rejectInvoice','${row.invoice_db_id}')">Reject Inv</button>`);
+        }
+        if (row.invoice_db_id && invoice === 'APPROVED' && payment === 'UNPAID') {
+            buttons.push(`<button type="button" class="inv-mini-btn success" onclick="quickWorkflow('markInvoicePaid','${row.invoice_db_id}')">Mark Paid</button>`);
+        }
+        return buttons.length ? `<div class="inv-table-actions">${buttons.join('')}</div>` : '<span class="inv-status gray">No action</span>';
+    }
+
+    function renderInvoiceLedger(rows) {
+        invState.invoiceLedgerRows = rows;
+        const el = document.getElementById('invoiceLedgerBody');
+        if (!el) return;
+        if (!rows.length) {
+            el.innerHTML = '<tr><td colspan="7"><div class="inv-empty">No invoices found yet.</div></td></tr>';
+            return;
+        }
+        el.innerHTML = rows.map(row => {
+            const direction = String(row.invoice_direction || '').toUpperCase();
+            const directionClass = direction === 'INBOUND' ? 'green' : 'blue';
+            return `<tr>
+                <td><span class="inv-status ${directionClass}">${safe(direction)}</span></td>
+                <td><button type="button" class="inv-link-btn" onclick="openInvoiceModal('${jsArg(row.id)}','${jsArg(direction)}')">${safe(row.invoice_no)}</button><br><small>${safe(row.reference_no, '')}</small></td>
+                <td>${safe(row.party_name)}</td>
+                <td>${safe(row.invoice_type)}</td>
+                <td>${statusBadge(row.workflow_status || row.approval_status)}</td>
+                <td>${statusBadge(row.payment_status)}</td>
+                <td class="inv-money">${money.format(Number(row.total_amount || 0))}</td>
+            </tr>`;
+        }).join('');
+    }
+
+    function findInvoiceRecord(id, direction) {
+        const normalizedDirection = String(direction || '').toUpperCase();
+        const ledgerRecord = invState.invoiceLedgerRows.find(row =>
+            String(row.id) === String(id) &&
+            String(row.invoice_direction || '').toUpperCase() === normalizedDirection);
+        if (ledgerRecord) return ledgerRecord;
+
+        const salesRecord = invState.salesRows.find(row =>
+            String(row.invoice_db_id || '') === String(id) || String(row.invoice_id || '') === String(id));
+        if (!salesRecord) return null;
+
+        return {
+            id: salesRecord.invoice_db_id,
+            invoice_direction: 'OUTBOUND',
+            invoice_no: salesRecord.invoice_id,
+            reference_no: salesRecord.quotation_id,
+            party_name: salesRecord.customer_name,
+            invoice_type: 'Sales / Stock-Out',
+            workflow_status: salesRecord.delivery_status,
+            approval_status: salesRecord.approval_status,
+            payment_status: salesRecord.payment_status,
+            total_amount: salesRecord.invoice_amount || salesRecord.quotation_amount || 0,
+            created_at: salesRecord.created_at,
+            delivery_no: salesRecord.do_id,
+            company_name: salesRecord.company_name
+        };
+    }
+
+    function openInvoiceModal(id, direction) {
+        const record = findInvoiceRecord(id, direction);
+        if (!record) {
+            alert('Invoice detail is not available yet. Create or approve the invoice first.');
+            return;
+        }
+
+        const invoiceNo = safe(record.invoice_no, 'Draft invoice');
+        document.getElementById('invoiceModalTitle').textContent = invoiceNo;
+        document.getElementById('invoiceModalKicker').textContent = `${safe(record.invoice_direction, 'Invoice')} detail`;
+        document.getElementById('invoiceDetailBody').innerHTML = `
+            <div class="inv-invoice-sheet" id="printableInvoice">
+                <div class="inv-invoice-top">
+                    <div class="inv-invoice-brand">
+                        <span>TRACK360 ERP</span>
+                        <strong>${invoiceNo}</strong>
+                        <small>${safe(record.invoice_type)}</small>
+                    </div>
+                    <div class="inv-invoice-total">
+                        <span>Total Amount</span>
+                        <strong>${money.format(Number(record.total_amount || 0))}</strong>
+                        <small>${safe(record.payment_status)}</small>
+                    </div>
+                </div>
+                <div class="inv-invoice-grid">
+                    <div class="inv-invoice-field"><span>Party</span><strong>${safe(record.party_name)}</strong></div>
+                    <div class="inv-invoice-field"><span>Reference</span><strong>${safe(record.reference_no)}</strong></div>
+                    <div class="inv-invoice-field"><span>Direction</span><strong>${safe(record.invoice_direction)}</strong></div>
+                    <div class="inv-invoice-field"><span>Date</span><strong>${formatDate(record.created_at)}</strong></div>
+                    <div class="inv-invoice-field"><span>Workflow Status</span><strong>${safe(record.workflow_status || record.approval_status)}</strong></div>
+                    <div class="inv-invoice-field"><span>Approval Status</span><strong>${safe(record.approval_status)}</strong></div>
+                </div>
+                <div class="inv-invoice-note">
+                    This invoice is opened from the live inventory workflow. Use row actions in Purchasing or Sales & Invoices to approve, create DO, approve invoice, or mark paid.
+                </div>
+            </div>`;
+
+        const modal = document.getElementById('invInvoiceModal');
+        modal.classList.add('open');
+        modal.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeInvoiceModal() {
+        const modal = document.getElementById('invInvoiceModal');
+        modal.classList.remove('open');
+        modal.setAttribute('aria-hidden', 'true');
+    }
+
+    function printInvoiceDetail() {
+        const sheet = document.getElementById('printableInvoice');
+        if (!sheet) return;
+        const win = window.open('', '_blank', 'width=900,height=700');
+        if (!win) {
+            alert('Popup blocked. Please allow popups to print this invoice.');
+            return;
+        }
+        win.document.write(`<!doctype html><html><head><title>Invoice</title><style>
+            body{font-family:Arial,sans-serif;margin:24px;color:#0f172a}
+            .inv-invoice-sheet{border:1px solid #dbe4f0;border-radius:14px;overflow:hidden}
+            .inv-invoice-top{display:flex;justify-content:space-between;gap:18px;padding:18px;background:#f8fbff;border-bottom:1px solid #dbe4f0}
+            .inv-invoice-brand span,.inv-invoice-total span{display:block;color:#64748b;font-size:12px;font-weight:700;text-transform:uppercase}
+            .inv-invoice-brand strong,.inv-invoice-total strong{display:block;margin-top:5px;font-size:22px}
+            .inv-invoice-total{text-align:right}
+            .inv-invoice-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:18px}
+            .inv-invoice-field{border:1px solid #e7edf5;border-radius:12px;padding:12px;background:#f8fafc}
+            .inv-invoice-field span{display:block;color:#64748b;font-size:11px;font-weight:700;text-transform:uppercase}
+            .inv-invoice-field strong{display:block;margin-top:5px;font-size:13px}
+            .inv-invoice-note{margin:0 18px 18px;padding:12px;border-radius:12px;background:#eff6ff;color:#2563eb;font-size:12px;font-weight:700}
+        </style></head><body>${sheet.outerHTML}</body></html>`);
+        win.document.close();
+        win.focus();
+        win.print();
+    }
+
+    function buildInvoiceHtml() {
+        const sheet = document.getElementById('printableInvoice');
+        if (!sheet) return '';
+        return `<!doctype html><html><head><meta charset="utf-8"><title>Invoice</title><style>
+            body{font-family:Arial,sans-serif;margin:24px;color:#0f172a}
+            .inv-invoice-sheet{border:1px solid #dbe4f0;border-radius:14px;overflow:hidden}
+            .inv-invoice-top{display:flex;justify-content:space-between;gap:18px;padding:18px;background:#f8fbff;border-bottom:1px solid #dbe4f0}
+            .inv-invoice-brand span,.inv-invoice-total span{display:block;color:#64748b;font-size:12px;font-weight:700;text-transform:uppercase}
+            .inv-invoice-brand strong,.inv-invoice-total strong{display:block;margin-top:5px;font-size:22px}
+            .inv-invoice-total{text-align:right}
+            .inv-invoice-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:18px}
+            .inv-invoice-field{border:1px solid #e7edf5;border-radius:12px;padding:12px;background:#f8fafc}
+            .inv-invoice-field span{display:block;color:#64748b;font-size:11px;font-weight:700;text-transform:uppercase}
+            .inv-invoice-field strong{display:block;margin-top:5px;font-size:13px}
+            .inv-invoice-note{margin:0 18px 18px;padding:12px;border-radius:12px;background:#eff6ff;color:#2563eb;font-size:12px;font-weight:700}
+        </style></head><body>${sheet.outerHTML}</body></html>`;
+    }
+
+    function downloadInvoiceDetail() {
+        const html = buildInvoiceHtml();
+        if (!html) return;
+        const title = document.getElementById('invoiceModalTitle').textContent || 'invoice';
+        const fileName = `${title.replace(/[^a-z0-9-]+/gi, '_')}.html`;
+        const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(link.href);
+    }
+
+    function renderInstallations(rows) {
+        invState.installationRows = rows;
+        const el = document.getElementById('installationsBody');
+        if (!rows.length) {
+            el.innerHTML = '<tr><td colspan="7">No installation requests found.</td></tr>';
+            return;
+        }
+        el.innerHTML = rows.map(row => `<tr>
+            <td><strong>${safe(row.request_no, 'New request')}</strong><br><small>${new Date(row.created_at).toLocaleDateString()}</small></td>
+            <td>${safe(row.customer_name)}<br><small>${safe(row.company_name, '')}</small></td>
+            <td><strong>${safe(row.vehicle_no)}</strong><br><small>${safe(row.installation_type)}</small></td>
+            <td>${safe(row.tracker_serial, 'Not assigned')}<br><small>${safe(row.tracker_product, '')}</small></td>
+            <td>${statusBadge(row.status)}</td>
+            <td><small>${safe(row.mapping_notes, safe(row.welcome_call_notes, safe(row.remarks, 'Pending workflow')))}</small></td>
+            <td>${installationActions(row)}</td>
+        </tr>`).join('');
+    }
+
+    function installationActions(row) {
+        const status = String(row.status || '').toUpperCase();
+        const buttons = [];
+        if (!row.tracker_item_id && !['COMPLETED', 'CANCELLED'].includes(status)) {
+            buttons.push(`<button type="button" class="inv-mini-btn" onclick="openWorkflowModal('assignTracker','${row.id}')">Assign Tracker</button>`);
+        }
+        if (row.tracker_item_id && status !== 'COMPLETED' && status !== 'CANCELLED') {
+            buttons.push(`<button type="button" class="inv-mini-btn success" onclick="openWorkflowModal('completeInstallation','${row.id}')">Complete</button>`);
+        }
+        if (!['COMPLETED', 'CANCELLED'].includes(status)) {
+            buttons.push(`<button type="button" class="inv-mini-btn danger" onclick="quickWorkflow('cancelInstallation','${row.id}')">Cancel</button>`);
+        }
+        return buttons.length ? `<div class="inv-table-actions">${buttons.join('')}</div>` : '<span class="inv-status gray">Closed</span>';
+    }
+
+    function renderSupport(data) {
+        invState.complaints = data.complaints || [];
+        invState.replacements = data.replacements || [];
+        const complaintsEl = document.getElementById('complaintsBody');
+        const replacementsEl = document.getElementById('replacementsBody');
+
+        complaintsEl.innerHTML = invState.complaints.length ? invState.complaints.map(row => `<tr>
+            <td><strong>${safe(row.ticket_no, 'New ticket')}</strong><br><small>${new Date(row.created_at).toLocaleDateString()}</small></td>
+            <td>${safe(row.customer_name)}<br><small>${safe(row.vehicle_no, '')}</small></td>
+            <td>${safe(row.issue_type)}<br><small>${safe(row.remarks, '')}</small></td>
+            <td>${statusBadge(row.priority)}</td>
+            <td>${statusBadge(row.status)}</td>
+            <td>${complaintActions(row)}</td>
+        </tr>`).join('') : '<tr><td colspan="6">No complaints found.</td></tr>';
+
+        replacementsEl.innerHTML = invState.replacements.length ? invState.replacements.map(row => `<tr>
+            <td><strong>${safe(row.replacement_no, 'New replacement')}</strong><br><small>${new Date(row.created_at).toLocaleDateString()}</small></td>
+            <td>${safe(row.customer_name)}</td>
+            <td>${safe(row.vehicle_no)}</td>
+            <td>${safe(row.old_serial, 'Old not linked')}<br><small>${safe(row.new_serial, 'New not linked')}</small></td>
+            <td>${statusBadge(row.status)}</td>
+        </tr>`).join('') : '<tr><td colspan="5">No replacements found.</td></tr>';
+    }
+
+    function complaintActions(row) {
+        const status = String(row.status || '').toUpperCase();
+        const buttons = [];
+        if (status !== 'RESOLVED') {
+            buttons.push(`<button type="button" class="inv-mini-btn success" onclick="quickWorkflow('resolveComplaint','${row.id}')">Resolve</button>`);
+            buttons.push(`<button type="button" class="inv-mini-btn" onclick="openWorkflowModal('replacement','${row.id}')">Replacement</button>`);
+        }
+        return buttons.length ? `<div class="inv-table-actions">${buttons.join('')}</div>` : '<span class="inv-status gray">Closed</span>';
+    }
+
+    function renderParties(customers, vendors) {
+        invState.customers = customers;
+        invState.vendors = vendors;
+        const customersEl = document.getElementById('customersList');
+        const vendorsEl = document.getElementById('vendorsList');
+        const visibleCustomers = customers.slice(0, 12);
+        const visibleVendors = vendors.slice(0, 12);
+        customersEl.innerHTML = visibleCustomers.length ? visibleCustomers.map(c => `<div class="inv-party">
+            <span class="inv-dot"></span>
+            <div style="flex:1;"><strong>${safe(c.customer_name)}</strong><span>${safe(c.company_name)} / ${safe(c.phone)}</span></div>
+            ${actions('customer', c.id)}
+        </div>`).join('') + (customers.length > visibleCustomers.length ? `<div class="inv-empty">Showing ${visibleCustomers.length} of ${customers.length} customers. Use workflow dropdowns for all records.</div>` : '') : '<div class="inv-empty">No customers found.</div>';
+        vendorsEl.innerHTML = visibleVendors.length ? visibleVendors.map(v => `<div class="inv-party">
+            <span class="inv-dot"></span>
+            <div style="flex:1;"><strong>${safe(v.vendor_name)}</strong><span>${safe(v.contact_person)} / ${safe(v.phone)}</span></div>
+            ${actions('vendor', v.id)}
+        </div>`).join('') + (vendors.length > visibleVendors.length ? `<div class="inv-empty">Showing ${visibleVendors.length} of ${vendors.length} vendors. Use workflow dropdowns for all records.</div>` : '') : '<div class="inv-empty">No vendors found.</div>';
+    }
+
+    function optionList(items, valueKey, labelKey, selected) {
+        return items.map(item => {
+            const value = item[valueKey];
+            const selectedAttr = String(value) === String(selected || '') ? 'selected' : '';
+            return `<option value="${escapeAttr(value)}" ${selectedAttr}>${escapeAttr(item[labelKey] || item.product_name || item.category_name)}</option>`;
+        }).join('');
+    }
+
+    function findRecord(type, id) {
+        const key = type === 'category' ? 'categories' : type === 'product' ? 'products' : type === 'serial' ? 'serials' : type === 'customer' ? 'customers' : 'vendors';
+        return invState[key].find(item => String(item.id) === String(id)) || null;
+    }
+
+    function field(name, label, value = '', attrs = '') {
+        return `<div class="inv-field"><label>${label}</label><input name="${name}" value="${escapeAttr(value)}" ${attrs} /></div>`;
+    }
+
+    function selectField(name, label, options, value = '') {
+        return `<div class="inv-field"><label>${label}</label><select name="${name}">${options(value)}</select></div>`;
+    }
+
+    function renderMasterFields(type, record = {}) {
+        if (type === 'category') {
+            return `
+                ${field('category_name', 'Category Name', record.category_name, 'required')}
+                <div class="inv-field full"><label>Description</label><textarea name="description">${escapeAttr(record.description || '')}</textarea></div>
+            `;
+        }
+
+        if (type === 'product') {
+            return `
+                ${field('product_name', 'Product / Service Name', record.product_name, 'required')}
+                ${selectField('category_id', 'Category', (selected) => `<option value="">No category</option>${optionList(invState.categories, 'id', 'category_name', selected)}`, record.category_id)}
+                ${selectField('product_type', 'Product Type', (selected) => ['ASSET','CONSUMABLE','SERVICE'].map(v => `<option value="${v}" ${v === (selected || 'ASSET') ? 'selected' : ''}>${v}</option>`).join(''), record.product_type || 'ASSET')}
+                ${selectField('tracking_type', 'Tracking Type', (selected) => ['SERIAL','IMEI','NONE'].map(v => `<option value="${v}" ${v === (selected || 'NONE') ? 'selected' : ''}>${v}</option>`).join(''), record.tracking_type || 'NONE')}
+                ${field('quantity', 'Opening / Current Quantity', record.quantity ?? 0, 'type="number" min="0"')}
+            `;
+        }
+
+        if (type === 'serial') {
+            return `
+                ${selectField('product_id', 'Product', (selected) => `${optionList(invState.products, 'id', 'product_name', selected)}`, record.product_id)}
+                ${field('serial_number', 'Serial / IMEI Number', record.serial_number, 'required')}
+                ${selectField('current_status', 'Current Status', (selected) => ['AVAILABLE','ALLOCATED','INSTALLED','RETURNED','DAMAGED'].map(v => `<option value="${v}" ${v === (selected || 'AVAILABLE') ? 'selected' : ''}>${v}</option>`).join(''), record.current_status || 'AVAILABLE')}
+            `;
+        }
+
+        if (type === 'customer') {
+            return `
+                ${field('customer_name', 'Customer Name', record.customer_name, 'required')}
+                ${field('company_name', 'Company Name', record.company_name, 'required')}
+                ${field('customer_type', 'Customer Type', record.customer_type || 'Corporate', 'required')}
+                ${field('phone', 'Phone', record.phone, 'required')}
+                ${field('email', 'Email', record.email, 'type="email" required')}
+            `;
+        }
+
+        return `
+            ${field('vendor_name', 'Vendor Name', record.vendor_name, 'required')}
+            ${field('contact_person', 'Contact Person', record.contact_person)}
+            ${field('phone', 'Phone', record.phone)}
+            ${field('email', 'Email', record.email, 'type="email"')}
+        `;
+    }
+
+    function openMasterModal(type, id = '') {
+        const record = id ? findRecord(type, id) : {};
+        const labels = {
+            category: 'Category',
+            product: 'Product / Service',
+            serial: 'Serial Item',
+            customer: 'Customer',
+            vendor: 'Vendor'
+        };
+
+        document.getElementById('masterType').value = type;
+        document.getElementById('masterRecordId').value = id || '';
+        document.getElementById('masterModalKicker').textContent = id ? 'Edit master record' : 'Create master record';
+        document.getElementById('masterModalTitle').textContent = `${id ? 'Edit' : 'Add'} ${labels[type]}`;
+        document.getElementById('masterFields').innerHTML = renderMasterFields(type, record || {});
+        document.getElementById('invMasterModal').classList.add('open');
+        document.getElementById('invMasterModal').setAttribute('aria-hidden', 'false');
+    }
+
+    function closeMasterModal() {
+        document.getElementById('invMasterModal').classList.remove('open');
+        document.getElementById('invMasterModal').setAttribute('aria-hidden', 'true');
+        document.getElementById('masterForm').reset();
+    }
+
+    function workflowSelect(name, label, optionsHtml, value = '') {
+        return `<div class="inv-field"><label>${label}</label><select name="${name}" required>${optionsHtml(value)}</select></div>`;
+    }
+
+    function workflowRemarks(value = '') {
+        return `<div class="inv-field full"><label>Remarks</label><textarea name="remarks" placeholder="Approval note, receiving note, client reference...">${escapeAttr(value)}</textarea></div>`;
+    }
+
+    function workflowItemBox(kind) {
+        const purchase = kind === 'purchase';
+        return `<div class="inv-items-box">
+            <div class="inv-panel-head" style="padding:0;border:0;">
+                <div><span>${purchase ? 'Requested items' : 'Quotation items'}</span><h2 style="font-size:15px;">Line Items</h2></div>
+                <button type="button" class="inv-mini-btn" onclick="addWorkflowItemRow('${kind}')">Add Item</button>
+            </div>
+            <div id="workflowItems"></div>
+        </div>`;
+    }
+
+    function addWorkflowItemRow(kind) {
+        const wrap = document.getElementById('workflowItems');
+        if (!wrap) return;
+        const purchase = kind === 'purchase';
+        const options = optionList(invState.products, 'id', 'product_name', '');
+        const row = document.createElement('div');
+        row.className = `inv-item-row ${purchase ? 'purchase-item' : ''}`;
+        row.innerHTML = `
+            <select name="product_id" required><option value="">Select product</option>${options}</select>
+            <input name="quantity" type="number" min="1" value="1" required />
+            ${purchase ? '' : '<input name="unit_price" type="number" min="0" step="0.01" value="0" required />'}
+            <button type="button" class="inv-row-remove" onclick="this.closest('.inv-item-row').remove()">x</button>
+        `;
+        wrap.appendChild(row);
+    }
+
+    function parseWorkflowItems(items) {
+        if (Array.isArray(items)) return items;
+        try { return JSON.parse(items || '[]'); } catch { return []; }
+    }
+
+    function collectWorkflowItems(includePrice) {
+        return Array.from(document.querySelectorAll('#workflowItems .inv-item-row')).map(row => {
+            const productId = row.querySelector('[name="product_id"]').value;
+            const product = invState.products.find(item => String(item.id) === String(productId));
+            return {
+                product_id: productId,
+                product_name: product?.product_name || '',
+                quantity: Number(row.querySelector('[name="quantity"]').value || 1),
+                unit_price: includePrice ? Number(row.querySelector('[name="unit_price"]').value || 0) : 0
+            };
+        }).filter(item => item.product_id);
+    }
+
+    function findWorkflowRow(collection, id) {
+        return collection.find(item => String(item.id) === String(id)) || null;
+    }
+
+    function trackerOptions(statuses = ['AVAILABLE', 'ALLOCATED']) {
+        const allowed = statuses.map(status => status.toUpperCase());
+        return invState.serials
+            .filter(item => allowed.includes(String(item.current_status || '').toUpperCase()))
+            .map(item => `<option value="${escapeAttr(item.id)}">${escapeAttr(item.serial_number)} - ${escapeAttr(item.product_name || 'Tracker')}</option>`)
+            .join('');
+    }
+
+    function renderWorkflowFields(type, id = '') {
+        if (type === 'purchaseRequest') {
+            setTimeout(() => addWorkflowItemRow('purchase'), 0);
+            return `
+                ${workflowSelect('department_id', 'Department', selected => optionList(invState.departments, 'id', 'department_name', selected))}
+                ${workflowItemBox('purchase')}
+                ${workflowRemarks()}
+            `;
+        }
+
+        if (type === 'purchaseOrder') {
+            const approvedPrs = invState.purchaseRows.filter(row => String(row.status).toUpperCase() === 'APPROVED' && !row.purchase_order_db_id);
+            return `
+                ${id ? '' : workflowSelect('purchase_request_id', 'Approved Purchase Request', selected => optionList(approvedPrs, 'id', 'pr_id', selected))}
+                ${workflowSelect('vendor_id', 'Vendor', selected => optionList(invState.vendors, 'id', 'vendor_name', selected))}
+                ${field('default_unit_price', 'Default Unit Price', 0, 'type="number" min="0" step="0.01" required')}
+                ${workflowRemarks('PO generated from approved PR.')}
+            `;
+        }
+
+        if (type === 'grn') {
+            const pendingOrders = invState.purchaseOrders.filter(row => !row.grn_id);
+            return `
+                ${id ? '' : workflowSelect('purchase_order_id', 'Purchase Order', selected => optionList(pendingOrders, 'id', 'po_id', selected))}
+                ${field('serial_prefix', 'Serial Prefix', `GRN-${new Date().toISOString().slice(0,10).replaceAll('-', '')}`, 'required')}
+                ${workflowRemarks('Goods received and added to inventory.')}
+            `;
+        }
+
+        if (type === 'quotation') {
+            setTimeout(() => addWorkflowItemRow('sales'), 0);
+            return `
+                ${workflowSelect('customer_id', 'Customer', selected => optionList(invState.customers, 'id', 'customer_name', selected))}
+                ${workflowItemBox('sales')}
+                ${workflowRemarks('Quotation prepared for client approval.')}
+            `;
+        }
+
+        if (type === 'installation') {
+            return `
+                ${workflowSelect('customer_id', 'Customer', selected => optionList(invState.customers, 'id', 'customer_name', selected))}
+                ${field('vehicle_no', 'Vehicle Number', '', 'required placeholder="ABC-123"')}
+                ${field('vehicle_model', 'Vehicle Model', '', 'placeholder="Toyota Corolla / Truck / Bike"')}
+                ${field('contact_person', 'Contact Person', '', 'placeholder="Fleet coordinator"')}
+                ${field('contact_phone', 'Contact Phone', '', 'placeholder="03001234567"')}
+                ${selectField('installation_type', 'Installation Type', selected => ['NEW','REPLACEMENT','SERVICE'].map(v => `<option value="${v}" ${v === (selected || 'NEW') ? 'selected' : ''}>${v}</option>`).join(''), 'NEW')}
+                ${field('po_reference', 'PO / Client Reference', '', 'placeholder="Optional"')}
+                ${workflowRemarks('Installation request created from inventory workspace.')}
+            `;
+        }
+
+        if (type === 'assignTracker') {
+            const installation = findWorkflowRow(invState.installationRows, id);
+            return `
+                <div class="inv-field full"><label>Installation</label><input value="${escapeAttr(`${installation?.customer_name || ''} / ${installation?.vehicle_no || ''}`)}" disabled /></div>
+                <div class="inv-field full"><label>Tracker Serial</label><select name="tracker_item_id" required><option value="">Select available tracker</option>${trackerOptions()}</select></div>
+                ${field('mapping_notes', 'Vehicle Mapping Notes', `Mapped to ${installation?.vehicle_no || 'vehicle'}`, 'required')}
+                ${workflowRemarks('Tracker assigned and marked installed.')}
+            `;
+        }
+
+        if (type === 'completeInstallation') {
+            return `
+                ${field('welcome_call_notes', 'Welcome Call Notes', 'Customer welcome call completed.', 'required')}
+                ${field('billing_notes', 'Billing / Finance Notes', 'Billing setup ready.', 'required')}
+                ${workflowRemarks('Installation completed.')}
+            `;
+        }
+
+        if (type === 'complaint') {
+            return `
+                ${workflowSelect('customer_id', 'Customer', selected => optionList(invState.customers, 'id', 'customer_name', selected))}
+                ${field('vehicle_no', 'Vehicle Number', '', 'placeholder="Optional"')}
+                ${field('issue_type', 'Issue Type', '', 'required placeholder="No signal / device fault / billing issue"')}
+                ${selectField('priority', 'Priority', selected => ['LOW','MEDIUM','HIGH'].map(v => `<option value="${v}" ${v === (selected || 'MEDIUM') ? 'selected' : ''}>${v}</option>`).join(''), 'MEDIUM')}
+                ${workflowRemarks('Complaint taken by support team.')}
+            `;
+        }
+
+        if (type === 'replacement') {
+            const complaint = findWorkflowRow(invState.complaints, id);
+            const customerId = complaint?.customer_id || '';
+            const vehicleNo = complaint?.vehicle_no || '';
+            return `
+                ${id ? `<input type="hidden" name="complaint_id" value="${escapeAttr(id)}" />` : ''}
+                ${id ? `<input type="hidden" name="customer_id" value="${escapeAttr(customerId)}" />` : workflowSelect('customer_id', 'Customer', selected => optionList(invState.customers, 'id', 'customer_name', selected))}
+                ${field('vehicle_no', 'Vehicle Number', vehicleNo, 'placeholder="Vehicle number"')}
+                <div class="inv-field"><label>Old Serial</label><select name="old_inventory_item_id"><option value="">Old serial unknown</option>${trackerOptions(['INSTALLED','ALLOCATED','DAMAGED','RETURNED'])}</select></div>
+                <div class="inv-field"><label>New Serial</label><select name="new_inventory_item_id" required><option value="">Select replacement tracker</option>${trackerOptions(['AVAILABLE','ALLOCATED'])}</select></div>
+                ${workflowRemarks('Old serial returned, new serial installed, complaint resolved.')}
+            `;
+        }
+
+        return workflowRemarks();
+    }
+
+    function openWorkflowModal(type, id = '') {
+        const titles = {
+            purchaseRequest: 'Create Purchase Request',
+            purchaseOrder: 'Generate Purchase Order',
+            grn: 'Receive Goods Note',
+            quotation: 'Create Customer Quotation',
+            installation: 'Create Installation Request',
+            assignTracker: 'Assign Tracker Serial',
+            completeInstallation: 'Complete Installation',
+            complaint: 'Create Complaint Ticket',
+            replacement: 'Record Item Replacement'
+        };
+        document.getElementById('workflowType').value = type;
+        document.getElementById('workflowRecordId').value = id || '';
+        document.getElementById('workflowModalKicker').textContent = 'Actionable ERP workflow';
+        document.getElementById('workflowModalTitle').textContent = titles[type] || 'Run Workflow Action';
+        document.getElementById('workflowFields').innerHTML = renderWorkflowFields(type, id);
+        document.getElementById('workflowSaveBtn').textContent = type === 'grn' ? 'Receive Stock' : 'Save Workflow';
+        document.getElementById('invWorkflowModal').classList.add('open');
+        document.getElementById('invWorkflowModal').setAttribute('aria-hidden', 'false');
+    }
+
+    function closeWorkflowModal() {
+        document.getElementById('invWorkflowModal').classList.remove('open');
+        document.getElementById('invWorkflowModal').setAttribute('aria-hidden', 'true');
+        document.getElementById('workflowForm').reset();
+        document.getElementById('workflowFields').innerHTML = '';
+    }
+
+    async function saveWorkflowRecord(event) {
+        event.preventDefault();
+        const form = event.currentTarget;
+        const type = document.getElementById('workflowType').value;
+        const id = document.getElementById('workflowRecordId').value;
+        const data = Object.fromEntries(new FormData(form).entries());
+        const btn = document.getElementById('workflowSaveBtn');
+        btn.disabled = true;
+        btn.textContent = 'Working...';
+
+        let res;
+        if (type === 'purchaseRequest') {
+            res = await EmsApi.inventory.createPurchaseRequest({
+                department_id: data.department_id,
+                remarks: data.remarks,
+                items: collectWorkflowItems(false)
+            });
+        } else if (type === 'purchaseOrder') {
+            const purchaseRequestId = id || data.purchase_request_id;
+            const row = findWorkflowRow(invState.purchaseRows, purchaseRequestId);
+            const unitPrices = {};
+            parseWorkflowItems(row?.items).forEach(item => { unitPrices[item.product_id] = Number(data.default_unit_price || 0); });
+            res = await EmsApi.inventory.createPurchaseOrder({
+                purchase_request_id: purchaseRequestId,
+                vendor_id: data.vendor_id,
+                unit_prices: unitPrices,
+                remarks: data.remarks
+            });
+        } else if (type === 'grn') {
+            res = await EmsApi.inventory.createGrn({
+                purchase_order_id: id || data.purchase_order_id,
+                serial_prefix: data.serial_prefix,
+                remarks: data.remarks
+            });
+        } else if (type === 'quotation') {
+            res = await EmsApi.inventory.createQuotation({
+                customer_id: data.customer_id,
+                remarks: data.remarks,
+                items: collectWorkflowItems(true)
+            });
+        } else if (type === 'installation') {
+            res = await EmsApi.inventory.createInstallation({
+                customer_id: data.customer_id,
+                vehicle_no: data.vehicle_no,
+                vehicle_model: data.vehicle_model,
+                contact_person: data.contact_person,
+                contact_phone: data.contact_phone,
+                installation_type: data.installation_type,
+                po_reference: data.po_reference,
+                remarks: data.remarks
+            });
+        } else if (type === 'assignTracker') {
+            res = await EmsApi.inventory.assignInstallationTracker(id, {
+                tracker_item_id: data.tracker_item_id,
+                mapping_notes: data.mapping_notes,
+                remarks: data.remarks
+            });
+        } else if (type === 'completeInstallation') {
+            res = await EmsApi.inventory.completeInstallation(id, {
+                welcome_call_notes: data.welcome_call_notes,
+                billing_notes: data.billing_notes,
+                remarks: data.remarks
+            });
+        } else if (type === 'complaint') {
+            res = await EmsApi.inventory.createComplaint({
+                customer_id: data.customer_id,
+                vehicle_no: data.vehicle_no,
+                issue_type: data.issue_type,
+                priority: data.priority,
+                remarks: data.remarks
+            });
+        } else if (type === 'replacement') {
+            res = await EmsApi.inventory.createReplacement({
+                complaint_id: data.complaint_id,
+                customer_id: data.customer_id,
+                vehicle_no: data.vehicle_no,
+                old_inventory_item_id: data.old_inventory_item_id,
+                new_inventory_item_id: data.new_inventory_item_id,
+                status: 'REPLACED',
+                remarks: data.remarks
+            });
+        }
+
+        btn.disabled = false;
+        btn.textContent = type === 'grn' ? 'Receive Stock' : 'Save Workflow';
+        if (!res?.success) {
+            alert(res?.error || 'Workflow action failed.');
+            return false;
+        }
+
+        closeWorkflowModal();
+        await loadInventoryControl();
+        return false;
+    }
+
+    async function quickWorkflow(type, id) {
+        const labels = {
+            approvePurchaseRequest: 'approve this purchase request',
+            rejectPurchaseRequest: 'reject this purchase request',
+            approveQuotation: 'approve this quotation',
+            rejectQuotation: 'reject this quotation',
+            createDeliveryOrder: 'create delivery order',
+            approveDeliveryOrder: 'approve delivery order and allocate stock',
+            rejectDeliveryOrder: 'reject delivery order',
+            createInvoice: 'create invoice',
+            approveInvoice: 'approve invoice',
+            rejectInvoice: 'reject invoice',
+            markInvoicePaid: 'mark invoice as paid',
+            cancelInstallation: 'cancel this installation',
+            resolveComplaint: 'resolve this complaint'
+        };
+        if (!confirm(`Do you want to ${labels[type] || 'run this action'}?`)) return;
+        const remarks = ['rejectPurchaseRequest','rejectQuotation','rejectDeliveryOrder','rejectInvoice'].includes(type)
+            ? prompt('Reason / remarks?', 'Rejected after review') || 'Rejected'
+            : 'Action completed from inventory workspace.';
+        const map = {
+            approvePurchaseRequest: () => EmsApi.inventory.approvePurchaseRequest(id, { remarks }),
+            rejectPurchaseRequest: () => EmsApi.inventory.rejectPurchaseRequest(id, { remarks }),
+            approveQuotation: () => EmsApi.inventory.approveQuotation(id, { remarks }),
+            rejectQuotation: () => EmsApi.inventory.rejectQuotation(id, { remarks }),
+            createDeliveryOrder: () => EmsApi.inventory.createDeliveryOrder({ quotation_id: id, remarks }),
+            approveDeliveryOrder: () => EmsApi.inventory.approveDeliveryOrder(id, { remarks }),
+            rejectDeliveryOrder: () => EmsApi.inventory.rejectDeliveryOrder(id, { remarks }),
+            createInvoice: () => EmsApi.inventory.createInvoice({ quotation_id: id, remarks }),
+            approveInvoice: () => EmsApi.inventory.approveInvoice(id, { remarks }),
+            rejectInvoice: () => EmsApi.inventory.rejectInvoice(id, { remarks }),
+            markInvoicePaid: () => EmsApi.inventory.markInvoicePaid(id, { remarks: 'Payment received.' }),
+            cancelInstallation: () => EmsApi.inventory.cancelInstallation(id, { remarks }),
+            resolveComplaint: () => EmsApi.inventory.resolveComplaint(id, { resolution_notes: remarks })
+        };
+        const res = await map[type]();
+        if (!res.success) {
+            alert(res.error || 'Workflow action failed.');
+            return;
+        }
+        await loadInventoryControl();
+    }
+
+    function formToObject(form) {
+        const data = {};
+        new FormData(form).forEach((value, key) => {
+            if (!['master_type', 'record_id'].includes(key)) data[key] = value;
+        });
+        return data;
+    }
+
+    async function saveMasterRecord(event) {
+        event.preventDefault();
+        const form = event.currentTarget;
+        const type = document.getElementById('masterType').value;
+        const id = document.getElementById('masterRecordId').value;
+        const data = formToObject(form);
+        const btn = document.getElementById('masterSaveBtn');
+        btn.disabled = true;
+        btn.textContent = 'Saving...';
+
+        const createMap = {
+            category: EmsApi.inventory.createCategory,
+            product: EmsApi.inventory.createProduct,
+            serial: EmsApi.inventory.createSerial,
+            customer: EmsApi.inventory.createCustomer,
+            vendor: EmsApi.inventory.createVendor
+        };
+        const updateMap = {
+            category: EmsApi.inventory.updateCategory,
+            product: EmsApi.inventory.updateProduct,
+            serial: EmsApi.inventory.updateSerial,
+            customer: EmsApi.inventory.updateCustomer,
+            vendor: EmsApi.inventory.updateVendor
+        };
+
+        const res = id ? await updateMap[type](id, data) : await createMap[type](data);
+        btn.disabled = false;
+        btn.textContent = 'Save';
+
+        if (!res.success) {
+            alert(res.error || 'Could not save record.');
+            return false;
+        }
+
+        closeMasterModal();
+        await loadInventoryControl();
+        return false;
+    }
+
+    async function deleteMasterRecord(type, id) {
+        const labels = { category: 'category', product: 'product', serial: 'serial item', customer: 'customer', vendor: 'vendor' };
+        if (!confirm(`Delete this ${labels[type]}? Linked records are protected automatically.`)) return;
+
+        const deleteMap = {
+            category: EmsApi.inventory.deleteCategory,
+            product: EmsApi.inventory.deleteProduct,
+            serial: EmsApi.inventory.deleteSerial,
+            customer: EmsApi.inventory.deleteCustomer,
+            vendor: EmsApi.inventory.deleteVendor
+        };
+
+        const res = await deleteMap[type](id);
+        if (!res.success) {
+            alert(res.error || 'Could not delete record. It may be linked with purchase/sales history.');
+            return;
+        }
+        await loadInventoryControl();
+    }
+
+    async function loadInventoryControl() {
+        const [
+            statusRes,
+            categoriesRes,
+            productsRes,
+            serialsRes,
+            purchaseRes,
+            purchaseOrdersRes,
+            salesRes,
+            invoiceLedgerRes,
+            installationsRes,
+            supportRes,
+            customersRes,
+            vendorsRes,
+            departmentsRes
+        ] = await Promise.allSettled([
+            EmsApi.inventory.status(),
+            EmsApi.inventory.categories(),
+            EmsApi.inventory.products({ limit: 100 }),
+            EmsApi.inventory.serials({ limit: 100 }),
+            EmsApi.inventory.purchaseFlow(),
+            EmsApi.inventory.purchaseOrders(),
+            EmsApi.inventory.salesFlow(),
+            EmsApi.inventory.invoiceLedger(),
+            EmsApi.inventory.installationFlow(),
+            EmsApi.inventory.supportFlow(),
+            EmsApi.inventory.customers({ limit: 100 }),
+            EmsApi.inventory.vendors({ limit: 100 }),
+            EmsApi.config.get('departments')
+        ]);
+
+        const status = statusRes.value;
+        if (status?.success) {
+            renderSummary(status.data.summary || {});
+        } else {
+            document.getElementById('inventoryAuthStatus').textContent = 'Backend unavailable';
+            document.getElementById('demoReadiness').textContent = 'Needs attention';
+        }
+
+        if (categoriesRes.value?.success) {
+            renderCategories(categoriesRes.value.data || []);
+        }
+        invState.purchaseOrders = purchaseOrdersRes.value?.data || [];
+        invState.departments = departmentsRes.value?.data || [];
+        renderProducts(productsRes.value?.data || []);
+        renderSerials(serialsRes.value?.data || []);
+        renderPurchase(purchaseRes.value?.data || []);
+        renderSales(salesRes.value?.data || []);
+        renderInvoiceLedger(invoiceLedgerRes.value?.data || []);
+        renderInstallations(installationsRes.value?.data || []);
+        renderSupport(supportRes.value?.data || { complaints: [], replacements: [] });
+        renderParties(customersRes.value?.data || [], vendorsRes.value?.data || []);
+    }
+
+    loadInventoryControl();
+</script>
+}

@@ -119,30 +119,36 @@
         btn.disabled = true; btn.textContent = 'Publishing...';
         const res = await EmsApi.announcements.create({ title, content, is_pinned });
         btn.disabled = false; btn.innerHTML = '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Publish';
-        if (res.success) { showToast('Announcement published!', 'success'); loadAnnouncements(); }
-        else {
-            allAnnouncements.unshift({ id: 'local_'+Date.now(), title, content, is_pinned, author_name: 'You', created_at: new Date().toISOString(), read_count: 0 });
-            renderFeed(allAnnouncements);
-            showToast('Published (preview mode)', 'success');
+        if (res.success) {
+            showToast('Announcement published!', 'success');
+            loadAnnouncements();
+            closeModal('announceModal');
+            document.getElementById('annTitle').value = '';
+            document.getElementById('annContent').value = '';
+        } else {
+            showToast(res.error || 'Unable to publish announcement in database', 'error');
         }
-        closeModal('announceModal');
-        document.getElementById('annTitle').value = '';
-        document.getElementById('annContent').value = '';
     }
 
     async function togglePin(id, pin) {
-        const ann = allAnnouncements.find(a => String(a.id) === String(id));
-        if (ann) { ann.is_pinned = pin; renderFeed(allAnnouncements); }
-        pin ? await EmsApi.announcements.pin(id) : await EmsApi.announcements.unpin(id);
+        const res = pin ? await EmsApi.announcements.pin(id) : await EmsApi.announcements.unpin(id);
+        if (!res.success) {
+            showToast(res.error || 'Unable to update announcement', 'error');
+            return;
+        }
+        await loadAnnouncements();
         showToast(pin ? 'Pinned to top' : 'Unpinned', 'success');
     }
 
     async function deleteAnn(id) {
         showConfirm({ title: 'Delete Announcement?', message: 'This will remove this announcement.', type: 'danger', confirmText: 'Delete',
             onConfirm: async () => {
-                await EmsApi.announcements.delete(id);
-                allAnnouncements = allAnnouncements.filter(a => String(a.id) !== String(id));
-                renderFeed(allAnnouncements);
+                const res = await EmsApi.announcements.delete(id);
+                if (!res.success) {
+                    showToast(res.error || 'Unable to delete announcement', 'error');
+                    return;
+                }
+                await loadAnnouncements();
                 showToast('Announcement deleted', 'success');
             }
         });

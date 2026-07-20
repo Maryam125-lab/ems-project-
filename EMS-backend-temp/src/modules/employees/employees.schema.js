@@ -26,6 +26,11 @@ const jobInfoSchema = z.object({
 const salaryInfoSchema = z
   .object({
     base_salary: z.number().nonnegative().optional(),
+    payroll_cycle: z.enum(['monthly', 'biweekly', 'weekly']).optional().nullable(),
+    tax_status: z.enum(['taxable', 'non_taxable']).optional().nullable(),
+    allowance_notes: z.string().max(500).optional().nullable(),
+    probation_salary: z.number().nonnegative().optional().nullable(),
+    salary_effective_from: z.string().min(8).optional().nullable(),
   })
   .optional();
 
@@ -83,6 +88,22 @@ const medicalInfoSchema = z.object({
   next_medical_exam_date: z.string().optional().nullable(),
 });
 
+const documentInfoSchema = z
+  .object({
+    cnic_document: z.string().max(255).optional().nullable(),
+    resume_document: z.string().max(255).optional().nullable(),
+    offer_letter_document: z.string().max(255).optional().nullable(),
+  })
+  .optional();
+
+const accessInfoSchema = z
+  .object({
+    portal_access: z.enum(['enabled', 'disabled']).optional().nullable(),
+    access_role: z.enum(['employee', 'hr_admin', 'manager']).optional().nullable(),
+    send_welcome_email: z.enum(['yes', 'no']).optional().nullable(),
+  })
+  .optional();
+
 export const createEmployeeSchema = z.object({
   personalInfo: personalInfoSchema,
   jobInfo: jobInfoSchema,
@@ -91,6 +112,8 @@ export const createEmployeeSchema = z.object({
   emergencyContacts: emergencyContactsSchema.optional(),
   bankInfo: bankInfoSchema.optional(),
   medicalInfo: medicalInfoSchema.optional(),
+  documentInfo: documentInfoSchema,
+  accessInfo: accessInfoSchema,
 });
 
 export const updatePersonalInfoSchema = personalInfoSchema.partial().extend({

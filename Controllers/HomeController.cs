@@ -8,6 +8,9 @@ public class HomeController : Controller
 {
     public IActionResult Index()    
     {
+        Response.Cookies.Delete("ems_jwt", new CookieOptions { Path = "/" });
+        Response.Cookies.Delete("ems_login_session", new CookieOptions { Path = "/" });
+        Response.Cookies.Delete("ems_csrf", new CookieOptions { Path = "/" });
         return View();
     }
 

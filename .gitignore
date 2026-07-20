@@ -11,6 +11,11 @@
 # .NET publish output
 out/
 publish/
+publish*/
+TRACK360-ERP-publish-ready*/
+
+# Local secrets
+appsettings.Local.json
 
 # NuGet
 *.nupkg

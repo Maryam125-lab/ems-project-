@@ -8,8 +8,7 @@
     </div>
     <button class="btn btn-primary" onclick="openModal('configModal')">
         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-            <line x1="12" y1="5" x2="12" y2="19" />
-            <line x1="5" y1="12" x2="19" y2="12" />
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
         </svg>
         Add @ViewData["ItemName"]
     </button>
@@ -17,10 +16,9 @@
 
 <div class="table-container anim-fade-in-up">
     <div class="filter-bar">
-        <input class="filter-search" type="text" placeholder="Search @ViewData["Title"]…" id="configSearch"
-               oninput="filterTable('configTable','configSearch')" />
+        <input class="filter-search" type="text" placeholder="Search @ViewData["Title"]…" id="configSearch" oninput="filterTable('configTable','configSearch')" />
         <div style="margin-left:auto;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:4px;">
-            <strong id="configTable-count" style="color:var(--text);">0</strong> records
+            <strong id="configTable-count" style="color:var(--text);">@ViewData["Count"]</strong> records
         </div>
     </div>
     <div class="table-scroll-wrapper">
@@ -30,15 +28,13 @@
                     @Html.Raw(ViewData["TableHeaders"]?.ToString())
                 </tr>
             </thead>
-            <tbody id="configTableBody">
-                <tr>
-                    <td colspan="10" style="text-align:center;padding:40px;color:var(--muted)">Loading...</td>
-                </tr>
+            <tbody>
+                @Html.Raw(ViewData["TableBody"]?.ToString())
             </tbody>
         </table>
     </div>
     <div class="table-pagination">
-        <div class="pagination-info" id="configPagInfo">Showing all <strong>0</strong> records</div>
+        <div class="pagination-info">Showing all <strong>@ViewData["Count"]</strong> records</div>
         <div class="pagination-controls"><button class="page-btn active">1</button></div>
     </div>
 </div>
@@ -46,20 +42,306 @@
 <div class="modal-backdrop" id="configModal">
     <div class="modal-dialog">
         <div class="modal-header">
-            <div class="modal-title" id="configModalTitle">@Html.Raw(ViewData["Icon"]) Add @ViewData["ItemName"]</div>
-            <button class="modal-close" onclick="closeModal('configModal')">
-                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <line x1="18" y1="6" x2="6" y2="18" />
-                    <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-            </button>
+            <div class="modal-title">@Html.Raw(ViewData["Icon"]) Add @ViewData["ItemName"]</div>
+            <button class="modal-close" onclick="closeModal('configModal')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
         </div>
         <div class="modal-body">
             @Html.Raw(ViewData["ModalFields"]?.ToString())
         </div>
         <div class="modal-footer">
             <button class="btn btn-ghost" onclick="closeModal('configModal')">Cancel</button>
-            <button class="btn btn-primary" onclick="if(window.saveConfigRecord) saveConfigRecord()">Save</button>
+            <button class="btn btn-primary" id="configSaveBtn" onclick="saveConfigRecord()">Save</button>
         </div>
     </div>
-</div> 
+</div>
+
+<script>
+    const configRouteMap = {
+        Departments: { entity: 'departments', title: 'Department', fields: [
+            { name: 'department_name', label: 'Department Name', required: true },
+            { name: 'department_code', label: 'Code', required: true },
+            { name: 'parent_department_id', label: 'Parent Department', type: 'ref', ref: 'departments' },
+            { name: 'is_active', label: 'Status', type: 'bool' }
+        ] },
+        Designations: { entity: 'designations', title: 'Designation', fields: [
+            { name: 'title', label: 'Designation Title', required: true },
+            { name: 'is_active', label: 'Status', type: 'bool' }
+        ] },
+        EmployeeTypes: { entity: 'employment-types', title: 'Employee Type', fields: [
+            { name: 'type_name', label: 'Type Name', required: true },
+            { name: 'is_active', label: 'Status', type: 'bool' }
+        ] },
+        JobStatuses: { entity: 'job-statuses', title: 'Job Status', fields: [
+            { name: 'status_name', label: 'Status Name', required: true },
+            { name: 'is_active', label: 'Status', type: 'bool' }
+        ] },
+        WorkModes: { entity: 'work-modes', title: 'Work Mode', fields: [
+            { name: 'mode_name', label: 'Mode Name', required: true },
+            { name: 'is_active', label: 'Status', type: 'bool' }
+        ] },
+        WorkLocations: { entity: 'work-locations', title: 'Work Location', fields: [
+            { name: 'location_name', label: 'Location Name', required: true },
+            { name: 'is_active', label: 'Status', type: 'bool' }
+        ] },
+        Shifts: { entity: 'shifts', title: 'Shift', fields: [
+            { name: 'name', label: 'Shift Name', required: true },
+            { name: 'start_time', label: 'Start Time', type: 'time', required: true },
+            { name: 'end_time', label: 'End Time', type: 'time', required: true },
+            { name: 'late_after_minutes', label: 'Grace Period (minutes)', type: 'number', required: true },
+            { name: 'is_active', label: 'Status', type: 'bool' }
+        ] },
+        LeaveTypes: { entity: 'leave-types', title: 'Leave Type', fields: [
+            { name: 'name', label: 'Leave Type Name', required: true },
+            { name: 'is_active', label: 'Status', type: 'bool' }
+        ] },
+        LeavePolicies: { entity: 'leave-policies', title: 'Leave Policy', fields: [
+            { name: 'department_id', label: 'Department', type: 'ref', ref: 'departments', required: true },
+            { name: 'leave_type_id', label: 'Leave Type', type: 'ref', ref: 'leave-types', required: true },
+            { name: 'days_allowed', label: 'Days Allowed', type: 'number', required: true },
+            { name: 'year', label: 'Year', type: 'number', required: true },
+            { name: 'is_active', label: 'Status', type: 'bool' }
+        ] },
+        PenaltiesConfig: { entity: 'penalty-rules', title: 'Penalty Rule', fields: [
+            { name: 'name', label: 'Rule Name', required: true },
+            { name: 'amount_pkr', label: 'Amount (PKR)', type: 'number', required: true },
+            { name: 'type', label: 'Type', type: 'select', options: [{ value: 'flat', label: 'Flat' }, { value: 'percentage', label: 'Percentage' }], required: true },
+            { name: 'is_active', label: 'Status', type: 'bool' }
+        ] },
+        SalaryComponents: { entity: 'salary-components', title: 'Salary Component', fields: [
+            { name: 'component_name', label: 'Component Name', required: true },
+            { name: 'component_type', label: 'Type', type: 'select', options: [{ value: 'earning', label: 'Earning' }, { value: 'deduction', label: 'Deduction' }], required: true },
+            { name: 'calculation_type', label: 'Calculation', type: 'select', options: [{ value: 'fixed', label: 'Fixed Amount' }, { value: 'percentage', label: 'Percentage' }, { value: 'slab', label: 'Slab-based' }], required: true },
+            { name: 'fixed_amount', label: 'Fixed Amount', type: 'number' },
+            { name: 'percentage_rate', label: 'Percentage Rate', type: 'number' },
+            { name: 'is_taxable', label: 'Taxable', type: 'bool' },
+            { name: 'is_active', label: 'Status', type: 'bool' }
+        ] },
+        GlobalDays: { entity: 'global-days', title: 'Global Day', fields: [
+            { name: 'name', label: 'Holiday Name', required: true },
+            { name: 'type', label: 'Type', type: 'select', options: [{ value: 'national', label: 'National' }, { value: 'religious', label: 'Religious' }, { value: 'company', label: 'Company' }], required: true },
+            { name: 'start_date', label: 'Start Date', type: 'date', required: true },
+            { name: 'end_date', label: 'End Date', type: 'date' },
+            { name: 'is_active', label: 'Status', type: 'bool' }
+        ] },
+        TaxConfig: { entity: 'tax-config', title: 'Tax Slab', fields: [
+            { name: 'income_from', label: 'Income From', type: 'number', required: true },
+            { name: 'income_to', label: 'Income To', type: 'number' },
+            { name: 'rate_percent', label: 'Rate (%)', type: 'number', required: true },
+            { name: 'fixed_amount', label: 'Fixed Amount', type: 'number', required: true },
+            { name: 'is_active', label: 'Status', type: 'bool' }
+        ] },
+        CustomFields: { entity: 'custom-fields', title: 'Custom Field', fields: [
+            { name: 'field_name', label: 'Field Name', required: true },
+            { name: 'field_type', label: 'Field Type', type: 'select', options: [{ value: 'text', label: 'Text' }, { value: 'number', label: 'Number' }, { value: 'select', label: 'Select' }, { value: 'date', label: 'Date' }, { value: 'url', label: 'URL' }, { value: 'textarea', label: 'Textarea' }], required: true },
+            { name: 'section', label: 'Section', type: 'select', options: [{ value: 'personal', label: 'Personal' }, { value: 'job', label: 'Job' }, { value: 'bank', label: 'Bank' }], required: true },
+            { name: 'is_required', label: 'Required', type: 'bool' },
+            { name: 'is_active', label: 'Status', type: 'bool' }
+        ] }
+    };
+
+    let currentConfig = null;
+    let currentConfigRows = [];
+    let currentConfigEditId = null;
+    let currentConfigRefs = {};
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const pageKey = location.pathname.split('/').filter(Boolean).pop();
+        currentConfig = configRouteMap[pageKey];
+        if (!currentConfig || typeof EmsApi === 'undefined') return;
+
+        buildConfigModal();
+        loadConfigRecords();
+    });
+
+    function configDisplayValue(row, field) {
+        const value = row[field.name];
+        if (field.type === 'bool') {
+            if (field.name !== 'is_active') {
+                return value ? '<span class="tag tag-green">Yes</span>' : '<span class="tag tag-red">No</span>';
+            }
+            return value ? '<span class="status-badge approved">Active</span>' : '<span class="status-badge rejected">Inactive</span>';
+        }
+        if (field.type === 'ref') {
+            const options = currentConfigRefs[field.ref] || [];
+            const match = options.find(x => x.id === value);
+            return escapeHtml(match ? configRecordLabel(match) : (value || '-'));
+        }
+        return escapeHtml(value ?? '-');
+    }
+
+    function configRecordLabel(row) {
+        return row.department_name || row.title || row.type_name || row.status_name || row.mode_name || row.location_name || row.name || row.email || row.id;
+    }
+
+    async function loadConfigRefs() {
+        const refs = [...new Set(currentConfig.fields.filter(f => f.type === 'ref').map(f => f.ref))];
+        for (const ref of refs) {
+            if (currentConfigRefs[ref]) continue;
+            const res = await EmsApi.config.get(ref);
+            currentConfigRefs[ref] = res.success ? (Array.isArray(res.data) ? res.data : []) : [];
+        }
+    }
+
+    async function loadConfigRecords() {
+        const tbody = document.querySelector('#configTable tbody');
+        tbody.innerHTML = '<tr><td colspan="8" style="padding:24px;color:var(--muted);">Loading live records...</td></tr>';
+        await loadConfigRefs();
+
+        const res = await EmsApi.config.get(currentConfig.entity);
+        if (!res.success) {
+            tbody.innerHTML = `<tr><td colspan="8" style="padding:24px;color:#dc2626;">${escapeHtml(res.error || 'Failed to load records')}</td></tr>`;
+            return;
+        }
+
+        currentConfigRows = Array.isArray(res.data) ? res.data : [];
+        const thead = document.querySelector('#configTable thead tr');
+        thead.innerHTML = currentConfig.fields.map(f => `<th>${escapeHtml(f.label)}</th>`).join('') + '<th>Actions</th>';
+        document.getElementById('configTable-count').textContent = currentConfigRows.length;
+        document.querySelector('.pagination-info').innerHTML = `Showing all <strong>${currentConfigRows.length}</strong> records`;
+
+        if (!currentConfigRows.length) {
+            tbody.innerHTML = `<tr><td colspan="${currentConfig.fields.length + 1}" style="padding:24px;color:var(--muted);">No records found.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = currentConfigRows.map(row => `
+            <tr>
+                ${currentConfig.fields.map(field => `<td>${configDisplayValue(row, field)}</td>`).join('')}
+                <td>
+                    <div class="table-actions">
+                        <button class="table-action-btn" title="Edit" onclick="editConfigRecord('${row.id}')">
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        </button>
+                        <button class="table-action-btn danger" title="Deactivate" onclick="deactivateConfigRecord('${row.id}')">
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function buildConfigModal() {
+        const modalBody = document.querySelector('#configModal .modal-body');
+        modalBody.innerHTML = `<div class="form-grid form-grid-2">
+            ${currentConfig.fields.map(field => renderConfigField(field)).join('')}
+        </div>`;
+        document.querySelector('#configModal .modal-title').innerHTML = `@Html.Raw(ViewData["Icon"]) Add ${escapeHtml(currentConfig.title)}`;
+    }
+
+    function renderConfigField(field) {
+        const required = field.required ? 'required' : '';
+        const label = `${escapeHtml(field.label)}${field.required ? ' <span class="field-required">*</span>' : ''}`;
+        if (field.type === 'bool') {
+            const yes = field.name === 'is_active' ? 'Active' : 'Yes';
+            const no = field.name === 'is_active' ? 'Inactive' : 'No';
+            return `<div class="field-group"><label class="field-label">${label}</label><select class="field-select" name="${field.name}"><option value="true">${yes}</option><option value="false">${no}</option></select></div>`;
+        }
+        if (field.type === 'select') {
+            return `<div class="field-group"><label class="field-label">${label}</label><select class="field-select" name="${field.name}" ${required}>${field.options.map(o => `<option value="${escapeAttr(o.value)}">${escapeHtml(o.label)}</option>`).join('')}</select></div>`;
+        }
+        if (field.type === 'ref') {
+            const options = currentConfigRefs[field.ref] || [];
+            return `<div class="field-group"><label class="field-label">${label}</label><select class="field-select" name="${field.name}" ${required}><option value="">Select</option>${options.map(o => `<option value="${escapeAttr(o.id)}">${escapeHtml(configRecordLabel(o))}</option>`).join('')}</select></div>`;
+        }
+        return `<div class="field-group"><label class="field-label">${label}</label><input class="field-input" type="${field.type || 'text'}" name="${field.name}" ${required} /></div>`;
+    }
+
+    function openNewConfigRecord() {
+        currentConfigEditId = null;
+        buildConfigModal();
+        document.querySelector('#configModal .modal-title').innerHTML = `@Html.Raw(ViewData["Icon"]) Add ${escapeHtml(currentConfig.title)}`;
+        openModal('configModal');
+    }
+
+    function editConfigRecord(id) {
+        const row = currentConfigRows.find(x => x.id === id);
+        if (!row) return;
+        currentConfigEditId = id;
+        buildConfigModal();
+        for (const field of currentConfig.fields) {
+            const input = document.querySelector(`#configModal [name="${field.name}"]`);
+            if (!input) continue;
+            input.value = field.type === 'bool' ? String(row[field.name] !== false) : (row[field.name] ?? '');
+        }
+        document.querySelector('#configModal .modal-title').innerHTML = `@Html.Raw(ViewData["Icon"]) Edit ${escapeHtml(currentConfig.title)}`;
+        openModal('configModal');
+    }
+
+    async function saveConfigRecord() {
+        if (!currentConfig) {
+            closeModal('configModal');
+            showToast('@ViewData["ItemName"] saved successfully', 'success');
+            return;
+        }
+
+        const payload = {};
+        for (const field of currentConfig.fields) {
+            const input = document.querySelector(`#configModal [name="${field.name}"]`);
+            if (!input) continue;
+            let value = input.value;
+            if (field.required && !value) {
+                showToast(`${field.label} is required`, 'error');
+                return;
+            }
+            if (value === '') value = null;
+            if (field.type === 'bool') value = input.value === 'true';
+            if (field.type === 'number' && value !== null) value = Number(value);
+            payload[field.name] = value;
+        }
+
+        const btn = document.getElementById('configSaveBtn');
+        btn.disabled = true;
+        btn.textContent = 'Saving...';
+        const res = currentConfigEditId
+            ? await EmsApi.config.update(currentConfig.entity, currentConfigEditId, payload)
+            : await EmsApi.config.create(currentConfig.entity, payload);
+        btn.disabled = false;
+        btn.textContent = 'Save';
+
+        if (!res.success) {
+            showToast(res.error || 'Unable to save record', 'error');
+            return;
+        }
+
+        closeModal('configModal');
+        showToast(`${currentConfig.title} saved successfully`, 'success');
+        await loadConfigRecords();
+    }
+
+    async function deactivateConfigRecord(id) {
+        if (!currentConfig) return;
+        showConfirm({
+            title: 'Deactivate record?',
+            message: 'This will hide the record from active lists.',
+            type: 'danger',
+            confirmText: 'Deactivate',
+            onConfirm: async function () {
+                const res = await EmsApi.config.update(currentConfig.entity, id, { is_active: false });
+                if (!res.success) {
+                    showToast(res.error || 'Unable to deactivate record', 'error');
+                    return;
+                }
+                showToast('Record deactivated', 'success');
+                await loadConfigRecords();
+            }
+        });
+    }
+
+    document.addEventListener('click', function (event) {
+        const addBtn = event.target.closest('.page-header .btn-primary');
+        if (addBtn && currentConfig) {
+            event.preventDefault();
+            event.stopPropagation();
+            openNewConfigRecord();
+        }
+    }, true);
+
+    function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    function escapeAttr(value) {
+        return escapeHtml(value).replace(/`/g, '&#96;');
+    }
+</script>

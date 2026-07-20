@@ -1,31 +1,203 @@
 @{ ViewData["Title"] = "HR Accounts"; ViewData["Active"] = "HRAccounts"; }
+
 <div class="page-header anim-fade-in-up">
     <div>
         <h1 class="page-title"><i class="fa-solid fa-user-lock" aria-hidden="true"></i> HR Accounts</h1>
-        <div class="page-date">Manage HR admin user accounts and permissions</div>
+        <div class="page-date">Manage ERP user accounts, roles and password reset flow</div>
     </div>
-    <button class="btn btn-primary" onclick="openModal('accountModal')">
+    <button class="btn btn-primary" onclick="openAccountModal()">
         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Create Account
     </button>
 </div>
+
 <div class="table-container anim-fade-in-up">
-    <div class="filter-bar"><input class="filter-search" type="text" placeholder="Search accounts…" id="accSearch" oninput="filterTable('accTable','accSearch')" /></div>
+    <div class="filter-bar">
+        <input class="filter-search" type="text" placeholder="Search accounts..." id="accSearch" oninput="filterTable('accTable','accSearch')" />
+        <div style="margin-left:auto;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:4px;">
+            <strong id="accountCount" style="color:var(--text);">0</strong> accounts
+        </div>
+    </div>
     <div class="table-scroll-wrapper">
         <table class="data-table" id="accTable">
-            <thead><tr><th>User</th><th>Username</th><th>Role</th><th>Branch</th><th>Last Login</th><th>Status</th><th>Actions</th></tr></thead>
-            <tbody>
-                <tr><td><div class="cell-employee"><div class="cell-avatar blue">SU</div><div><div class="cell-name">Super Admin</div><div class="cell-sub">superadmin@esspl.com</div></div></div></td><td><span class="cell-mono">superadmin</span></td><td><span class="tag tag-blue">Super Admin</span></td><td>All</td><td><span class="cell-mono" style="font-size:11px;">Apr 18, 12:00</span></td><td><span class="status-badge approved">Active</span></td><td><div class="table-actions"><button class="table-action-btn" onclick="openModal('accountModal')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/></svg></button></div></td></tr>
-                <tr><td><div class="cell-employee"><div class="cell-avatar purple">SA</div><div><div class="cell-name">Sara Ali</div><div class="cell-sub">sara.a@esspl.com</div></div></div></td><td><span class="cell-mono">hr1</span></td><td><span class="tag tag-purple">HR Admin</span></td><td>Head Office</td><td><span class="cell-mono" style="font-size:11px;">Apr 18, 09:30</span></td><td><span class="status-badge approved">Active</span></td><td><div class="table-actions"><button class="table-action-btn" onclick="openModal('accountModal')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/></svg></button></div></td></tr>
-                <tr><td><div class="cell-employee"><div class="cell-avatar purple">KY</div><div><div class="cell-name">Kamran Yusuf</div><div class="cell-sub">kamran.y@esspl.com</div></div></div></td><td><span class="cell-mono">hr2</span></td><td><span class="tag tag-purple">HR Admin</span></td><td>Lahore</td><td><span class="cell-mono" style="font-size:11px;">Apr 17, 18:00</span></td><td><span class="status-badge approved">Active</span></td><td><div class="table-actions"><button class="table-action-btn" onclick="openModal('accountModal')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/></svg></button></div></td></tr>
+            <thead><tr><th>User</th><th>Employee ID</th><th>Role</th><th>Branch</th><th>Password</th><th>Created</th><th>Actions</th></tr></thead>
+            <tbody id="accountsBody">
+                <tr><td colspan="7" style="padding:24px;color:var(--muted);">Loading live accounts...</td></tr>
             </tbody>
         </table>
     </div>
-    <div class="table-pagination"><div class="pagination-info">Showing all <strong>3</strong> accounts</div><div class="pagination-controls"><button class="page-btn active">1</button></div></div>
+    <div class="table-pagination"><div class="pagination-info" id="accountsInfo">Showing all accounts</div><div class="pagination-controls"><button class="page-btn active">1</button></div></div>
 </div>
+
 <div class="modal-backdrop" id="accountModal">
-    <div class="modal-dialog"><div class="modal-header"><div class="modal-title"><i class="fa-solid fa-user-lock" aria-hidden="true"></i> Create Account</div><button class="modal-close" onclick="closeModal('accountModal')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
-    <div class="modal-body"><div class="form-grid form-grid-2"><div class="field-group"><label class="field-label">Full Name <span class="field-required">*</span></label><input type="text" class="field-input" /></div><div class="field-group"><label class="field-label">Email <span class="field-required">*</span></label><input type="email" class="field-input" /></div><div class="field-group"><label class="field-label">Username <span class="field-required">*</span></label><input type="text" class="field-input" /></div><div class="field-group"><label class="field-label">Role</label><select class="field-select"><option>HR Admin</option><option>Super Admin</option></select></div><div class="field-group"><label class="field-label">Branch</label><select class="field-select"><option>All</option><option>Head Office</option><option>Lahore</option><option>Islamabad</option></select></div><div class="field-group"><label class="field-label">Temp Password</label><input type="text" class="field-input" value="temp@123" readonly /></div></div></div>
-    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('accountModal')">Cancel</button><button class="btn btn-primary" onclick="closeModal('accountModal'); showToast('Account created','success')">Create Account</button></div></div>
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <div class="modal-title"><i class="fa-solid fa-user-lock" aria-hidden="true"></i> Create Account</div>
+            <button class="modal-close" onclick="closeModal('accountModal')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+        <div class="modal-body">
+            <div class="form-grid form-grid-2">
+                <div class="field-group form-full">
+                    <label class="field-label">Employee <span class="field-required">*</span></label>
+                    <select class="field-select" id="accEmployee" onchange="prefillAccountEmail()"></select>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Email <span class="field-required">*</span></label>
+                    <input type="email" class="field-input" id="accEmail" />
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Role <span class="field-required">*</span></label>
+                    <select class="field-select" id="accRole"></select>
+                </div>
+                <div class="field-group form-full">
+                    <label class="field-label">Temporary Password <span class="field-required">*</span></label>
+                    <input type="text" class="field-input" id="accPassword" value="Temp@12345" />
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModal('accountModal')">Cancel</button>
+            <button class="btn btn-primary" id="accountSaveBtn" onclick="saveAccount()">Create Account</button>
+        </div>
+    </div>
 </div>
-@section Scripts { <script src="~/js/tables.js"></script><script src="~/js/modals.js"></script> }
+
+@section Scripts {
+    <script src="~/js/tables.js"></script>
+    <script src="~/js/modals.js"></script>
+    <script>
+        let accounts = [];
+        let accountRoles = [];
+        let accountEmployees = [];
+
+        document.addEventListener('DOMContentLoaded', loadAccountPage);
+
+        async function loadAccountPage() {
+            const [accRes, rolesRes, empRes] = await Promise.all([
+                EmsApi.accounts.list(),
+                EmsApi.accounts.roles(),
+                EmsApi.employees.list()
+            ]);
+
+            accounts = accRes.success ? (Array.isArray(accRes.data) ? accRes.data : []) : [];
+            accountRoles = rolesRes.success ? (Array.isArray(rolesRes.data) ? rolesRes.data : []) : [];
+            accountEmployees = empRes.success ? (Array.isArray(empRes.data) ? empRes.data : []) : [];
+
+            renderAccounts();
+            renderAccountOptions();
+        }
+
+        function renderAccounts() {
+            const tbody = document.getElementById('accountsBody');
+            document.getElementById('accountCount').textContent = accounts.length;
+            document.getElementById('accountsInfo').innerHTML = `Showing all <strong>${accounts.length}</strong> accounts`;
+
+            if (!accounts.length) {
+                tbody.innerHTML = '<tr><td colspan="7" style="padding:24px;color:var(--muted);">No accounts found.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = accounts.map(account => {
+                const initials = (account.employee_name || account.email || 'U').slice(0, 2).toUpperCase();
+                const role = account.role_name || 'employee';
+                const status = account.must_change_password
+                    ? '<span class="tag tag-amber">Must Change</span>'
+                    : '<span class="status-badge approved">Updated</span>';
+                return `
+                    <tr>
+                        <td><div class="cell-employee"><div class="cell-avatar blue">${escapeHtml(initials)}</div><div><div class="cell-name">${escapeHtml(account.employee_name || 'User Account')}</div><div class="cell-sub">${escapeHtml(account.email)}</div></div></div></td>
+                        <td><span class="cell-mono">${escapeHtml(account.employee_id || '-')}</span></td>
+                        <td><span class="tag tag-blue">${escapeHtml(role.replaceAll('_', ' '))}</span></td>
+                        <td>${escapeHtml(account.branch_name || 'All')}</td>
+                        <td>${status}</td>
+                        <td><span class="cell-mono" style="font-size:11px;">${formatDate(account.created_at)}</span></td>
+                        <td><div class="table-actions">
+                            <button class="table-action-btn" title="Force password change" onclick="forceAccountPasswordChange('${account.id}')">
+                                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-2.78-2.78L21 2z"/><path d="M15 7l2 2"/></svg>
+                            </button>
+                        </div></td>
+                    </tr>`;
+            }).join('');
+        }
+
+        function renderAccountOptions() {
+            const empSelect = document.getElementById('accEmployee');
+            const roleSelect = document.getElementById('accRole');
+            const existingEmployeeIds = new Set(accounts.map(account => account.employee_id).filter(Boolean));
+
+            empSelect.innerHTML = '<option value="">Select employee</option>' + accountEmployees
+                .filter(emp => !existingEmployeeIds.has(emp.employee_id))
+                .map(emp => `<option value="${escapeAttr(emp.employee_id)}" data-email="${escapeAttr(emp.email || '')}">${escapeHtml(emp.name || emp.employee_name || emp.employee_id)} (${escapeHtml(emp.employee_id)})</option>`)
+                .join('');
+
+            roleSelect.innerHTML = accountRoles
+                .map(role => `<option value="${escapeAttr(role.id)}">${escapeHtml((role.role_name || '').replaceAll('_', ' '))}</option>`)
+                .join('');
+        }
+
+        function openAccountModal() {
+            document.getElementById('accEmployee').value = '';
+            document.getElementById('accEmail').value = '';
+            document.getElementById('accPassword').value = 'Temp@12345';
+            openModal('accountModal');
+        }
+
+        function prefillAccountEmail() {
+            const option = document.getElementById('accEmployee').selectedOptions[0];
+            const email = option?.dataset?.email || '';
+            if (email) document.getElementById('accEmail').value = email;
+        }
+
+        async function saveAccount() {
+            const employeeId = document.getElementById('accEmployee').value;
+            const email = document.getElementById('accEmail').value.trim();
+            const roleId = document.getElementById('accRole').value;
+            const password = document.getElementById('accPassword').value;
+
+            if (!employeeId || !email || !roleId || !password) {
+                showToast('Please fill all required fields', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('accountSaveBtn');
+            btn.disabled = true;
+            btn.textContent = 'Creating...';
+            const res = await EmsApi.accounts.create({ employee_id: employeeId, email, role_id: roleId, password });
+            btn.disabled = false;
+            btn.textContent = 'Create Account';
+
+            if (!res.success) {
+                showToast(res.error || 'Failed to create account', 'error');
+                return;
+            }
+
+            closeModal('accountModal');
+            showToast('Account created successfully', 'success');
+            await loadAccountPage();
+        }
+
+        async function forceAccountPasswordChange(id) {
+            const res = await EmsApi.accounts.forcePasswordChange(id);
+            if (!res.success) {
+                showToast(res.error || 'Failed to update account', 'error');
+                return;
+            }
+            showToast('Password change required on next login', 'success');
+            await loadAccountPage();
+        }
+
+        function formatDate(value) {
+            if (!value) return '-';
+            const date = new Date(value);
+            return Number.isNaN(date.getTime()) ? '-' : date.toLocaleDateString();
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+
+        function escapeAttr(value) {
+            return escapeHtml(value).replace(/`/g, '&#96;');
+        }
+    </script>
+}

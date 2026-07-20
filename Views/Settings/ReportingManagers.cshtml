@@ -1,7 +1,265 @@
-@{ ViewData["Icon"] = "<i class='fa-solid fa-users' aria-hidden='true'></i>"; ViewData["Subtitle"] = "Assign reporting managers to employees"; ViewData["ItemName"] = "Assignment"; ViewData["Count"] = "5";
-ViewData["TableHeaders"] = @"<th>Manager</th><th>Department</th><th>Direct Reports</th><th>Status</th><th>Actions</th>";
-ViewData["TableBody"] = @"<tr><td><strong>Imran Shah</strong></td><td>Engineering</td><td>12</td><td><span class=""status-badge approved"">Active</span></td><td><div class=""table-actions""><button class=""table-action-btn"" onclick=""openModal('configModal')""><svg fill=""none"" stroke=""currentColor"" stroke-width=""2"" viewBox=""0 0 24 24""><path d=""M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z""/><path d=""M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7""/></svg></button></div></td></tr><tr><td><strong>Sara Ali</strong></td><td>HR</td><td>8</td><td><span class=""status-badge approved"">Active</span></td><td><div class=""table-actions""><button class=""table-action-btn"" onclick=""openModal('configModal')""><svg fill=""none"" stroke=""currentColor"" stroke-width=""2"" viewBox=""0 0 24 24""><path d=""M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z""/><path d=""M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7""/></svg></button></div></td></tr><tr><td><strong>Bilal Ahmed</strong></td><td>Engineering</td><td>6</td><td><span class=""status-badge approved"">Active</span></td><td><div class=""table-actions""><button class=""table-action-btn"" onclick=""openModal('configModal')""><svg fill=""none"" stroke=""currentColor"" stroke-width=""2"" viewBox=""0 0 24 24""><path d=""M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z""/><path d=""M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7""/></svg></button></div></td></tr><tr><td><strong>Usman Raza</strong></td><td>Sales</td><td>10</td><td><span class=""status-badge approved"">Active</span></td><td><div class=""table-actions""><button class=""table-action-btn"" onclick=""openModal('configModal')""><svg fill=""none"" stroke=""currentColor"" stroke-width=""2"" viewBox=""0 0 24 24""><path d=""M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z""/><path d=""M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7""/></svg></button></div></td></tr><tr><td><strong>Fatima Noor</strong></td><td>Marketing</td><td>5</td><td><span class=""status-badge approved"">Active</span></td><td><div class=""table-actions""><button class=""table-action-btn"" onclick=""openModal('configModal')""><svg fill=""none"" stroke=""currentColor"" stroke-width=""2"" viewBox=""0 0 24 24""><path d=""M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z""/><path d=""M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7""/></svg></button></div></td></tr>";
-ViewData["ModalFields"] = @"<div class=""form-grid form-grid-2""><div class=""field-group""><label class=""field-label"">Employee <span class=""field-required"">*</span></label><select class=""field-select""><option value="""">Select</option><option>Ahmed Khan</option><option>Usman Raza</option></select></div><div class=""field-group""><label class=""field-label"">Reports To <span class=""field-required"">*</span></label><select class=""field-select""><option value="""">Select Manager</option><option>Imran Shah</option><option>Sara Ali</option></select></div></div>"; }
-@await Html.PartialAsync("_ConfigPage")
-@section Scripts { <script src="~/js/tables.js"></script><script src="~/js/modals.js"></script> }
+@{
+    ViewData["Title"] = "Reporting Managers";
+    ViewData["Active"] = "ReportingManagers";
+}
 
+<div class="page-header anim-fade-in-up">
+    <div>
+        <h1 class="page-title">
+            <i class="fa-solid fa-users" aria-hidden="true"></i>
+            Reporting Managers
+        </h1>
+        <div class="page-date">Assign employees to reporting managers with live database saving</div>
+    </div>
+    <button class="btn btn-primary" onclick="openAssignmentModal()">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Add Assignment
+    </button>
+</div>
+
+<div class="metric-grid anim-fade-in-up" style="grid-template-columns:repeat(3,minmax(0,1fr));margin-bottom:16px;">
+    <div class="metric-card">
+        <div class="metric-label">Managers Active</div>
+        <div class="metric-value" id="managerCount">0</div>
+        <div class="metric-sub">Employees with direct reports</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-label">Assigned Employees</div>
+        <div class="metric-value" id="assignedCount">0</div>
+        <div class="metric-sub">Reporting line connected</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-label">Unassigned Employees</div>
+        <div class="metric-value" id="unassignedCount">0</div>
+        <div class="metric-sub">Need manager assignment</div>
+    </div>
+</div>
+
+<div class="table-container anim-fade-in-up" style="margin-bottom:16px;">
+    <div class="filter-bar">
+        <input class="filter-search" type="text" placeholder="Search managers..." id="managerSearch" oninput="filterTable('managersTable','managerSearch')" />
+        <div style="margin-left:auto;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:4px;">
+            <strong id="managerTableCount" style="color:var(--text);">0</strong> managers
+        </div>
+    </div>
+    <div class="table-scroll-wrapper">
+        <table class="data-table" id="managersTable">
+            <thead>
+                <tr>
+                    <th>Manager</th>
+                    <th>Department</th>
+                    <th>Direct Reports</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="managersBody">
+                <tr><td colspan="4" style="padding:24px;color:var(--muted);">Loading live managers...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="table-container anim-fade-in-up">
+    <div class="filter-bar">
+        <input class="filter-search" type="text" placeholder="Search employee assignments..." id="assignmentSearch" oninput="filterTable('assignmentsTable','assignmentSearch')" />
+        <div style="margin-left:auto;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:4px;">
+            <strong id="assignmentTableCount" style="color:var(--text);">0</strong> assignments
+        </div>
+    </div>
+    <div class="table-scroll-wrapper">
+        <table class="data-table" id="assignmentsTable">
+            <thead>
+                <tr>
+                    <th>Employee</th>
+                    <th>Department</th>
+                    <th>Reports To</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="assignmentsBody">
+                <tr><td colspan="5" style="padding:24px;color:var(--muted);">Loading live assignments...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal-backdrop" id="managerModal">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <div class="modal-title"><i class="fa-solid fa-user-check" aria-hidden="true"></i> Assign Reporting Manager</div>
+            <button class="modal-close" onclick="closeModal('managerModal')">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="form-grid form-grid-2">
+                <div class="field-group">
+                    <label class="field-label">Employee <span class="field-required">*</span></label>
+                    <select class="field-select" id="assignmentEmployee" required></select>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Reports To <span class="field-required">*</span></label>
+                    <select class="field-select" id="assignmentManager" required></select>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModal('managerModal')">Cancel</button>
+            <button class="btn btn-primary" id="saveManagerBtn" onclick="saveManagerAssignment()">Save Assignment</button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/tables.js"></script>
+    <script src="~/js/modals.js"></script>
+    <script>
+        let managerRows = [];
+        let assignmentRows = [];
+        let employeeRows = [];
+
+        document.addEventListener('DOMContentLoaded', loadReportingManagers);
+
+        async function loadReportingManagers() {
+            const managersBody = document.getElementById('managersBody');
+            const assignmentsBody = document.getElementById('assignmentsBody');
+            managersBody.innerHTML = '<tr><td colspan="4" style="padding:24px;color:var(--muted);">Loading live managers...</td></tr>';
+            assignmentsBody.innerHTML = '<tr><td colspan="5" style="padding:24px;color:var(--muted);">Loading live assignments...</td></tr>';
+
+            const [managerRes, employeeRes] = await Promise.all([
+                EmsApi.employees.reportingManagers(),
+                EmsApi.employees.list()
+            ]);
+
+            if (!managerRes.success) {
+                managersBody.innerHTML = `<tr><td colspan="4" style="padding:24px;color:#dc2626;">${escapeHtml(managerRes.error || 'Unable to load reporting managers')}</td></tr>`;
+                assignmentsBody.innerHTML = `<tr><td colspan="5" style="padding:24px;color:#dc2626;">${escapeHtml(managerRes.error || 'Unable to load assignments')}</td></tr>`;
+                return;
+            }
+
+            employeeRows = employeeRes.success && Array.isArray(employeeRes.data) ? employeeRes.data : [];
+            managerRows = Array.isArray(managerRes.data?.managers) ? managerRes.data.managers : [];
+            assignmentRows = Array.isArray(managerRes.data?.assignments) ? managerRes.data.assignments : [];
+            renderManagerSummary();
+            renderAssignments();
+            buildAssignmentOptions();
+        }
+
+        function renderManagerSummary() {
+            const body = document.getElementById('managersBody');
+            document.getElementById('managerCount').textContent = managerRows.length;
+            document.getElementById('managerTableCount').textContent = managerRows.length;
+
+            if (!managerRows.length) {
+                body.innerHTML = '<tr><td colspan="4" style="padding:24px;color:var(--muted);">No reporting managers assigned yet.</td></tr>';
+                return;
+            }
+
+            body.innerHTML = managerRows.map(row => `
+                <tr>
+                    <td><strong>${escapeHtml(row.manager_name)}</strong><div style="font-size:11px;color:var(--muted);">${escapeHtml(row.manager_emp_id)}</div></td>
+                    <td>${escapeHtml(row.department_name || '-')}</td>
+                    <td><strong>${Number(row.direct_reports || 0)}</strong></td>
+                    <td><span class="status-badge approved">Active</span></td>
+                </tr>
+            `).join('');
+        }
+
+        function renderAssignments() {
+            const body = document.getElementById('assignmentsBody');
+            const assigned = assignmentRows.filter(x => x.manager_emp_id).length;
+            const unassigned = assignmentRows.length - assigned;
+            document.getElementById('assignedCount').textContent = assigned;
+            document.getElementById('unassignedCount').textContent = unassigned;
+            document.getElementById('assignmentTableCount').textContent = assignmentRows.length;
+
+            if (!assignmentRows.length) {
+                body.innerHTML = '<tr><td colspan="5" style="padding:24px;color:var(--muted);">No employee records found.</td></tr>';
+                return;
+            }
+
+            body.innerHTML = assignmentRows.map(row => `
+                <tr>
+                    <td><strong>${escapeHtml(row.employee_name)}</strong><div style="font-size:11px;color:var(--muted);">${escapeHtml(row.employee_id)}</div></td>
+                    <td>${escapeHtml(row.department_name || '-')}</td>
+                    <td>${row.manager_name ? `<strong>${escapeHtml(row.manager_name)}</strong><div style="font-size:11px;color:var(--muted);">${escapeHtml(row.manager_emp_id)}</div>` : '-'}</td>
+                    <td>${row.manager_emp_id ? '<span class="status-badge approved">Assigned</span>' : '<span class="status-badge pending">Unassigned</span>'}</td>
+                    <td>
+                        <div class="table-actions">
+                            <button class="table-action-btn" title="Edit manager" onclick="openAssignmentModal('${escapeAttr(row.employee_id)}')">
+                                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function buildAssignmentOptions(selectedEmployeeId) {
+            const employeeSelect = document.getElementById('assignmentEmployee');
+            const managerSelect = document.getElementById('assignmentManager');
+            const employees = employeeRows.length ? employeeRows : assignmentRows.map(x => ({
+                employee_id: x.employee_id,
+                name: x.employee_name,
+                designation_title: ''
+            }));
+
+            employeeSelect.innerHTML = '<option value="">Select Employee</option>' + employees.map(emp => `
+                <option value="${escapeAttr(emp.employee_id)}">${escapeHtml(emp.name)} (${escapeHtml(emp.employee_id)})</option>
+            `).join('');
+
+            managerSelect.innerHTML = '<option value="">Select Manager</option>' + employees.map(emp => `
+                <option value="${escapeAttr(emp.employee_id)}">${escapeHtml(emp.name)} (${escapeHtml(emp.designation_title || 'Employee')})</option>
+            `).join('');
+
+            if (selectedEmployeeId) employeeSelect.value = selectedEmployeeId;
+        }
+
+        function openAssignmentModal(employeeId) {
+            buildAssignmentOptions(employeeId);
+            const selected = assignmentRows.find(x => x.employee_id === employeeId);
+            document.getElementById('assignmentManager').value = selected?.manager_emp_id || '';
+            openModal('managerModal');
+        }
+
+        async function saveManagerAssignment() {
+            const employeeId = document.getElementById('assignmentEmployee').value;
+            const managerEmpId = document.getElementById('assignmentManager').value;
+            if (!employeeId || !managerEmpId) {
+                showToast('Employee and reporting manager are required', 'error');
+                return;
+            }
+            if (employeeId === managerEmpId) {
+                showToast('Employee cannot report to themselves', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('saveManagerBtn');
+            btn.disabled = true;
+            btn.textContent = 'Saving...';
+            const res = await EmsApi.employees.updateManager(employeeId, managerEmpId);
+            btn.disabled = false;
+            btn.textContent = 'Save Assignment';
+
+            if (!res.success) {
+                showToast(res.error || 'Unable to save reporting manager', 'error');
+                return;
+            }
+
+            closeModal('managerModal');
+            showToast('Reporting manager saved successfully', 'success');
+            await loadReportingManagers();
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+
+        function escapeAttr(value) {
+            return escapeHtml(value).replace(/`/g, '&#96;');
+        }
+    </script>
+}

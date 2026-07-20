@@ -4,6 +4,12 @@
     Layout = "~/Views/Shared/_LoginLayout.cshtml";
 }
 
+<script>
+    localStorage.removeItem('ems_jwt_token');
+    localStorage.removeItem('ems_user_data');
+    sessionStorage.clear();
+</script>
+
 <div class="login-page" id="loginPage">
     <!-- Animated Background -->
     <div class="login-bg">
@@ -41,20 +47,22 @@
         </div>
 
         <!-- Form -->
-        <form class="login-form" id="loginForm" onsubmit="return handleLogin(event)">
+        <form class="login-form" id="loginForm" onsubmit="return handleLogin(event)" autocomplete="off">
             <div class="form-group">
-                <label class="form-label" for="email">Email Address</label>
+                <label class="form-label" for="loginIdentifier">Email / Employee ID</label>
                 <div class="form-input-wrapper">
-                    <input type="email" class="form-input" id="email" name="email"
-                           placeholder="Enter your email" autocomplete="email" required />
+                    <input type="text" class="form-input" id="loginIdentifier" name="login_identifier"
+                           placeholder="Enter your email or employee ID" autocomplete="off"
+                           autocapitalize="none" spellcheck="false" data-lpignore="true" data-1p-ignore required />
                 </div>
             </div>
 
             <div class="form-group">
-                <label class="form-label" for="password">Password</label>
+                <label class="form-label" for="loginPassword">Password</label>
                 <div class="form-input-wrapper">
-                    <input type="password" class="form-input" id="password" name="password"
-                           placeholder="Enter your password" autocomplete="current-password" required
+                    <input type="password" class="form-input" id="loginPassword" name="login_password"
+                           placeholder="Enter your password" autocomplete="new-password"
+                           data-lpignore="true" data-1p-ignore required
                            style="padding-right: 44px;" />
                     <button type="button" class="password-toggle" onclick="togglePassword()" id="pwToggle">
                         <svg id="eyeIcon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -123,6 +131,14 @@
         animation: pulse-dot 1.5s infinite;
     }
     @@keyframes pulse-dot { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+
+    /* Hide login form during active session check */
+    .session-checking .login-card {
+        display: none !important;
+    }
+    .session-checking .login-connection-status {
+        display: flex !important;
+    }
 </style>
 <script>
     (async function checkBackend() {
@@ -148,18 +164,29 @@
         }
     })();
 
-    if (EmsApi.isLoggedIn()) {
-        window.location.href = '/Dashboard';
+    function clearLoginFields() {
+        const loginInput = document.getElementById('loginIdentifier');
+        const passwordInput = document.getElementById('loginPassword');
+        if (loginInput) loginInput.value = '';
+        if (passwordInput) passwordInput.value = '';
     }
 
+    document.addEventListener('DOMContentLoaded', function () {
+        clearLoginFields();
+        setTimeout(clearLoginFields, 100);
+        setTimeout(clearLoginFields, 500);
+    });
+    window.addEventListener('pageshow', clearLoginFields);
+
+    // Fill credentials from demo account click
     function fillCredentials(email, pass) {
-        document.getElementById('email').value = email;
-        document.getElementById('password').value = pass;
-        document.getElementById('email').focus();
+        document.getElementById('loginIdentifier').value = email;
+        document.getElementById('loginPassword').value = pass;
+        document.getElementById('loginIdentifier').focus();
     }
 
     function togglePassword() {
-        const input = document.getElementById('password');
+        const input = document.getElementById('loginPassword');
         const icon = document.getElementById('eyeIcon');
         if (input.type === 'password') {
             input.type = 'text';
@@ -174,8 +201,8 @@
         e.preventDefault();
         const btn = document.getElementById('loginBtn');
         const errorEl = document.getElementById('loginError');
-        const email = document.getElementById('email').value.trim();
-        const pass = document.getElementById('password').value;
+        const email = document.getElementById('loginIdentifier').value.trim();
+        const pass = document.getElementById('loginPassword').value;
 
         errorEl.classList.remove('show');
 
@@ -199,15 +226,12 @@
                     userData.permissions = session.data.permissions || [];
                     localStorage.setItem('ems_user_data', JSON.stringify(userData));
 
-                    const isSuperAdmin = session.data.is_super_admin;
-                    const roleName = (session.data.role_name || '').toLowerCase();
-                    if (isSuperAdmin || roleName.includes('admin') || roleName.includes('hr')) {
-                        window.location.href = '/Dashboard';
-                    } else {
-                        window.location.href = '/MyPortal/Dashboard';
-                    }
+                    const roleName = String(userData.role_name || '').toLowerCase().replace(/\s+/g, '_');
+                    window.location.href = roleName === 'employee' ? '/MyPortal/Dashboard' : '/Launchpad';
                 } else {
-                    window.location.href = '/Dashboard';
+                    const userData = EmsApi.getUser() || {};
+                    const roleName = String(userData.role_name || '').toLowerCase().replace(/\s+/g, '_');
+                    window.location.href = roleName === 'employee' ? '/MyPortal/Dashboard' : '/Launchpad';
                 }
             } else {
                 btn.classList.remove('loading');

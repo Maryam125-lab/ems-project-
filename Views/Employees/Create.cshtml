@@ -22,7 +22,7 @@
 </div>
 
 <!-- STEP INDICATOR -->
-<div class="step-indicator anim-fade-in-up" style="display:flex; justify-content:space-between; margin-bottom:30px; position:relative;">
+<div class="step-indicator anim-fade-in-up onboarding-steps">
     <div class="step-line" style="position:absolute; top:18px; left:0; right:0; height:2px; background:var(--surface2); z-index:0;">
         <div id="stepProgress" style="width:0%; height:100%; background:var(--accent); transition: width 0.3s ease;"></div>
     </div>
@@ -36,7 +36,23 @@
     </div>
     <div class="step-item" data-step="3" style="z-index:1; background:var(--surface1); padding:0 10px; text-align:center;">
         <div class="step-dot" style="width:36px; height:36px; border-radius:50%; border:2px solid var(--surface3); display:flex; align-items:center; justify-content:center; margin:0 auto 8px; background:var(--surface1); font-weight:600; color:var(--muted);">3</div>
-        <div style="font-size:11px; font-weight:600; color:var(--muted);">Financial</div>
+        <div style="font-size:11px; font-weight:600; color:var(--muted);">Schedule</div>
+    </div>
+    <div class="step-item" data-step="4" style="z-index:1; background:var(--surface1); padding:0 10px; text-align:center;">
+        <div class="step-dot" style="width:36px; height:36px; border-radius:50%; border:2px solid var(--surface3); display:flex; align-items:center; justify-content:center; margin:0 auto 8px; background:var(--surface1); font-weight:600; color:var(--muted);">4</div>
+        <div style="font-size:11px; font-weight:600; color:var(--muted);">Payroll</div>
+    </div>
+    <div class="step-item" data-step="5" style="z-index:1; background:var(--surface1); padding:0 10px; text-align:center;">
+        <div class="step-dot" style="width:36px; height:36px; border-radius:50%; border:2px solid var(--surface3); display:flex; align-items:center; justify-content:center; margin:0 auto 8px; background:var(--surface1); font-weight:600; color:var(--muted);">5</div>
+        <div style="font-size:11px; font-weight:600; color:var(--muted);">Bank</div>
+    </div>
+    <div class="step-item" data-step="6" style="z-index:1; background:var(--surface1); padding:0 10px; text-align:center;">
+        <div class="step-dot" style="width:36px; height:36px; border-radius:50%; border:2px solid var(--surface3); display:flex; align-items:center; justify-content:center; margin:0 auto 8px; background:var(--surface1); font-weight:600; color:var(--muted);">6</div>
+        <div style="font-size:11px; font-weight:600; color:var(--muted);">Access</div>
+    </div>
+    <div class="step-item" data-step="7" style="z-index:1; background:var(--surface1); padding:0 10px; text-align:center;">
+        <div class="step-dot" style="width:36px; height:36px; border-radius:50%; border:2px solid var(--surface3); display:flex; align-items:center; justify-content:center; margin:0 auto 8px; background:var(--surface1); font-weight:600; color:var(--muted);">7</div>
+        <div style="font-size:11px; font-weight:600; color:var(--muted);">Review</div>
     </div>
 </div>
 
@@ -141,6 +157,16 @@
                         <option value="">Loading...</option>
                     </select>
                 </div>
+            </div>
+        </div>
+
+        <!-- STEP 3: Schedule & Reporting -->
+        <div class="form-step" id="step-3" style="display:none;">
+            <div class="form-section-title">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                Schedule & Reporting
+            </div>
+            <div class="form-grid form-grid-3">
                 <div class="field-group">
                     <label class="field-label">Shift</label>
                     <select name="shift_id" id="shift_id" class="field-select">
@@ -166,27 +192,55 @@
             </div>
         </div>
 
-        <!-- STEP 3: Financial & Account -->
-        <div class="form-step" id="step-3" style="display:none;">
+        <!-- STEP 4: Payroll Setup -->
+        <div class="form-step" id="step-4" style="display:none;">
             <div class="form-section-title">
-                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-                Account & Financial Details
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"/></svg>
+                Payroll Setup
             </div>
             <div class="form-grid form-grid-3">
-                <div class="field-group form-full" style="padding-bottom: 20px; border-bottom: 1px solid var(--surface3); margin-bottom: 20px;">
-                    <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 12px;">Login Credentials</div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                        <div>
-                            <label class="field-label">Official Email <span class="field-required">*</span></label>
-                            <input type="email" name="email" class="field-input" placeholder="e.g. ahmed.k@esspl.com" required />
-                        </div>
-                        <div>
-                            <label class="field-label">Initial Password <span class="field-required">*</span></label>
-                            <input type="text" name="password" class="field-input" placeholder="e.g. Emp@12345" required />
-                        </div>
-                    </div>
+                <div class="field-group">
+                    <label class="field-label">Basic Salary (PKR)</label>
+                    <input type="number" name="basic_salary" class="field-input" placeholder="e.g. 80000" oninput="this.value = this.value.replace(/[^0-9]/g, '')" />
                 </div>
+                <div class="field-group">
+                    <label class="field-label">Payroll Cycle</label>
+                    <select name="payroll_cycle" class="field-select">
+                        <option value="monthly">Monthly</option>
+                        <option value="biweekly">Bi-weekly</option>
+                        <option value="weekly">Weekly</option>
+                    </select>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Tax Status</label>
+                    <select name="tax_status" class="field-select">
+                        <option value="">Select</option>
+                        <option value="taxable">Taxable</option>
+                        <option value="non_taxable">Non-taxable</option>
+                    </select>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Allowance Notes</label>
+                    <input type="text" name="allowance_notes" class="field-input" placeholder="e.g. Fuel / medical allowance" />
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Probation Salary</label>
+                    <input type="number" name="probation_salary" class="field-input" placeholder="Optional" oninput="this.value = this.value.replace(/[^0-9]/g, '')" />
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Salary Effective From</label>
+                    <input type="date" name="salary_effective_from" class="field-input" />
+                </div>
+            </div>
+        </div>
 
+        <!-- STEP 5: Bank & Documents -->
+        <div class="form-step" id="step-5" style="display:none;">
+            <div class="form-section-title">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M4 10h16"/><path d="M6 10v8M10 10v8M14 10v8M18 10v8"/><path d="M12 3 3 8h18z"/></svg>
+                Bank & Documents
+            </div>
+            <div class="form-grid form-grid-3">
                 <div class="field-group">
                     <label class="field-label">Bank Name</label>
                     <input type="text" name="bank_name" class="field-input" placeholder="e.g. HBL" />
@@ -200,9 +254,86 @@
                     <input type="text" name="bank_account_no" class="field-input" placeholder="e.g. PK36HABB0012345678901" />
                 </div>
                 <div class="field-group">
-                    <label class="field-label">Basic Salary (PKR)</label>
-                    <input type="number" name="basic_salary" class="field-input" placeholder="e.g. 80000" oninput="this.value = this.value.replace(/[^0-9]/g, '')" />
+                    <label class="field-label">CNIC Copy</label>
+                    <input type="file" name="cnic_document" class="field-input" accept=".pdf,.jpg,.jpeg,.png" />
                 </div>
+                <div class="field-group">
+                    <label class="field-label">Resume / CV</label>
+                    <input type="file" name="resume_document" class="field-input" accept=".pdf,.doc,.docx" />
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Offer Letter</label>
+                    <input type="file" name="offer_letter_document" class="field-input" accept=".pdf,.doc,.docx" />
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 6: Login & Access -->
+        <div class="form-step" id="step-6" style="display:none;">
+            <div class="form-section-title">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                Login & Access
+            </div>
+            <div class="form-grid form-grid-3">
+                <div class="field-group">
+                    <label class="field-label">Official Email <span class="field-required">*</span></label>
+                    <input type="email" name="email" class="field-input" placeholder="e.g. ahmed.k@esspl.com" required />
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Initial Password <span class="field-required">*</span></label>
+                    <input type="text" name="password" class="field-input" placeholder="e.g. Emp@12345" required />
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Portal Access</label>
+                    <select name="portal_access" class="field-select">
+                        <option value="enabled">Enabled</option>
+                        <option value="disabled">Disabled</option>
+                    </select>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Access Role</label>
+                    <select name="access_role" class="field-select">
+                        <option value="employee">Employee</option>
+                        <option value="hr_admin">HR Admin</option>
+                        <option value="manager">Manager</option>
+                    </select>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Send Welcome Email</label>
+                    <select name="send_welcome_email" class="field-select">
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 7: Review & Complete -->
+        <div class="form-step" id="step-7" style="display:none;">
+            <div class="form-section-title">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                Review & Complete
+            </div>
+            <div class="review-panel">
+                <div class="review-card">
+                    <span>Employee</span>
+                    <strong id="reviewName">Not entered</strong>
+                </div>
+                <div class="review-card">
+                    <span>Job</span>
+                    <strong id="reviewJob">Not selected</strong>
+                </div>
+                <div class="review-card">
+                    <span>Email</span>
+                    <strong id="reviewEmail">Not entered</strong>
+                </div>
+                <div class="review-card">
+                    <span>Payroll</span>
+                    <strong id="reviewSalary">Optional</strong>
+                </div>
+            </div>
+            <div class="onboarding-note">
+                Please review the information before completing onboarding. The employee account, HR profile, job setup and payroll details will be created together.
             </div>
         </div>
     </div>
@@ -229,16 +360,87 @@
     </div>
 </form>
 
+@section Styles {
+<style>
+    :root { --surface1: var(--white); }
+
+    .onboarding-steps {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 30px;
+        position: relative;
+        overflow-x: auto;
+        padding: 0 8px 6px;
+    }
+
+    .onboarding-steps .step-item {
+        min-width: 92px;
+    }
+
+    .review-panel {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .review-card {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: #f8fafc;
+        padding: 16px;
+    }
+
+    .review-card span {
+        display: block;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: .05em;
+        text-transform: uppercase;
+        margin-bottom: 7px;
+    }
+
+    .review-card strong {
+        color: var(--text);
+        font-size: 14px;
+        word-break: break-word;
+    }
+
+    .onboarding-note {
+        margin-top: 16px;
+        border: 1px solid var(--accent-light);
+        border-radius: 12px;
+        background: #eff6ff;
+        color: var(--text2);
+        padding: 14px 16px;
+        font-size: 13px;
+        line-height: 1.5;
+    }
+
+    @@media (max-width: 900px) {
+        .review-panel { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @@media (max-width: 640px) {
+        .review-panel { grid-template-columns: 1fr; }
+    }
+</style>
+}
+
 @section Scripts {
 <script src="~/js/modals.js" asp-append-version="true"></script>
 <script>
     let currentStep = 1;
-    const totalSteps = 3;
+    const totalSteps = 7;
 
     function updateSteps() {
         // Update display
         document.querySelectorAll('.form-step').forEach(s => s.style.display = 'none');
         document.getElementById(`step-${currentStep}`).style.display = 'block';
+        if (currentStep === totalSteps) {
+            renderReview();
+        }
 
         // Update progress bar
         const progress = ((currentStep - 1) / (totalSteps - 1)) * 100;
@@ -309,6 +511,27 @@
         }
     }
 
+    function getSelectText(name) {
+        const el = document.querySelector(`[name="${name}"]`);
+        return el?.selectedOptions?.[0]?.textContent?.trim() || '';
+    }
+
+    function renderReview() {
+        const form = document.getElementById('onboardingForm');
+        const formData = new FormData(form);
+        const firstName = formData.get('first_name') || '';
+        const lastName = formData.get('last_name') || '';
+        const email = formData.get('email') || '';
+        const salary = formData.get('basic_salary') || '';
+        const designation = getSelectText('designation_id');
+        const department = getSelectText('department_id');
+
+        document.getElementById('reviewName').textContent = `${firstName} ${lastName}`.trim() || 'Not entered';
+        document.getElementById('reviewJob').textContent = [designation, department].filter(Boolean).join(' - ') || 'Not selected';
+        document.getElementById('reviewEmail').textContent = email || 'Not entered';
+        document.getElementById('reviewSalary').textContent = salary ? `PKR ${Number(salary).toLocaleString()}` : 'Optional';
+    }
+
     (async function initOnboarding() {
         updateSteps();
         // Load all config dropdowns
@@ -344,7 +567,7 @@
         if (mgrRes.success && Array.isArray(mgrRes.data)) {
             mgrRes.data.forEach(emp => {
                 const opt = document.createElement('option');
-                opt.value = emp.id || emp.employee_id;
+                opt.value = emp.employee_id;
                 opt.textContent = emp.name + ' (' + (emp.designation_title || emp.designation_name || '') + ')';
                 mgrEl.appendChild(opt);
             });
@@ -361,6 +584,11 @@
             if (value) data[key] = value;
         });
 
+        const fileName = (fieldName) => {
+            const input = form.querySelector(`[name="${fieldName}"]`);
+            return input?.files?.[0]?.name || null;
+        };
+
         const payload = {
             personalInfo: {
                 name: `${data.first_name} ${data.last_name}`,
@@ -376,10 +604,16 @@
                 work_mode_id: data.work_mode_id,
                 work_location_id: data.location_id,
                 shift_id: data.shift_id,
+                manager_emp_id: data.manager_id || null,
                 date_of_joining: data.joining_date
             },
             salaryInfo: {
-                base_salary: data.basic_salary ? Number(data.basic_salary) : 0
+                base_salary: data.basic_salary ? Number(data.basic_salary) : 0,
+                payroll_cycle: data.payroll_cycle || null,
+                tax_status: data.tax_status || null,
+                allowance_notes: data.allowance_notes || null,
+                probation_salary: data.probation_salary ? Number(data.probation_salary) : null,
+                salary_effective_from: data.salary_effective_from || null
             },
             accountInfo: {
                 email: data.email,
@@ -403,6 +637,16 @@
                 e_contact_2_phone_country_code: null,
                 e_contact_2_email: null,
                 primary_contact: 1
+            },
+            documentInfo: {
+                cnic_document: fileName('cnic_document'),
+                resume_document: fileName('resume_document'),
+                offer_letter_document: fileName('offer_letter_document')
+            },
+            accessInfo: {
+                portal_access: data.portal_access || 'enabled',
+                access_role: data.access_role || 'employee',
+                send_welcome_email: data.send_welcome_email || 'yes'
             }
         };
 

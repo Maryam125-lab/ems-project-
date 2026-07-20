@@ -1,7 +1,9 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EMS.Web.Controllers
 {
+    [Authorize]
     public class AttendanceController : Controller
     {
         public IActionResult Index()

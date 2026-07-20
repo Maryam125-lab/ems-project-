@@ -11,7 +11,7 @@ export async function listAnnouncements(req, res, next) {
 
 export async function createAnnouncement(req, res, next) {
     try {
-        const announcement = await announcementService.createAnnouncement(req.body, req.user.id);
+        const announcement = await announcementService.createAnnouncement(req.body, req.user.user_id);
         res.status(201).json({ success: true, data: announcement });
     } catch (error) {
         next(error);

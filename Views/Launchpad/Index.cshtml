@@ -1,0 +1,108 @@
+@{
+    ViewData["Title"] = "ERP Launchpad";
+    ViewData["Active"] = "Launchpad";
+}
+
+<div class="erp-hero">
+    <div>
+        <div class="erp-eyebrow">Unified workspace</div>
+        <h1>TRACK360 ERP Command Center</h1>
+        <p>One login, one interface, and a connected foundation for HR, Inventory, Project Management, and Reports.</p>
+    </div>
+    <div class="erp-hero-panel">
+        <span class="erp-hero-label">System mode</span>
+        <strong>Modular ERP Shell</strong>
+        <small>Shared authentication and backend-ready module boundaries</small>
+    </div>
+</div>
+
+<div class="erp-module-grid" id="moduleGrid">
+    <a class="erp-module-card active" href="/Dashboard" data-module-key="hr">
+        <div class="erp-module-top">
+            <div class="erp-module-icon blue"><i class="fa-solid fa-users-gear"></i></div>
+            <span class="erp-pill live">Active</span>
+        </div>
+        <h2>HR Management</h2>
+        <p>Employees, attendance, leave, payroll, penalties, announcements, and HR configuration.</p>
+        <div class="erp-module-metrics">
+            <span>Live data</span>
+            <span>Connected backend</span>
+        </div>
+    </a>
+
+    <a class="erp-module-card soon" href="/Inventory" data-module-key="inventory">
+        <div class="erp-module-top">
+            <div class="erp-module-icon green"><i class="fa-solid fa-boxes-stacked"></i></div>
+            <span class="erp-pill">Setup in progress</span>
+        </div>
+        <h2>Inventory Control</h2>
+        <p>Item master, warehouses, stock movements, purchase requests, low stock alerts, and project usage.</p>
+        <div class="erp-module-metrics">
+            <span>Architecture ready</span>
+            <span>Awaiting master data</span>
+        </div>
+    </a>
+
+    <a class="erp-module-card soon" href="/Projects" data-module-key="projects">
+        <div class="erp-module-top">
+            <div class="erp-module-icon violet"><i class="fa-solid fa-diagram-project"></i></div>
+            <span class="erp-pill">Setup in progress</span>
+        </div>
+        <h2>Project Management</h2>
+        <p>Projects, milestones, tasks, teams, timesheets, inventory consumption, and project costing.</p>
+        <div class="erp-module-metrics">
+            <span>Module shell ready</span>
+            <span>Workflow mapping next</span>
+        </div>
+    </a>
+
+    <a class="erp-module-card partial" href="/AuditLog" data-module-key="reports">
+        <div class="erp-module-top">
+            <div class="erp-module-icon amber"><i class="fa-solid fa-chart-line"></i></div>
+            <span class="erp-pill partial">Partial</span>
+        </div>
+        <h2>Reports Center</h2>
+        <p>Audit trails and the future home for HR, Inventory, Project, Payroll, and approval reports.</p>
+        <div class="erp-module-metrics">
+            <span>Audit active</span>
+            <span>Analytics roadmap</span>
+        </div>
+    </a>
+</div>
+
+<div class="erp-two-col">
+    <div class="erp-panel">
+        <div class="erp-panel-title">Connected ERP foundation</div>
+        <div class="erp-flow">
+            <div><strong>Single Auth</strong><span>One session controls HR, Inventory, and Projects.</span></div>
+            <div><strong>Shared User Identity</strong><span>Employees, managers, and admins map to the same ERP profile.</span></div>
+            <div><strong>Module APIs</strong><span>Each module can grow into its own service without changing the user experience.</span></div>
+        </div>
+    </div>
+    <div class="erp-panel">
+        <div class="erp-panel-title">Next build sequence</div>
+        <ol class="erp-steps">
+            <li>Import and normalize inventory master data.</li>
+            <li>Create warehouses, stock ledger, stock in/out, and purchase workflow.</li>
+            <li>Add project master, task board, team allocation, and inventory consumption links.</li>
+        </ol>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    (async function syncLaunchpad() {
+        const result = await EmsApi.erp.modules();
+        if (!result.success || !Array.isArray(result.data.modules)) return;
+
+        result.data.modules.forEach(function (module) {
+            const card = document.querySelector('[data-module-key="' + module.key + '"]');
+            if (!card) return;
+            card.href = module.route || card.href;
+            card.querySelector('p').textContent = module.description;
+            const title = card.querySelector('h2');
+            if (title) title.textContent = module.name;
+        });
+    })();
+</script>
+}

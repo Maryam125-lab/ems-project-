@@ -1,25 +1,166 @@
-@{ ViewData["Title"] = "My Payslips"; }
+@{ ViewData["Title"] = "My Payslips"; ViewData["Active"] = "MyPayslips"; }
+
 <div class="page-header anim-fade-in-up">
-    <div><h1 class="page-title"><i class="fa-solid fa-money-bill-wave" aria-hidden="true"></i> My Payslips</h1><div class="page-date">View and download your monthly payslips</div></div>
-</div>
-<div class="card anim-fade-in-up" style="margin-bottom:16px;">
-    <div class="card-title">Latest Payslip – April 2026</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;font-size:13px;">
-        <div><span style="color:var(--muted);font-size:11px;display:block;">Basic Salary</span><strong class="cell-mono" style="font-size:15px;">PKR 120,000</strong></div>
-        <div><span style="color:var(--muted);font-size:11px;display:block;">House Rent</span><span style="color:var(--accent2);font-family:'DM Mono',monospace;">+15,000</span></div>
-        <div><span style="color:var(--muted);font-size:11px;display:block;">Transport</span><span style="color:var(--accent2);font-family:'DM Mono',monospace;">+10,000</span></div>
-        <div><span style="color:var(--muted);font-size:11px;display:block;">Tax Deduction</span><span style="color:var(--accent4);font-family:'DM Mono',monospace;">-12,000</span></div>
-        <div><span style="color:var(--muted);font-size:11px;display:block;">Provident Fund</span><span style="color:var(--accent4);font-family:'DM Mono',monospace;">-6,500</span></div>
-        <div style="background:var(--accent-light);padding:12px;border-radius:10px;"><span style="color:var(--accent);font-size:11px;display:block;font-weight:700;">NET PAYABLE</span><strong style="font-size:20px;font-family:'DM Mono',monospace;color:var(--accent);">PKR 126,500</strong></div>
+    <div>
+        <h1 class="page-title"><i class="fa-solid fa-money-bill-wave" aria-hidden="true"></i> My Payslips</h1>
+        <div class="page-date">View monthly salary records loaded from the .NET payroll service</div>
     </div>
-    <div style="margin-top:16px;display:flex;gap:8px;"><button class="btn btn-outline" onclick="showToast('PDF Downloaded','success')">Download PDF</button><button class="btn btn-ghost">Print</button></div>
 </div>
+
+<div class="card anim-fade-in-up" style="margin-bottom:16px;" id="latestPayslipCard">
+    <div class="card-title">Latest Payslip</div>
+    <div id="latestPayslipBody" style="padding:18px;color:var(--muted);">Loading your latest payslip...</div>
+</div>
+
 <div class="card anim-fade-in-up">
     <div class="card-title">Payslip History</div>
-    <table class="data-table"><thead><tr><th>Month</th><th>Basic</th><th>Gross</th><th>Deductions</th><th>Net Pay</th><th>Action</th></tr></thead>
-    <tbody>
-        <tr><td><strong>April 2026</strong></td><td class="cell-mono">120,000</td><td class="cell-mono">145,000</td><td class="cell-mono" style="color:var(--accent4)">-18,500</td><td><strong class="cell-mono">126,500</strong></td><td><button class="btn btn-sm btn-outline" onclick="showToast('Downloaded','success')">PDF</button></td></tr>
-        <tr><td><strong>March 2026</strong></td><td class="cell-mono">120,000</td><td class="cell-mono">145,000</td><td class="cell-mono" style="color:var(--accent4)">-18,500</td><td><strong class="cell-mono">126,500</strong></td><td><button class="btn btn-sm btn-outline">PDF</button></td></tr>
-        <tr><td><strong>February 2026</strong></td><td class="cell-mono">120,000</td><td class="cell-mono">145,000</td><td class="cell-mono" style="color:var(--accent4)">-19,000</td><td><strong class="cell-mono">126,000</strong></td><td><button class="btn btn-sm btn-outline">PDF</button></td></tr>
-    </tbody></table>
+    <div class="table-scroll-wrapper">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Month</th>
+                    <th>Basic</th>
+                    <th>Allowances</th>
+                    <th>Deductions</th>
+                    <th>Net Pay</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="payslipHistory">
+                <tr><td colspan="7" style="padding:24px;color:var(--muted);">Loading payroll records...</td></tr>
+            </tbody>
+        </table>
+    </div>
 </div>
+
+<div class="modal-backdrop" id="payslipModal">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <div class="modal-title"><i class="fa-solid fa-file-invoice-dollar" aria-hidden="true"></i> Payslip Details</div>
+            <button class="modal-close" onclick="closeModal('payslipModal')"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+        <div class="modal-body" id="payslipModalBody"></div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModal('payslipModal')">Close</button>
+            <button class="btn btn-primary" onclick="window.print()">Print</button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/modals.js"></script>
+    <script>
+        let payslips = [];
+
+        document.addEventListener('DOMContentLoaded', loadPayslips);
+
+        async function loadPayslips() {
+            const res = await EmsApi.payroll.getMine();
+            if (!res.success) {
+                document.getElementById('latestPayslipBody').innerHTML = `<span style="color:#dc2626;">${escapeHtml(res.error || 'Unable to load payslips')}</span>`;
+                document.getElementById('payslipHistory').innerHTML = '<tr><td colspan="7" style="padding:24px;color:#dc2626;">Unable to load payroll records.</td></tr>';
+                return;
+            }
+
+            payslips = Array.isArray(res.data) ? res.data : [];
+            renderLatestPayslip();
+            renderPayslipHistory();
+        }
+
+        function renderLatestPayslip() {
+            const latest = payslips[0];
+            const body = document.getElementById('latestPayslipBody');
+            if (!latest) {
+                body.innerHTML = '<div style="padding:10px;color:var(--muted);">No payroll records are available yet.</div>';
+                return;
+            }
+
+            body.innerHTML = `
+                <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;font-size:13px;">
+                    ${salaryMetric('Period', `${monthName(latest.month)} ${latest.year}`)}
+                    ${salaryMetric('Status', statusBadge(latest.status), true)}
+                    ${salaryMetric('Basic Salary', money(latest.basic_salary))}
+                    ${salaryMetric('Allowances', `<span style="color:var(--accent2);font-family:'DM Mono',monospace;">+${money(latest.allowances)}</span>`, true)}
+                    ${salaryMetric('Deductions', `<span style="color:var(--accent4);font-family:'DM Mono',monospace;">-${money(latest.deductions)}</span>`, true)}
+                    <div style="background:var(--accent-light);padding:12px;border-radius:10px;">
+                        <span style="color:var(--accent);font-size:11px;display:block;font-weight:700;">NET PAYABLE</span>
+                        <strong style="font-size:20px;font-family:'DM Mono',monospace;color:var(--accent);">${money(latest.net_salary)}</strong>
+                    </div>
+                </div>
+                <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;">
+                    <button class="btn btn-outline" onclick="openPayslip('${latest.id}')">View Details</button>
+                    <button class="btn btn-ghost" onclick="window.print()">Print</button>
+                </div>`;
+        }
+
+        function renderPayslipHistory() {
+            const tbody = document.getElementById('payslipHistory');
+            if (!payslips.length) {
+                tbody.innerHTML = '<tr><td colspan="7" style="padding:24px;color:var(--muted);">No payslip history found.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = payslips.map(p => `
+                <tr>
+                    <td><strong>${monthName(p.month)} ${escapeHtml(p.year)}</strong></td>
+                    <td class="cell-mono">${money(p.basic_salary)}</td>
+                    <td class="cell-mono" style="color:var(--accent2)">+${money(p.allowances)}</td>
+                    <td class="cell-mono" style="color:var(--accent4)">-${money(p.deductions)}</td>
+                    <td><strong class="cell-mono">${money(p.net_salary)}</strong></td>
+                    <td>${statusBadge(p.status)}</td>
+                    <td><button class="btn btn-sm btn-outline" onclick="openPayslip('${p.id}')">View</button></td>
+                </tr>
+            `).join('');
+        }
+
+        async function openPayslip(id) {
+            const res = await EmsApi.payroll.getPayslip(id);
+            if (!res.success) {
+                showToast(res.error || 'Unable to load payslip detail', 'error');
+                return;
+            }
+
+            const p = res.data;
+            document.getElementById('payslipModalBody').innerHTML = `
+                <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;">
+                    ${detailRow('Employee', p.employee_name || p.employee_id)}
+                    ${detailRow('Employee ID', p.employee_id)}
+                    ${detailRow('Period', `${monthName(p.month)} ${p.year}`)}
+                    ${detailRow('Status', p.status)}
+                    ${detailRow('Basic Salary', money(p.basic_salary))}
+                    ${detailRow('Allowances', money(p.allowances))}
+                    ${detailRow('Deductions', money(p.deductions))}
+                    ${detailRow('Net Salary', money(p.net_salary))}
+                </div>`;
+            openModal('payslipModal');
+        }
+
+        function salaryMetric(label, value, raw = false) {
+            return `<div><span style="color:var(--muted);font-size:11px;display:block;">${escapeHtml(label)}</span><strong class="cell-mono" style="font-size:15px;">${raw ? value : escapeHtml(value)}</strong></div>`;
+        }
+
+        function detailRow(label, value) {
+            return `<div class="field-group"><label class="field-label">${escapeHtml(label)}</label><div class="field-input" style="background:var(--surface2);">${escapeHtml(value ?? '-')}</div></div>`;
+        }
+
+        function money(value) {
+            return `PKR ${Number(value || 0).toLocaleString()}`;
+        }
+
+        function monthName(value) {
+            const month = Number(value || 1);
+            return new Date(2026, month - 1, 1).toLocaleString(undefined, { month: 'long' });
+        }
+
+        function statusBadge(status) {
+            const normalized = String(status || 'pending').toLowerCase();
+            const cls = normalized === 'processed' || normalized === 'paid' ? 'approved' : 'pending';
+            return `<span class="status-badge ${cls}">${escapeHtml(normalized)}</span>`;
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+    </script>
+}

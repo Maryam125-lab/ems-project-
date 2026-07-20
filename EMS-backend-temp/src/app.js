@@ -17,37 +17,28 @@ import promotionsModuleRoutes from './modules/promotions/promotions.routes.js';
 import announcementsModuleRoutes from './modules/announcements/announcements.routes.js';
 import payrollModuleRoutes from './modules/payroll/payroll.routes.js';
 import auditModuleRoutes from './modules/audit/audit.routes.js';
+import erpModuleRoutes from './modules/erp/erp.routes.js';
+import inventoryModuleRoutes from './modules/inventory/inventory.routes.js';
+import projectsModuleRoutes from './modules/projects/projects.routes.js';
+
 
 const app = express();
 
-// Debug logs sirf development mein
-if (process.env.NODE_ENV !== 'production') {
-  app.use((req, res, next) => {
-    console.log('[DEBUG]', req.method, req.url);
-    next();
-  });
-}
+const debugMiddleware = (req, res, next) => {
+	console.log('[DEBUG] Request:', req.method, req.url, 'cookies:', Object.keys(req.cookies || {}), 'auth:', req.headers.authorization ? 'present' : 'none');
+	next();
+};
 
-// CORS fix — .env se origin lega
-const allowedOrigins = process.env.FRONTEND_ORIGIN
-  ? process.env.FRONTEND_ORIGIN.split(',').map(o => o.trim())
-  : ['http://localhost:5034', 'http://127.0.0.1:5034'];
+app.use(debugMiddleware);
 
 app.use(
-  cors({
-    origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
-  })
+	cors({
+		origin: ['http://localhost:5034', 'http://127.0.0.1:5034'],
+		credentials: true,
+		methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+		allowedHeaders: ['Content-Type', 'Authorization']
+	})
 );
-
 app.use(express.json());
 app.use(cookieParser());
 
@@ -65,11 +56,14 @@ app.use('/api/promotions', promotionsModuleRoutes);
 app.use('/api/announcements', announcementsModuleRoutes);
 app.use('/api/payroll', payrollModuleRoutes);
 app.use('/api/audit-logs', auditModuleRoutes);
+app.use('/api/erp', erpModuleRoutes);
+app.use('/api/inventory', inventoryModuleRoutes);
+app.use('/api/projects', projectsModuleRoutes);
 
 app.get('/', (req, res) => {
-  res.status(200).json({ success: true, data: { message: 'server is running' } });
+	res.status(200).json({ success: true, data: { message: 'server is running' } });
 });
 
 app.use(errorHandler);
 
-export default app; 
+export default app;

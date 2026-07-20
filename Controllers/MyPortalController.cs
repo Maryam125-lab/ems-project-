@@ -1,7 +1,9 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EMS.Web.Controllers
 {
+    [Authorize]
     public class MyPortalController : Controller
     {
         public IActionResult Dashboard()       { ViewData["Title"] = "My Dashboard";    ViewData["Active"] = "MyDashboard";  return View(); }

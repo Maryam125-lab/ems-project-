@@ -5,6 +5,19 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RollForward>Major</RollForward>
+    <UserSecretsId>track360-erp-local-secrets</UserSecretsId>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BCrypt.Net-Next" Version="4.2.0" />
+    <PackageReference Include="Dapper" Version="2.1.79" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.11" />
+    <PackageReference Include="Npgsql" Version="8.0.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Remove="EMS-backend-temp\**;publish\**;publish-final\**;publish-ready\**" />
+    <None Remove="EMS-backend-temp\**;publish\**;publish-final\**;publish-ready\**" />
+  </ItemGroup>
 
 </Project>

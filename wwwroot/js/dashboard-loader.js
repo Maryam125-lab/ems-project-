@@ -11,21 +11,17 @@
 
     // ── Greeting ───────────────────────────────────────────────────
     function setGreeting() {
-        const h = new Date().getHours();
         const user = EmsApi.getUser();
-        const role = EmsApi.getRoleName();
-        const greet = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+        const role = String(EmsApi.getRoleName() || '').toLowerCase().replace(/\s+/g, '_');
         
         let displayRole = 'Admin';
         if (role === 'super_admin') displayRole = 'Super Admin';
-        else if (role.toLowerCase().includes('hr')) displayRole = 'HR Manager';
+        else if (role.includes('hr')) displayRole = 'HR Manager';
         else if (role === 'employee') displayRole = 'Team Member';
 
-        const name = user?.employee_name || user?.email?.split('@')[0] || 'User';
-        
         const el = document.getElementById('greetingText');
         if (el) {
-            el.innerHTML = `${greet}, ${displayRole} <span style="font-size:0.7em; opacity:0.7; font-weight:400;">(${name})</span> <i class="fa-solid fa-fire" aria-hidden="true"></i> <span class="live-dot">LIVE</span>`;
+            el.textContent = `Welcome ${displayRole}`;
         }
     }
     setGreeting();
@@ -49,6 +45,10 @@
     async function loadMetrics() {
         const res = await EmsApi.dashboard.getHRMetrics('6m');
         const d = res.success ? res.data : null;
+        if (!d) {
+            renderDashboardFallback();
+            return;
+        }
 
         // KPI: Total Payroll
         const totalEl = document.getElementById('kpiTotalNum');
@@ -108,17 +108,23 @@
         if (d && d.recent_activity) renderActivity(d.recent_activity);
 
         // Headcount Growth
-        if (d && d.headcount_trend) renderGrowthChart(d.headcount_trend);
+        renderGrowthChart(Array.isArray(d.headcount_trend) ? d.headcount_trend : []);
     }
 
     function renderGrowthChart(data) {
         const container = document.getElementById('growthChart');
         const labels = document.getElementById('growthLabels');
-        if (!container || !data.length) return;
+        if (!container) return;
+        if (!data.length) {
+            container.innerHTML = '<div class="dash-empty">No headcount trend data available yet.</div>';
+            if (labels) labels.innerHTML = '';
+            return;
+        }
 
         const maxVal = Math.max(...data.map(d => d.count), 1);
+        const lastIndex = Math.max(data.length - 1, 1);
         const points = data.map((d, i) => {
-            const x = (i / (data.length - 1)) * 400;
+            const x = (i / lastIndex) * 400;
             const y = 80 - (d.count / maxVal) * 60;
             return `${x},${y}`;
         }).join(' L ');
@@ -127,16 +133,33 @@
         const pathLine = `M 0,${80 - (data[0].count/maxVal)*60} L ${points}`;
 
         container.innerHTML = `
-            <svg width="100%" height="90" viewBox="0 0 400 90" preserveAspectRatio="none">
-                <defs><linearGradient id="lg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#10b981" stop-opacity="0.3"/><stop offset="100%" stop-color="#10b981" stop-opacity="0"/></linearGradient></defs>
-                <path d="${pathArea}" fill="url(#lg)"/>
-                <path d="${pathLine}" fill="none" stroke="#10b981" stroke-width="2"/>
+            <svg width="100%" height="112" viewBox="0 0 400 90" preserveAspectRatio="none">
+                <defs><linearGradient id="growthGradient" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#10b981" stop-opacity="0.28"/><stop offset="100%" stop-color="#10b981" stop-opacity="0.02"/></linearGradient></defs>
+                <path d="${pathArea}" fill="url(#growthGradient)"/>
+                <path d="${pathLine}" fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round"/>
             </svg>
         `;
 
         if (labels) {
             labels.innerHTML = data.map(d => `<span>${d.month}</span>`).join('');
         }
+    }
+
+    function renderDashboardFallback() {
+        const fallbackPairs = [
+            ['kpiTotalNum', '-'],
+            ['kpiPresentNum', '-'],
+            ['kpiLeaveNum', '-'],
+            ['metricAttendance', '--%'],
+            ['metricLeaveUsed', '--%'],
+            ['metricOnTime', '--%']
+        ];
+        fallbackPairs.forEach(([id, value]) => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = value;
+        });
+        const growth = document.getElementById('growthChart');
+        if (growth) growth.innerHTML = '<div class="dash-empty">Dashboard data could not be loaded.</div>';
     }
 
     function renderWorkforceChart(data) {
@@ -146,12 +169,12 @@
         container.innerHTML = data.map((t, i) => {
             const pct = total > 0 ? Math.round((t.count / total) * 100) : 0;
             const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'];
-            return `<div style="margin-bottom:10px;">
-                <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px;">
-                    <span>${t.label || 'Other'}</span><span>${pct}%</span>
+            return `<div style="margin-bottom:12px;">
+                <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;color:var(--text);font-weight:700;">
+                    <span>${t.label || 'Other'}</span><span style="color:var(--muted);font-family:'DM Mono',monospace;">${pct}%</span>
                 </div>
-                <div style="height:6px;background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden;">
-                    <div style="width:${pct}%;height:100%;background:${colors[i % colors.length]};"></div>
+                <div style="height:8px;background:#edf2f8;border-radius:999px;overflow:hidden;">
+                    <div style="width:${pct}%;height:100%;background:${colors[i % colors.length]};border-radius:999px;"></div>
                 </div>
             </div>`;
         }).join('');
@@ -165,7 +188,7 @@
             return;
         }
         container.innerHTML = data.map(a => `
-            <div class="alert-item" style="border:none;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.03);">
+            <div class="alert-item">
                 <div class="alert-dot blue"></div>
                 <div style="flex:1;">
                     <div style="font-size:12px;"><strong>${a.name}</strong> was promoted</div>
@@ -209,7 +232,7 @@
 
         legend.innerHTML = departments.slice(0, 6).map((dept, i) => {
             const pct = total > 0 ? Math.round(dept.count / total * 100) : 0;
-            return `<div style="display:flex;align-items:center;gap:7px;font-size:12px;">
+            return `<div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text);font-weight:700;padding:3px 0;">
                 <div style="width:8px;height:8px;border-radius:50%;background:${CHART_COLORS[i % CHART_COLORS.length]};flex-shrink:0;"></div>
                 ${dept.name || dept.department_name}
                 <span style="margin-left:auto;font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);padding-left:12px;">${dept.count}&nbsp;${pct}%</span>
@@ -224,16 +247,16 @@
 
         const maxVal = Math.max(...data.map(m => (m.present || 0) + (m.late || 0) + (m.absent || 0)), 1);
         container.innerHTML = data.slice(-6).map(m => {
-            const presentH = Math.max(4, ((m.present || 0) / maxVal) * 80);
-            const otherH = Math.max(4, (((m.late || 0) + (m.absent || 0)) / maxVal) * 80);
+            const presentH = Math.max(4, ((m.present || 0) / maxVal) * 92);
+            const otherH = Math.max(4, (((m.late || 0) + (m.absent || 0)) / maxVal) * 92);
             const pct = m.present && m.total ? Math.round(m.present / m.total * 100) : '—';
             return `<div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1;">
-                <div style="display:flex;gap:2px;align-items:flex-end;height:80px;">
-                    <div style="width:16px;height:${presentH}px;background:var(--accent);border-radius:3px 3px 0 0;min-height:4px;transition:height 0.6s ease;"></div>
-                    <div style="width:10px;height:${otherH}px;background:var(--accent4);border-radius:3px 3px 0 0;min-height:4px;transition:height 0.6s ease;"></div>
+                <div style="display:flex;gap:3px;align-items:flex-end;height:92px;">
+                    <div style="width:18px;height:${presentH}px;background:linear-gradient(180deg,#3b82f6,#2563eb);border-radius:6px 6px 2px 2px;min-height:4px;transition:height 0.6s ease;box-shadow:0 10px 18px rgba(37,99,235,.16);"></div>
+                    <div style="width:10px;height:${otherH}px;background:linear-gradient(180deg,#f87171,#dc2626);border-radius:6px 6px 2px 2px;min-height:4px;transition:height 0.6s ease;"></div>
                 </div>
-                <div style="font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;">${m.month || ''}</div>
-                <div style="font-size:8px;color:var(--muted);">${pct}%</div>
+                <div style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;margin-top:4px;">${m.month || ''}</div>
+                <div style="font-size:9px;color:var(--muted);">${pct}%</div>
             </div>`;
         }).join('');
     }
@@ -263,13 +286,13 @@
             container.innerHTML = res.data.map(a => {
                 const isPinned = a.is_pinned;
                 const borderStyle = isPinned 
-                    ? 'border-left: 3px solid var(--accent3); background:rgba(245,158,11,0.04);' 
-                    : 'border-left: 3px solid var(--accent); background:rgba(255,255,255,0.01);';
+                    ? 'border-left: 3px solid var(--accent3); background:#fff8ed;' 
+                    : 'border-left: 3px solid var(--accent); background:#f8fafc;';
                 const pinBadge = isPinned 
                     ? '<span style="color:var(--accent3); font-size:10px; font-weight:600; display:inline-flex; align-items:center; gap:3px;"><i class="fa-solid fa-thumbtack" style="font-size:8px;"></i> Pinned</span>' 
                     : '';
                 
-                return `<div style="padding:10px; border-radius:8px; display:flex; flex-direction:column; gap:4px; border:1px solid rgba(255,255,255,0.03); ${borderStyle}">
+                return `<div style="padding:12px; border-radius:12px; display:flex; flex-direction:column; gap:5px; border:1px solid var(--border-light); ${borderStyle}">
                     <div style="font-size:12px; font-weight:600; display:flex; justify-content:space-between; align-items:center; gap:8px;">
                         <span style="color:var(--foreground);">${a.title}</span>
                         <div style="display:flex; align-items:center; gap:8px;">

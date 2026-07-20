@@ -84,9 +84,13 @@ export async function approveUnlock(req, res, next) {
 
 export async function getMonthlyReport(req, res, next) {
   try {
+    const now = new Date();
+    const year = Number(req.query.year) || now.getFullYear();
+    const month = Number(req.query.month) || now.getMonth() + 1;
+
     const result = await attendanceService.getMonthlyReport(
-      Number(req.query.year),
-      Number(req.query.month),
+      year,
+      month,
       req.query.location_id,
       {
         employee_id: req.query.employee_id,

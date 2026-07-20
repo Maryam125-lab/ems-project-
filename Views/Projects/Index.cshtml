@@ -1,0 +1,276 @@
+@{
+    ViewData["Title"] = "Project Management";
+    ViewData["Active"] = "Projects";
+}
+
+<div class="page-header anim-fade-in-up">
+    <div>
+        <h1 class="page-title">
+            <i class="fa-solid fa-diagram-project" aria-hidden="true"></i>
+            Project Management
+        </h1>
+        <div class="page-date">Plan projects, assign managers, track tasks, budgets, and ERP delivery status</div>
+    </div>
+    <button class="btn btn-primary" onclick="openProjectModal()">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        New Project
+    </button>
+</div>
+
+<div class="module-coming-hero projects" style="margin-bottom:18px;">
+    <div>
+        <div class="erp-eyebrow">ERP Module 03</div>
+        <h1>Projects Command Center</h1>
+        <p>Connected with single ERP auth, HR employees, departments, tasks, milestones, timesheets and future inventory consumption.</p>
+        <div class="module-status-row">
+            <span class="erp-pill live" id="projectsAuthStatus">Backend connected</span>
+            <span class="erp-pill live">HR resources connected</span>
+            <span class="erp-pill partial">Inventory costing next</span>
+        </div>
+    </div>
+    <div class="module-orbit-card">
+        <strong>Professional project flow</strong>
+        <span>Plan -> Assign -> Track -> Consume stock -> Cost -> Close</span>
+    </div>
+</div>
+
+<div class="kpi-grid stagger" style="grid-template-columns: repeat(5, 1fr); margin-bottom: 20px;">
+    <div class="stat-card blue"><div class="kpi-label">Total Projects</div><div class="kpi-num" id="kpiProjectsTotal">-</div><div class="kpi-sub">All records</div></div>
+    <div class="stat-card green"><div class="kpi-label">Active</div><div class="kpi-num" id="kpiProjectsActive">-</div><div class="kpi-sub">In progress</div></div>
+    <div class="stat-card amber"><div class="kpi-label">Planning</div><div class="kpi-num" id="kpiProjectsPlanning">-</div><div class="kpi-sub">Not started</div></div>
+    <div class="stat-card red"><div class="kpi-label">Overdue</div><div class="kpi-num" id="kpiProjectsOverdue">-</div><div class="kpi-sub">Needs attention</div></div>
+    <div class="stat-card purple"><div class="kpi-label">Budget</div><div class="kpi-num" id="kpiProjectsBudget">-</div><div class="kpi-sub">PKR total</div></div>
+</div>
+
+<div class="table-container anim-fade-in-up">
+    <div class="filter-bar">
+        <input class="filter-search" type="text" placeholder="Search projects..." id="projectSearch" oninput="filterTable('projectsTable','projectSearch')" />
+        <div style="margin-left:auto;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:4px;">
+            <strong id="projectsCount" style="color:var(--text);">0</strong> projects
+        </div>
+    </div>
+    <div class="table-scroll-wrapper">
+        <table class="data-table" id="projectsTable">
+            <thead>
+                <tr>
+                    <th>Project</th>
+                    <th>Client</th>
+                    <th>Manager</th>
+                    <th>Department</th>
+                    <th>Timeline</th>
+                    <th>Budget</th>
+                    <th>Progress</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="projectsBody">
+                <tr><td colspan="8" style="text-align:center;padding:40px;color:var(--muted);">Loading projects...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="erp-module-grid compact" style="margin-top:18px;">
+    <div class="erp-feature-card">
+        <i class="fa-solid fa-users"></i>
+        <h3>HR Team Allocation</h3>
+        <p>Project managers and resources are selected from employee records.</p>
+    </div>
+    <div class="erp-feature-card">
+        <i class="fa-solid fa-boxes-stacked"></i>
+        <h3>Inventory Consumption</h3>
+        <p>Next link: issue stock to a project and update project cost automatically.</p>
+    </div>
+    <div class="erp-feature-card">
+        <i class="fa-solid fa-coins"></i>
+        <h3>Cost Tracking</h3>
+        <p>Budget foundation is live; labor hours and stock costing can be layered on top.</p>
+    </div>
+</div>
+
+<div class="modal-backdrop" id="projectModal">
+    <div class="modal-dialog wide">
+        <div class="modal-header">
+            <div class="modal-title"><i class="fa-solid fa-briefcase" aria-hidden="true"></i> New Project</div>
+            <button class="modal-close" onclick="closeModal('projectModal')">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="form-grid form-grid-3">
+                <div class="field-group">
+                    <label class="field-label">Project Name <span class="field-required">*</span></label>
+                    <input class="field-input" id="projectName" placeholder="e.g. ERP Office Rollout" />
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Client / Department</label>
+                    <input class="field-input" id="projectClient" placeholder="e.g. ESSPL Head Office" />
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Priority</label>
+                    <select class="field-select" id="projectPriority">
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                        <option value="critical">Critical</option>
+                        <option value="low">Low</option>
+                    </select>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Department</label>
+                    <select class="field-select" id="projectDepartment"><option value="">Loading...</option></select>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Project Manager</label>
+                    <select class="field-select" id="projectManager"><option value="">Loading...</option></select>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Status</label>
+                    <select class="field-select" id="projectStatus">
+                        <option value="planning">Planning</option>
+                        <option value="active">Active</option>
+                        <option value="in_progress">In Progress</option>
+                        <option value="on_hold">On Hold</option>
+                    </select>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Start Date</label>
+                    <input type="date" class="field-input" id="projectStart" />
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Due Date</label>
+                    <input type="date" class="field-input" id="projectDue" />
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Budget (PKR)</label>
+                    <input type="number" class="field-input" id="projectBudget" placeholder="0" />
+                </div>
+                <div class="field-group form-full">
+                    <label class="field-label">Description</label>
+                    <textarea class="field-textarea" id="projectDescription" rows="3" placeholder="Scope, goals, success criteria"></textarea>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModal('projectModal')">Cancel</button>
+            <button class="btn btn-primary" id="saveProjectBtn" onclick="saveProject()">Create Project</button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="~/js/tables.js" asp-append-version="true"></script>
+<script src="~/js/modals.js" asp-append-version="true"></script>
+<script>
+    let projectRows = [];
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        await Promise.allSettled([loadProjectLookups(), loadProjects()]);
+    });
+
+    async function loadProjectLookups() {
+        const [deptRes, empRes] = await Promise.allSettled([
+            EmsApi.config.get('departments'),
+            EmsApi.employees.list()
+        ]);
+        const deptSel = document.getElementById('projectDepartment');
+        const empSel = document.getElementById('projectManager');
+        const departments = deptRes.value?.success ? deptRes.value.data : [];
+        const employees = empRes.value?.success ? (Array.isArray(empRes.value.data) ? empRes.value.data : empRes.value.data?.data || []) : [];
+        deptSel.innerHTML = '<option value="">Select Department</option>' + departments.map(d => `<option value="${escapeAttr(d.id)}">${escapeHtml(d.department_name || d.name)}</option>`).join('');
+        empSel.innerHTML = '<option value="">Select Manager</option>' + employees.map(e => `<option value="${escapeAttr(e.employee_id)}">${escapeHtml(e.name)} (${escapeHtml(e.employee_id)})</option>`).join('');
+    }
+
+    async function loadProjects() {
+        const res = await EmsApi.projects.list();
+        if (!res.success) {
+            document.getElementById('projectsBody').innerHTML = `<tr><td colspan="8" style="text-align:center;padding:40px;color:#dc2626;">${escapeHtml(res.error || 'Unable to load projects')}</td></tr>`;
+            return;
+        }
+        projectRows = Array.isArray(res.data?.data) ? res.data.data : [];
+        renderProjectStats(res.data?.stats || {});
+        renderProjects(projectRows);
+    }
+
+    function renderProjectStats(stats) {
+        document.getElementById('kpiProjectsTotal').textContent = stats.total_projects ?? 0;
+        document.getElementById('kpiProjectsActive').textContent = stats.active_projects ?? 0;
+        document.getElementById('kpiProjectsPlanning').textContent = stats.planning_projects ?? 0;
+        document.getElementById('kpiProjectsOverdue').textContent = stats.overdue_projects ?? 0;
+        document.getElementById('kpiProjectsBudget').textContent = Number(stats.total_budget || 0) > 0 ? (Number(stats.total_budget) / 100000).toFixed(1) + 'L' : '-';
+    }
+
+    function renderProjects(rows) {
+        const body = document.getElementById('projectsBody');
+        document.getElementById('projectsCount').textContent = rows.length;
+        if (!rows.length) {
+            body.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--muted);">No projects yet. Create your first project to start tracking work.</td></tr>';
+            return;
+        }
+        body.innerHTML = rows.map(p => {
+            const status = String(p.status || 'planning').replace('_', ' ');
+            const statusClass = ['active', 'in_progress', 'completed'].includes(p.status) ? 'approved' : p.status === 'on_hold' ? 'pending' : 'pending';
+            const progress = Number(p.progress_percent || 0);
+            return `<tr>
+                <td><strong>${escapeHtml(p.project_name)}</strong><div style="font-size:11px;color:var(--muted);">${escapeHtml(p.project_code)}</div></td>
+                <td>${escapeHtml(p.client_name || '-')}</td>
+                <td>${escapeHtml(p.manager_name || p.manager_emp_id || '-')}</td>
+                <td>${escapeHtml(p.department_name || '-')}</td>
+                <td><span class="cell-mono" style="font-size:11px;">${formatDate(p.start_date)} - ${formatDate(p.due_date)}</span></td>
+                <td><strong>PKR ${Number(p.budget_amount || 0).toLocaleString()}</strong></td>
+                <td><div style="display:flex;align-items:center;gap:8px;"><div class="dash-progress" style="min-width:80px;"><span style="width:${progress}%"></span></div><span style="font-size:11px;color:var(--muted);">${progress}%</span></div></td>
+                <td><span class="status-badge ${statusClass}">${escapeHtml(status)}</span></td>
+            </tr>`;
+        }).join('');
+    }
+
+    function openProjectModal() {
+        openModal('projectModal');
+    }
+
+    async function saveProject() {
+        const payload = {
+            project_name: document.getElementById('projectName').value.trim(),
+            client_name: document.getElementById('projectClient').value.trim(),
+            priority: document.getElementById('projectPriority').value,
+            department_id: document.getElementById('projectDepartment').value || null,
+            manager_emp_id: document.getElementById('projectManager').value || null,
+            status: document.getElementById('projectStatus').value,
+            start_date: document.getElementById('projectStart').value || null,
+            due_date: document.getElementById('projectDue').value || null,
+            budget_amount: Number(document.getElementById('projectBudget').value || 0),
+            description: document.getElementById('projectDescription').value.trim()
+        };
+        if (!payload.project_name) {
+            showToast('Project name is required', 'error');
+            return;
+        }
+        const btn = document.getElementById('saveProjectBtn');
+        btn.disabled = true;
+        btn.textContent = 'Creating...';
+        const res = await EmsApi.projects.create(payload);
+        btn.disabled = false;
+        btn.textContent = 'Create Project';
+        if (!res.success) {
+            showToast(res.error || 'Unable to create project', 'error');
+            return;
+        }
+        closeModal('projectModal');
+        showToast('Project created successfully', 'success');
+        await loadProjects();
+    }
+
+    function formatDate(value) {
+        return value ? new Date(value).toLocaleDateString() : '-';
+    }
+
+    function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    function escapeAttr(value) {
+        return escapeHtml(value).replace(/`/g, '&#96;');
+    }
+</script>
+}

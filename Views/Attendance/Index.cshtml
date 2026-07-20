@@ -197,7 +197,7 @@
         const search = document.getElementById('attSearch').value.toLowerCase();
         let filtered = attData;
         if (dept !== 'all') filtered = filtered.filter(a => (a.department_name || '').toLowerCase() === dept.toLowerCase());
-        if (search) filtered = filtered.filter(a => (a.employee_name || '').toLowerCase().includes(search));
+        if (search) filtered = filtered.filter(a => (a.name || a.employee_name || a.employee_id || '').toLowerCase().includes(search));
         renderAttendance(filtered);
     }
 
