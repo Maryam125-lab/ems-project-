@@ -89,6 +89,20 @@ if (string.IsNullOrWhiteSpace(platformPort))
     app.UseHttpsRedirection();
 }
 
+app.Use(async (context, next) =>
+{
+    var path = context.Request.Path.Value ?? string.Empty;
+    var blockedExtensions = new[] { ".dll", ".pdb", ".deps.json", ".runtimeconfig.json", ".csproj", ".sln", ".json" };
+    if (blockedExtensions.Any(extension => path.EndsWith(extension, StringComparison.OrdinalIgnoreCase))
+        && !path.StartsWith("/api/", StringComparison.OrdinalIgnoreCase))
+    {
+        context.Response.StatusCode = StatusCodes.Status404NotFound;
+        return;
+    }
+
+    await next();
+});
+
 app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthentication();
