@@ -8,9 +8,7 @@ namespace EMS.Web.Controllers
     {
         public IActionResult Index()
         {
-            ViewData["Title"] = "ERP Launchpad";
-            ViewData["Active"] = "Launchpad";
-            return View();
+            return RedirectToAction("Index", "Dashboard");
         }
     }
 }

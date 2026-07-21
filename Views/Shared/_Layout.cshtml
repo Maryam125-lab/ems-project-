@@ -35,11 +35,6 @@
         <!-- ERP MODULES -->
         <div class="nav-section">
             <div class="nav-label">ERP Modules</div>
-            <a class="nav-item @(ViewData["Active"]?.ToString() == "Launchpad" ? "active" : "")"
-               asp-controller="Launchpad" asp-action="Index" id="nav-launchpad">
-                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-                Launchpad
-            </a>
             <a class="nav-item @(ViewData["Active"]?.ToString() == "Inventory" ? "active" : "")"
                asp-controller="Inventory" asp-action="Index" id="nav-inventory">
                 <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.3 7 12 12l8.7-5"/><path d="M12 22V12"/></svg>

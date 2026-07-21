@@ -227,11 +227,11 @@
                     localStorage.setItem('ems_user_data', JSON.stringify(userData));
 
                     const roleName = String(userData.role_name || '').toLowerCase().replace(/\s+/g, '_');
-                    window.location.href = roleName === 'employee' ? '/MyPortal/Dashboard' : '/Launchpad';
+                    window.location.href = roleName === 'employee' ? '/MyPortal/Dashboard' : '/Dashboard';
                 } else {
                     const userData = EmsApi.getUser() || {};
                     const roleName = String(userData.role_name || '').toLowerCase().replace(/\s+/g, '_');
-                    window.location.href = roleName === 'employee' ? '/MyPortal/Dashboard' : '/Launchpad';
+                    window.location.href = roleName === 'employee' ? '/MyPortal/Dashboard' : '/Dashboard';
                 }
             } else {
                 btn.classList.remove('loading');
