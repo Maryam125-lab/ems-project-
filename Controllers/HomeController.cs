@@ -26,8 +26,14 @@ public class HomeController : Controller
         return View();
     }
 
+    [HttpGet]
+    public IActionResult Login()
+    {
+        return RedirectToAction(nameof(Index));
+    }
+
     [HttpPost]
-    [ValidateAntiForgeryToken]
+    [IgnoreAntiforgeryToken]
     public async Task<IActionResult> Login([FromForm(Name = "login_identifier")] string loginIdentifier, [FromForm(Name = "login_password")] string password, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(loginIdentifier) || string.IsNullOrWhiteSpace(password))
