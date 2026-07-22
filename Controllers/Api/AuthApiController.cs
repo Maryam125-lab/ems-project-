@@ -79,7 +79,14 @@ public sealed class AuthApiController : ControllerBase
         {
             HttpOnly = true,
             SameSite = SameSiteMode.Lax,
-            Secure = !_env.IsDevelopment(),
+            Secure = Request.IsHttps,
+            Path = "/"
+        });
+
+        Response.Cookies.Append("ems_jwt_client", token, new CookieOptions
+        {
+            SameSite = SameSiteMode.Lax,
+            Secure = Request.IsHttps,
             Path = "/"
         });
 
@@ -87,7 +94,7 @@ public sealed class AuthApiController : ControllerBase
         {
             HttpOnly = true,
             SameSite = SameSiteMode.Lax,
-            Secure = !_env.IsDevelopment(),
+            Secure = Request.IsHttps,
             Path = "/"
         });
 
@@ -209,6 +216,7 @@ public sealed class AuthApiController : ControllerBase
     public IActionResult Logout()
     {
         Response.Cookies.Delete("ems_jwt", new CookieOptions { Path = "/" });
+        Response.Cookies.Delete("ems_jwt_client", new CookieOptions { Path = "/" });
         Response.Cookies.Delete("ems_login_session", new CookieOptions { Path = "/" });
         Response.Cookies.Delete("ems_csrf", new CookieOptions { Path = "/" });
         return Ok(ApiResponse<object>.Ok(null));

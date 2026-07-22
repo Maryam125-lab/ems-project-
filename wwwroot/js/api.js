@@ -3,7 +3,7 @@
  * Centralized client for communicating with the ASP.NET Core backend.
  * All API calls go through this module.
  */
-const EmsApi = (function () {
+window.EmsApi = (function () {
     'use strict';
 
     // ── Configuration ──────────────────────────────────────────────
@@ -12,7 +12,16 @@ const EmsApi = (function () {
     const USER_KEY = 'ems_user_data';
 
     // ── Token helpers ──────────────────────────────────────────────
-    function getToken() { return localStorage.getItem(TOKEN_KEY); }
+    function getCookie(name) {
+        return document.cookie
+            .split(';')
+            .map(v => v.trim())
+            .filter(Boolean)
+            .map(v => v.split('='))
+            .find(parts => decodeURIComponent(parts[0]) === name)?.slice(1).join('=') || null;
+    }
+
+    function getToken() { return localStorage.getItem(TOKEN_KEY) || getCookie('ems_jwt_client'); }
     function setToken(t) { localStorage.setItem(TOKEN_KEY, t); }
     function clearToken() { localStorage.removeItem(TOKEN_KEY); localStorage.removeItem(USER_KEY); }
 

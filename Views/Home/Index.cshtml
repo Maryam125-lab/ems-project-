@@ -39,15 +39,16 @@
         </div>
 
         <!-- Error Alert -->
-        <div class="login-error" id="loginError">
+        <div class="login-error @(TempData["LoginError"] is null ? "" : "show")" id="loginError">
             <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" />
             </svg>
-            <span id="loginErrorText">Invalid email or password</span>
+            <span id="loginErrorText">@(TempData["LoginError"] ?? "Invalid email or password")</span>
         </div>
 
         <!-- Form -->
-        <form class="login-form" id="loginForm" onsubmit="return handleLogin(event)" autocomplete="off">
+        <form class="login-form" id="loginForm" method="post" action="/Home/Login" autocomplete="off">
+            @Html.AntiForgeryToken()
             <div class="form-group">
                 <label class="form-label" for="loginIdentifier">Email / Employee ID</label>
                 <div class="form-input-wrapper">
@@ -179,13 +180,13 @@
     window.addEventListener('pageshow', clearLoginFields);
 
     // Fill credentials from demo account click
-    function fillCredentials(email, pass) {
+    window.fillCredentials = function (email, pass) {
         document.getElementById('loginIdentifier').value = email;
         document.getElementById('loginPassword').value = pass;
         document.getElementById('loginIdentifier').focus();
-    }
+    };
 
-    function togglePassword() {
+    window.togglePassword = function () {
         const input = document.getElementById('loginPassword');
         const icon = document.getElementById('eyeIcon');
         if (input.type === 'password') {
@@ -195,9 +196,9 @@
             input.type = 'password';
             icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
         }
-    }
+    };
 
-    async function handleLogin(e) {
+    window.handleLogin = async function (e) {
         e.preventDefault();
         const btn = document.getElementById('loginBtn');
         const errorEl = document.getElementById('loginError');
@@ -248,6 +249,7 @@
         }
 
         return false;
-    }
+    };
+
 </script>
 }
