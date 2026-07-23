@@ -564,8 +564,11 @@
         // Load Managers (Employees with special roles or just list of employees)
         const mgrRes = await EmsApi.employees.list();
         const mgrEl = document.getElementById('manager_id');
-        if (mgrRes.success && Array.isArray(mgrRes.data)) {
-            mgrRes.data.forEach(emp => {
+        const managerRows = mgrRes.success
+            ? (Array.isArray(mgrRes.data) ? mgrRes.data : (mgrRes.data?.data || []))
+            : [];
+        if (managerRows.length) {
+            managerRows.forEach(emp => {
                 const opt = document.createElement('option');
                 opt.value = emp.employee_id;
                 opt.textContent = emp.name + ' (' + (emp.designation_title || emp.designation_name || '') + ')';
@@ -671,8 +674,9 @@
 
         const res = await EmsApi.employees.create(payload);
         if (res.success) {
+            const createdId = res.data?.employee?.employee_id || res.data?.employee_id || '';
             showToast('Employee registered successfully!', 'success');
-            setTimeout(() => window.location.href = '/Employees', 1500);
+            setTimeout(() => window.location.href = createdId ? `/Employees?created=${encodeURIComponent(createdId)}` : '/Employees', 1200);
         } else {
             btn.disabled = false;
             btn.innerHTML = '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Register Employee';

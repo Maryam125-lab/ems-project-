@@ -48,6 +48,8 @@ public sealed class EmployeesApiController : ControllerBase
               ei.id,
               ei.employee_id,
               ei.name,
+              ei.cnic,
+              u.email,
               ji.designation_id,
               ji.department_id,
               dsg.title AS designation_title,
@@ -64,7 +66,10 @@ public sealed class EmployeesApiController : ControllerBase
             LEFT JOIN public.job_statuses js ON js.id = ji.job_status_id
             LEFT JOIN public.users u ON u.employee_id = ei.employee_id
             {whereSql}
-            ORDER BY ei.employee_id ASC
+            ORDER BY
+              CASE WHEN ei.employee_id ~ '^EMP[0-9]+$' THEN 0 ELSE 1 END,
+              CASE WHEN ei.employee_id ~ '^EMP[0-9]+$' THEN CAST(SUBSTRING(ei.employee_id FROM 4) AS INTEGER) ELSE 0 END DESC,
+              ei.employee_id DESC
             LIMIT @Limit OFFSET @Offset
             """, args);
         var total = await connection.QuerySingleAsync<int>($"""

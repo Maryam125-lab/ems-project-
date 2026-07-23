@@ -37,6 +37,24 @@
 
 <!-- TABLE -->
 <div class="table-container anim-fade-in-up" style="margin-top:20px;">
+    <style>
+        .new-employee-row {
+            background: rgba(37, 99, 235, 0.08) !important;
+            box-shadow: inset 3px 0 0 var(--accent);
+        }
+        .new-employee-row .cell-name::after {
+            content: "New";
+            display: inline-flex;
+            margin-left: 8px;
+            padding: 2px 7px;
+            border-radius: 999px;
+            background: var(--accent-light);
+            color: var(--accent);
+            font-size: 10px;
+            font-weight: 800;
+            vertical-align: middle;
+        }
+    </style>
     <div class="filter-bar">
         <div class="filter-group">
             <label class="filter-label">Department</label>
@@ -80,6 +98,7 @@
 <script src="~/js/modals.js" asp-append-version="true"></script>
 <script>
     let allEmployees = [];
+    const createdEmployeeId = new URLSearchParams(window.location.search).get('created');
 
     // Load employees from API
     (async function loadEmployees() {
@@ -93,6 +112,7 @@
             const employees = Array.isArray(res.data) ? res.data : (res.data.data || []);
             allEmployees = employees;
             renderEmployees(allEmployees);
+            highlightCreatedEmployee();
             
             if (res.data.meta && res.data.meta.total !== undefined) {
                 updateStatsWithTotal(allEmployees, res.data.meta.total);
@@ -136,7 +156,8 @@
             const colors = ['blue','green','amber','purple','teal','red'];
             const colorIdx = name.charCodeAt(0) % colors.length;
 
-            return `<tr>
+            const isNew = createdEmployeeId && String(emp.employee_id || '').toLowerCase() === createdEmployeeId.toLowerCase();
+            return `<tr data-employee-id="${emp.employee_id || ''}" class="${isNew ? 'new-employee-row' : ''}">
                 <td><input type="checkbox" class="table-checkbox" onclick="toggleRowSelect(this)" /></td>
                 <td>
                     <div class="cell-employee">
@@ -159,6 +180,17 @@
         }).join('');
 
         if (pagInfo) pagInfo.innerHTML = `Showing <strong>1</strong> to <strong>${emps.length}</strong> of <strong>${allEmployees.length}</strong>`;
+    }
+
+    function highlightCreatedEmployee() {
+        if (!createdEmployeeId) return;
+        const row = document.querySelector(`[data-employee-id="${CSS.escape(createdEmployeeId)}"]`);
+        if (row) {
+            row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            showToast(`Employee ${createdEmployeeId} created and listed successfully.`, 'success');
+        } else {
+            showToast(`Employee created, but ${createdEmployeeId} is not visible with current filters.`, 'warning');
+        }
     }
 
     function updateStats(emps) {
