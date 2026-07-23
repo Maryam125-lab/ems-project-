@@ -323,6 +323,14 @@
                 }
                 })();
 
+                function valueOf(e, keys) {
+                for (const key of keys) {
+                const value = e?.[key];
+                if (value !== undefined && value !== null && String(value).trim() !== '') return value;
+                }
+                return null;
+                }
+
                 function renderEmployee(e) {
                 document.getElementById('loadingOverlay').style.display = 'none';
                 document.getElementById('detailsContent').style.display = 'block';
@@ -349,6 +357,14 @@
                 const months = Math.floor((diff % (1000 * 60 * 60 * 24 * 365)) / (1000 * 60 * 60 * 24 * 30));
                 document.getElementById('pTenure').textContent = (years > 0 ? years + 'y ' : '') + months + 'm';
                 }
+
+                e.email = valueOf(e, ['user_email', 'email']);
+                e.phone = valueOf(e, ['phone_mobile', 'phone', 'contact_1']);
+                e.dob = valueOf(e, ['date_of_birth', 'dob', 'medical_dob']);
+                e.address = valueOf(e, ['address', 'perment_address', 'postal_address']);
+                e.location_name = valueOf(e, ['work_location_name', 'location_name']);
+                e.bank_account_title = valueOf(e, ['account_title', 'bank_account_title']);
+                e.bank_account_no = valueOf(e, ['iban', 'account_number', 'bank_account_no']);
 
                 document.getElementById('dEmail').textContent = e.email || '—';
                 document.getElementById('dPhone').textContent = e.phone || '—';
@@ -417,8 +433,8 @@
                 }
 
                 const cnic = document.getElementById('eCnic').value.trim();
-                if (cnic && !/^[0-9]{5}-[0-9]{7}-[0-9]{1}$/.test(cnic)) {
-                showToast('CNIC format: XXXXX-XXXXXXX-X', 'error');
+                if (cnic && !/^[0-9]{13}$/.test(cnic)) {
+                showToast('CNIC must be exactly 13 digits.', 'error');
                 btnSave.textContent = 'Save Changes'; btnSave.disabled = false; return;
                 }
 
@@ -426,14 +442,27 @@
                 email: document.getElementById('eEmail').value.trim(),
                 phone: phone,
                 cnic: cnic,
-                dob: document.getElementById('eDob').value || null,
-                gender: document.getElementById('eGender').value || null,
-                blood_group: document.getElementById('eBlood').value || null,
+                date_of_birth: document.getElementById('eDob').value || null,
                 marital_status: document.getElementById('eMarital').value || null,
-                address: document.getElementById('eAddress').value.trim() || null,
+                };
+
+                const extraData = {
+                emergencyContacts: {
+                contact_1: phone || null,
+                perment_address: document.getElementById('eAddress').value.trim() || null,
+                postal_address: document.getElementById('eAddress').value.trim() || null
+                },
+                bankInfo: {
                 bank_name: document.getElementById('eBank').value.trim() || null,
-                bank_account_title: document.getElementById('eAccTitle').value.trim() || null,
-                bank_account_no: document.getElementById('eIban').value.trim() || null,
+                account_title: document.getElementById('eAccTitle').value.trim() || null,
+                account_number: document.getElementById('eIban').value.trim() || null,
+                iban: document.getElementById('eIban').value.trim() || null
+                },
+                medicalInfo: {
+                date_of_birth: document.getElementById('eDob').value || null,
+                gender: document.getElementById('eGender').value || null,
+                blood_group: document.getElementById('eBlood').value || null
+                }
                 };
 
                 const jobData = {
@@ -444,21 +473,22 @@
                 shift_id: document.getElementById('eShift').value || null,
                 };
 
-                const [r1, r2] = await Promise.all([
+                const [r1, r2, r3] = await Promise.all([
                 EmsApi.employees.updatePersonal(EMP_ID, personalData),
                 EmsApi.employees.updateJob(EMP_ID, jobData),
+                EmsApi.employees.updateExtra(EMP_ID, extraData),
                 ]);
 
                 btnSave.textContent = 'Save Changes';
                 btnSave.disabled = false;
 
-                if (r1.success && r2.success) {
+                if (r1.success && r2.success && r3.success) {
                 showToast('Employee updated successfully!', 'success');
                 const res = await EmsApi.employees.get(EMP_ID);
                 if (res.success) { _empData = res.data; renderEmployee(_empData); }
                 cancelEdit();
                 } else {
-                showToast(r1.error || r2.error || 'Update failed.', 'error');
+                showToast(r1.error || r2.error || r3.error || 'Update failed.', 'error');
                 }
                 }
 

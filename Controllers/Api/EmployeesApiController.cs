@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Dapper;
 using EMS.Web.Backend;
 using Microsoft.AspNetCore.Authorization;
@@ -92,6 +93,7 @@ public sealed class EmployeesApiController : ControllerBase
     {
         await using var connection = await _db.OpenConnectionAsync(cancellationToken);
         await EnsureReportingManagerColumnAsync(connection);
+        await EnsureEmployeeProfileColumnsAsync(connection);
         var row = await connection.QuerySingleOrDefaultAsync("""
             SELECT
               ei.*,
@@ -178,9 +180,38 @@ public sealed class EmployeesApiController : ControllerBase
         {
             return BadRequest(ApiResponse<object>.Fail("VALIDATION_ERROR", "Name, CNIC, and email are required."));
         }
+        if (!IsLettersAndSpaces(name))
+        {
+            return BadRequest(ApiResponse<object>.Fail("VALIDATION_ERROR", "Employee name must contain letters and spaces only."));
+        }
+        if (!IsDigits(cnic, 13))
+        {
+            return BadRequest(ApiResponse<object>.Fail("VALIDATION_ERROR", "CNIC must be exactly 13 digits."));
+        }
+        var phone = Text(account, "phone");
+        if (!string.IsNullOrWhiteSpace(phone) && !IsDigits(phone, 11))
+        {
+            return BadRequest(ApiResponse<object>.Fail("VALIDATION_ERROR", "Phone number must be exactly 11 digits."));
+        }
+        var bankName = Text(bank, "bank_name");
+        var bankAccountTitle = Text(bank, "account_title");
+        var bankAccountNumber = Text(bank, "account_number");
+        if (string.IsNullOrWhiteSpace(bankName) || string.IsNullOrWhiteSpace(bankAccountTitle) || string.IsNullOrWhiteSpace(bankAccountNumber))
+        {
+            return BadRequest(ApiResponse<object>.Fail("VALIDATION_ERROR", "Bank name, account title, and IBAN are required."));
+        }
+        if (!IsLettersAndSpaces(bankName) || !IsLettersAndSpaces(bankAccountTitle))
+        {
+            return BadRequest(ApiResponse<object>.Fail("VALIDATION_ERROR", "Bank name and account title must contain letters and spaces only."));
+        }
+        if (!IsAlphaNumeric(bankAccountNumber, 16, 34))
+        {
+            return BadRequest(ApiResponse<object>.Fail("VALIDATION_ERROR", "IBAN must be 16 to 34 letters/numbers."));
+        }
 
         await using var connection = await _db.OpenConnectionAsync(cancellationToken);
         await EnsureReportingManagerColumnAsync(connection);
+        await EnsureEmployeeProfileColumnsAsync(connection);
         var duplicate = await connection.QuerySingleAsync<int>("SELECT COUNT(*)::int FROM public.employee_info WHERE cnic = @Cnic", new { Cnic = cnic });
         if (duplicate > 0) return Conflict(ApiResponse<object>.Fail("DUPLICATE_CNIC", "CNIC already exists."));
         duplicate = await connection.QuerySingleAsync<int>("SELECT COUNT(*)::int FROM public.users WHERE email = @Email", new { Email = email });
@@ -192,16 +223,17 @@ public sealed class EmployeesApiController : ControllerBase
             var maxEmployeeId = await connection.QuerySingleOrDefaultAsync<string>("SELECT employee_id FROM public.employee_info WHERE employee_id ~ '^EMP[0-9]+$' ORDER BY CAST(SUBSTRING(employee_id FROM 4) AS INTEGER) DESC LIMIT 1", transaction: tx);
             var employeeId = NextEmployeeCode(maxEmployeeId);
             var employee = await connection.QuerySingleAsync("""
-                INSERT INTO public.employee_info (employee_id, name, father_name, cnic, date_of_birth)
-                VALUES (@EmployeeId, @Name, @FatherName, @Cnic, @DateOfBirth)
-                RETURNING id, employee_id, name, father_name, cnic, date_of_birth
+                INSERT INTO public.employee_info (employee_id, name, father_name, cnic, date_of_birth, marital_status)
+                VALUES (@EmployeeId, @Name, @FatherName, @Cnic, @DateOfBirth, @MaritalStatus)
+                RETURNING id, employee_id, name, father_name, cnic, date_of_birth, marital_status
                 """, new
             {
                 EmployeeId = employeeId,
                 Name = name,
                 FatherName = Text(personal, "father_name"),
                 Cnic = cnic,
-                DateOfBirth = Text(personal, "date_of_birth")
+                DateOfBirth = Text(personal, "date_of_birth"),
+                MaritalStatus = Text(personal, "marital_status")
             }, tx);
 
             await connection.ExecuteAsync("""
@@ -271,16 +303,52 @@ public sealed class EmployeesApiController : ControllerBase
     {
         await using var connection = await _db.OpenConnectionAsync(cancellationToken);
         await EnsureReportingManagerColumnAsync(connection);
+        await EnsureEmployeeProfileColumnsAsync(connection);
+        var cnic = Text(body, "cnic");
+        var phone = Text(body, "phone");
+        if (!string.IsNullOrWhiteSpace(cnic) && !IsDigits(cnic, 13))
+        {
+            return BadRequest(ApiResponse<object>.Fail("VALIDATION_ERROR", "CNIC must be exactly 13 digits."));
+        }
+        if (!string.IsNullOrWhiteSpace(phone) && !IsDigits(phone, 11))
+        {
+            return BadRequest(ApiResponse<object>.Fail("VALIDATION_ERROR", "Phone number must be exactly 11 digits."));
+        }
+
         var row = await connection.QuerySingleOrDefaultAsync("""
             UPDATE public.employee_info
             SET name = COALESCE(@Name, name),
                 father_name = COALESCE(@FatherName, father_name),
                 cnic = COALESCE(@Cnic, cnic),
-                date_of_birth = COALESCE(@DateOfBirth, date_of_birth)
+                date_of_birth = COALESCE(@DateOfBirth, date_of_birth),
+                marital_status = COALESCE(@MaritalStatus, marital_status)
             WHERE employee_id = @EmployeeId
             RETURNING *
-            """, new { EmployeeId = employeeId, Name = Text(body, "name"), FatherName = Text(body, "father_name"), Cnic = Text(body, "cnic"), DateOfBirth = Text(body, "date_of_birth") });
-        return row is null ? NotFound(ApiResponse<object>.Fail("NOT_FOUND", "Employee not found.")) : Ok(ApiResponse<object>.Ok(row));
+            """, new
+        {
+            EmployeeId = employeeId,
+            Name = Text(body, "name"),
+            FatherName = Text(body, "father_name"),
+            Cnic = cnic,
+            DateOfBirth = Text(body, "date_of_birth") ?? Text(body, "dob"),
+            MaritalStatus = Text(body, "marital_status")
+        });
+        if (row is null) return NotFound(ApiResponse<object>.Fail("NOT_FOUND", "Employee not found."));
+
+        await connection.ExecuteAsync("""
+            UPDATE public.users
+            SET email = COALESCE(@Email, email)
+            WHERE employee_id = @EmployeeId
+            """, new { EmployeeId = employeeId, Email = Text(body, "email") });
+
+        await connection.ExecuteAsync("""
+            UPDATE public.directory_entries
+            SET email = COALESCE(@Email, email),
+                phone_mobile = COALESCE(@Phone, phone_mobile)
+            WHERE employee_id = @EmployeeId
+            """, new { EmployeeId = employeeId, Email = Text(body, "email"), Phone = phone });
+
+        return Ok(ApiResponse<object>.Ok(row));
     }
 
     [HttpPatch("{employeeId}/job")]
@@ -547,9 +615,17 @@ public sealed class EmployeesApiController : ControllerBase
     private static Guid? GuidValue(JsonElement? section, string name) => Guid.TryParse(Text(section, name), out var value) ? value : null;
     private static int? IntValue(JsonElement? section, string name) => int.TryParse(Text(section, name), out var value) ? value : null;
     private static decimal? DecimalValue(JsonElement? section, string name) => decimal.TryParse(Text(section, name), out var value) ? value : null;
+    private static bool IsDigits(string value, int length) => Regex.IsMatch(value, $"^[0-9]{{{length}}}$");
+    private static bool IsLettersAndSpaces(string value) => Regex.IsMatch(value.Trim(), "^[A-Za-z ]+$");
+    private static bool IsAlphaNumeric(string value, int min, int max) => Regex.IsMatch(value.Trim(), $"^[A-Za-z0-9]{{{min},{max}}}$");
 
     private static async Task EnsureReportingManagerColumnAsync(System.Data.IDbConnection connection)
     {
         await connection.ExecuteAsync("ALTER TABLE public.job_info ADD COLUMN IF NOT EXISTS manager_emp_id text");
+    }
+
+    private static async Task EnsureEmployeeProfileColumnsAsync(System.Data.IDbConnection connection)
+    {
+        await connection.ExecuteAsync("ALTER TABLE public.employee_info ADD COLUMN IF NOT EXISTS marital_status text");
     }
 }

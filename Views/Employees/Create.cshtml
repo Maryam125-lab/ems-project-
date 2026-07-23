@@ -56,7 +56,7 @@
     </div>
 </div>
 
-<form id="onboardingForm" class="anim-fade-in-up" onsubmit="return handleOnboarding(event)">
+<form id="onboardingForm" class="anim-fade-in-up" onsubmit="return handleOnboarding(event)" novalidate>
     <div class="card" style="margin-bottom:16px; min-height: 400px;">
         <!-- STEP 1: Personal Information -->
         <div class="form-step active" id="step-1">
@@ -79,7 +79,7 @@
                 </div>
                 <div class="field-group">
                     <label class="field-label">CNIC / ID Number <span class="field-required">*</span></label>
-                    <input type="text" name="cnic" class="field-input" placeholder="e.g. 4220112345678" required maxlength="15" oninput="this.value = this.value.replace(/[^0-9]/g, '')" />
+                    <input type="text" name="cnic" class="field-input" placeholder="e.g. 4220112345678" required minlength="13" maxlength="13" data-message="CNIC must be exactly 13 digits." oninput="this.value = this.value.replace(/[^0-9]/g, '')" />
                 </div>
                 <div class="field-group">
                     <label class="field-label">Date of Birth <span class="field-required">*</span></label>
@@ -87,7 +87,7 @@
                 </div>
                 <div class="field-group">
                     <label class="field-label">Gender</label>
-                    <select name="gender" class="field-select">
+                    <select name="gender" class="field-select" required>
                         <option value="">Select Gender</option>
                         <option value="male">Male</option>
                         <option value="female">Female</option>
@@ -96,7 +96,7 @@
                 </div>
                 <div class="field-group">
                     <label class="field-label">Blood Group</label>
-                    <select name="blood_group" class="field-select">
+                    <select name="blood_group" class="field-select" required>
                         <option value="">Select</option>
                         <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
                         <option>O+</option><option>O-</option><option>AB+</option><option>AB-</option>
@@ -104,18 +104,18 @@
                 </div>
                 <div class="field-group">
                     <label class="field-label">Phone Number <span class="field-required">*</span></label>
-                    <input type="tel" name="phone" class="field-input" placeholder="e.g. 03001234567" required maxlength="11" oninput="this.value = this.value.replace(/[^0-9]/g, '')" />
+                    <input type="tel" name="phone" class="field-input" placeholder="e.g. 03001234567" required minlength="11" maxlength="11" data-message="Phone number must be exactly 11 digits." oninput="this.value = this.value.replace(/[^0-9]/g, '')" />
                 </div>
                 <div class="field-group">
                     <label class="field-label">Marital Status</label>
-                    <select name="marital_status" class="field-select">
+                    <select name="marital_status" class="field-select" required>
                         <option value="">Select</option>
                         <option value="single">Single</option><option value="married">Married</option><option value="divorced">Divorced</option><option value="widowed">Widowed</option>
                     </select>
                 </div>
                 <div class="field-group form-full">
                     <label class="field-label">Address</label>
-                    <textarea name="address" class="field-textarea" rows="2" placeholder="Full residential address"></textarea>
+                    <textarea name="address" class="field-textarea" rows="2" placeholder="Full residential address" required minlength="8"></textarea>
                 </div>
             </div>
         </div>
@@ -242,16 +242,16 @@
             </div>
             <div class="form-grid form-grid-3">
                 <div class="field-group">
-                    <label class="field-label">Bank Name</label>
-                    <input type="text" name="bank_name" class="field-input" placeholder="e.g. HBL" />
+                    <label class="field-label">Bank Name <span class="field-required">*</span></label>
+                    <input type="text" name="bank_name" class="field-input" placeholder="e.g. HBL" required oninput="this.value = this.value.replace(/[^a-zA-Z\s]/g, '')" />
                 </div>
                 <div class="field-group">
-                    <label class="field-label">Account Title</label>
-                    <input type="text" name="bank_account_title" class="field-input" placeholder="e.g. Ahmed Khan" />
+                    <label class="field-label">Account Title <span class="field-required">*</span></label>
+                    <input type="text" name="bank_account_title" class="field-input" placeholder="e.g. Ahmed Khan" required oninput="this.value = this.value.replace(/[^a-zA-Z\s]/g, '')" />
                 </div>
                 <div class="field-group">
-                    <label class="field-label">IBAN</label>
-                    <input type="text" name="bank_account_no" class="field-input" placeholder="e.g. PK36HABB0012345678901" />
+                    <label class="field-label">IBAN <span class="field-required">*</span></label>
+                    <input type="text" name="bank_account_no" class="field-input" placeholder="e.g. PK36HABB0012345678901" required minlength="16" maxlength="34" data-message="IBAN must be 16 to 34 letters/numbers." oninput="this.value = this.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase()" />
                 </div>
                 <div class="field-group">
                     <label class="field-label">CNIC Copy</label>
@@ -299,11 +299,12 @@
                     </select>
                 </div>
                 <div class="field-group">
-                    <label class="field-label">Send Welcome Email</label>
+                    <label class="field-label">Welcome Email</label>
                     <select name="send_welcome_email" class="field-select">
-                        <option value="yes">Yes</option>
-                        <option value="no">No</option>
+                        <option value="no">No email now</option>
+                        <option value="yes">Record request only</option>
                     </select>
+                    <small style="display:block;margin-top:6px;color:var(--muted);font-size:11px;">SMTP/email service is not connected yet, so this only stores the request in the database.</small>
                 </div>
             </div>
         </div>
@@ -478,23 +479,61 @@
         document.getElementById('btnRegister').style.display = currentStep === totalSteps ? 'flex' : 'none';
     }
 
-    function nextStep() {
-        // Validation check for current step
+    function markInvalid(field, message) {
+        field.style.borderColor = 'var(--accent4)';
+        field.setAttribute('title', message || 'This field is required.');
+    }
+
+    function clearInvalid(field) {
+        field.style.borderColor = '';
+        field.removeAttribute('title');
+    }
+
+    function validateCurrentStep() {
         const currentStepDiv = document.getElementById(`step-${currentStep}`);
-        const requiredFields = currentStepDiv.querySelectorAll('[required]');
+        const fields = currentStepDiv.querySelectorAll('input, select, textarea');
         let allValid = true;
-        
-        requiredFields.forEach(field => {
-            if (!field.value.trim()) {
-                field.style.borderColor = 'var(--accent4)';
+
+        fields.forEach(field => {
+            const value = (field.value || '').trim();
+            clearInvalid(field);
+
+            if (field.hasAttribute('required') && !value) {
+                markInvalid(field, 'This field is required.');
                 allValid = false;
-            } else {
-                field.style.borderColor = '';
+                return;
+            }
+            if (!value) return;
+
+            if (field.name === 'cnic' && !/^[0-9]{13}$/.test(value)) {
+                markInvalid(field, field.dataset.message);
+                allValid = false;
+            }
+            if (field.name === 'phone' && !/^[0-9]{11}$/.test(value)) {
+                markInvalid(field, field.dataset.message);
+                allValid = false;
+            }
+            if (field.name === 'bank_account_no' && !/^[A-Z0-9]{16,34}$/.test(value)) {
+                markInvalid(field, field.dataset.message);
+                allValid = false;
+            }
+            if (field.type === 'email' && !/^[^\s@@]+@@[^\s@@]+\.[^\s@@]+$/.test(value)) {
+                markInvalid(field, 'Please enter a valid email address.');
+                allValid = false;
             }
         });
 
         if (!allValid) {
-            showToast('Please fill all required fields', 'error');
+            const firstInvalid = currentStepDiv.querySelector('[style*="border-color"]');
+            firstInvalid?.focus();
+            showToast('Please complete the highlighted fields before moving ahead.', 'error');
+        }
+
+        return allValid;
+    }
+
+    function nextStep() {
+        if (!validateCurrentStep()) {
             return;
         }
 
@@ -597,7 +636,8 @@
                 name: `${data.first_name} ${data.last_name}`,
                 father_name: data.father_name,
                 cnic: data.cnic,
-                date_of_birth: data.dob
+                date_of_birth: data.dob,
+                marital_status: data.marital_status
             },
             jobInfo: {
                 department_id: data.department_id,
@@ -649,7 +689,7 @@
             accessInfo: {
                 portal_access: data.portal_access || 'enabled',
                 access_role: data.access_role || 'employee',
-                send_welcome_email: data.send_welcome_email || 'yes'
+                send_welcome_email: data.send_welcome_email || 'no'
             }
         };
 
@@ -665,7 +705,8 @@
         if (data.blood_group || data.gender) {
             payload.medicalInfo = {
                 blood_group: data.blood_group || null,
-                gender: data.gender || null
+                gender: data.gender || null,
+                date_of_birth: data.dob || null
             };
         }
 
