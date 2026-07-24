@@ -31,7 +31,19 @@ public sealed class EmployeesApiController : ControllerBase
         args.Add("Offset", offset);
         if (!string.IsNullOrWhiteSpace(search))
         {
-            where.Add("(ei.employee_id ILIKE @Search OR ei.name ILIKE @Search)");
+            where.Add(@"(
+                ei.employee_id ILIKE @Search OR
+                ei.name ILIKE @Search OR
+                ei.cnic ILIKE @Search OR
+                u.email ILIKE @Search OR
+                dep.department_name ILIKE @Search OR
+                dsg.title ILIKE @Search OR
+                de.phone_mobile ILIKE @Search OR
+                eba.bank_name ILIKE @Search OR
+                eba.account_title ILIKE @Search OR
+                eba.account_number ILIKE @Search OR
+                eba.iban ILIKE @Search
+            )");
             args.Add("Search", $"%{search.Trim()}%");
         }
         if (departmentId is not null)
@@ -58,7 +70,12 @@ public sealed class EmployeesApiController : ControllerBase
               js.status_name AS status,
               ji.manager_emp_id,
               mgr.name AS manager_name,
-              ji.date_of_joining
+              ji.date_of_joining,
+              de.phone_mobile,
+              eba.bank_name,
+              eba.account_title,
+              eba.account_number,
+              eba.iban
             FROM public.employee_info ei
             LEFT JOIN public.job_info ji ON ji.employee_id = ei.employee_id
             LEFT JOIN public.employee_info mgr ON mgr.employee_id = ji.manager_emp_id
@@ -66,6 +83,8 @@ public sealed class EmployeesApiController : ControllerBase
             LEFT JOIN public.designations dsg ON dsg.id = ji.designation_id
             LEFT JOIN public.job_statuses js ON js.id = ji.job_status_id
             LEFT JOIN public.users u ON u.employee_id = ei.employee_id
+            LEFT JOIN public.directory_entries de ON de.employee_id = ei.employee_id
+            LEFT JOIN public.employee_bank_accounts eba ON eba.employee_id = ei.employee_id
             {whereSql}
             ORDER BY
               CASE WHEN ei.employee_id ~ '^EMP[0-9]+$' THEN 0 ELSE 1 END,
@@ -78,6 +97,10 @@ public sealed class EmployeesApiController : ControllerBase
             FROM public.employee_info ei
             LEFT JOIN public.job_info ji ON ji.employee_id = ei.employee_id
             LEFT JOIN public.users u ON u.employee_id = ei.employee_id
+            LEFT JOIN public.departments dep ON dep.id = ji.department_id
+            LEFT JOIN public.designations dsg ON dsg.id = ji.designation_id
+            LEFT JOIN public.directory_entries de ON de.employee_id = ei.employee_id
+            LEFT JOIN public.employee_bank_accounts eba ON eba.employee_id = ei.employee_id
             {whereSql}
             """, args);
 

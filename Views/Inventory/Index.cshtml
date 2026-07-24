@@ -66,6 +66,15 @@
         <button type="button" data-tab="masters" onclick="showInvTab('masters')">Master Setup</button>
     </div>
 
+    <div class="inv-search-strip">
+        <div class="inv-search-box">
+            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+            <input id="inventorySearch" type="search" placeholder="Search invoices, customers, vendors, products, serials, PR, DO, vehicle..." oninput="applyInventorySearch()" />
+        </div>
+        <button type="button" class="inv-clear-search" onclick="clearInventorySearch()">Clear</button>
+        <span id="inventorySearchSummary">Showing all inventory records</span>
+    </div>
+
     <div class="inv-tab-panel active" id="inv-tab-overview">
         <div class="inv-command-strip">
             <button type="button" onclick="openWorkflowModal('purchaseRequest')"><span>Purchase</span><strong>New PR</strong></button>
@@ -717,6 +726,60 @@
     .inv-tab-panel { display: none; }
     .inv-tab-panel.active { display: block; }
 
+    .inv-search-strip {
+        display: grid;
+        grid-template-columns: minmax(260px, 1fr) auto auto;
+        gap: 10px;
+        align-items: center;
+        margin: 12px 0 16px;
+        padding: 12px;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        background: linear-gradient(135deg, #ffffff, #f8fbff);
+        box-shadow: 0 12px 28px rgba(15, 23, 42, .06);
+    }
+
+    .inv-search-box {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+        padding: 0 13px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: #fff;
+    }
+
+    .inv-search-box i { color: var(--accent); }
+
+    .inv-search-box input {
+        width: 100%;
+        height: 42px;
+        border: 0;
+        outline: 0;
+        color: #0f172a;
+        font-weight: 700;
+        background: transparent;
+    }
+
+    .inv-clear-search {
+        height: 42px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: #fff;
+        color: var(--text2);
+        font-weight: 900;
+        padding: 0 16px;
+        cursor: pointer;
+    }
+
+    #inventorySearchSummary {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
     .inv-command-strip {
         display: grid;
         grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -1312,6 +1375,8 @@
     @@media (max-width: 720px) {
         .inv-hero { padding: 18px; }
         .inv-hero h1 { font-size: 24px; }
+        .inv-search-strip { grid-template-columns: 1fr; }
+        #inventorySearchSummary { white-space: normal; }
         .inv-flow-board,
         .inv-kpi-grid,
         .inv-dashboard-grid,
@@ -1341,12 +1406,15 @@
         invoiceLedgerRows: [],
         installationRows: [],
         complaints: [],
-        replacements: []
+        replacements: [],
+        activeTab: 'overview'
     };
 
     function showInvTab(tab) {
+        invState.activeTab = tab;
         document.querySelectorAll('.inv-tabs button').forEach(btn => btn.classList.toggle('active', btn.dataset.tab === tab));
         document.querySelectorAll('.inv-tab-panel').forEach(panel => panel.classList.toggle('active', panel.id === `inv-tab-${tab}`));
+        applyInventorySearch();
     }
 
     function safe(value, fallback = '-') {
@@ -1377,6 +1445,107 @@
         if (!value) return '-';
         const parsed = new Date(value);
         return Number.isNaN(parsed.getTime()) ? safe(value) : parsed.toLocaleDateString();
+    }
+
+    function flattenSearchValues(value, bucket = []) {
+        if (value === null || value === undefined) return bucket;
+        if (Array.isArray(value)) {
+            value.forEach(item => flattenSearchValues(item, bucket));
+            return bucket;
+        }
+        if (typeof value === 'object') {
+            Object.values(value).forEach(item => flattenSearchValues(item, bucket));
+            return bucket;
+        }
+        bucket.push(String(value));
+        return bucket;
+    }
+
+    function rowMatchesSearch(row, query) {
+        if (!query) return true;
+        return flattenSearchValues(row).join(' ').toLowerCase().includes(query);
+    }
+
+    function countRows(rows) {
+        return Array.isArray(rows) ? rows.length : 0;
+    }
+
+    function updateInventorySearchSummary(query, visible, total, label) {
+        const el = document.getElementById('inventorySearchSummary');
+        if (!el) return;
+        el.textContent = query
+            ? `Found ${visible} of ${total} ${label} for "${query}"`
+            : `Showing all ${label}`;
+    }
+
+    function applyInventorySearch() {
+        const input = document.getElementById('inventorySearch');
+        const query = String(input?.value || '').trim().toLowerCase();
+        const tab = invState.activeTab || document.querySelector('.inv-tabs button.active')?.dataset.tab || 'overview';
+
+        if (tab === 'stock') {
+            const products = invState.products.filter(row => rowMatchesSearch(row, query));
+            const serials = invState.serials.filter(row => rowMatchesSearch(row, query));
+            renderProducts(products, false);
+            renderSerials(serials, false);
+            updateInventorySearchSummary(query, products.length + serials.length, invState.products.length + invState.serials.length, 'stock records');
+            return;
+        }
+
+        if (tab === 'purchase') {
+            const rows = invState.purchaseRows.filter(row => rowMatchesSearch(row, query));
+            renderPurchase(rows, false);
+            updateInventorySearchSummary(query, rows.length, invState.purchaseRows.length, 'purchase records');
+            return;
+        }
+
+        if (tab === 'sales') {
+            const sales = invState.salesRows.filter(row => rowMatchesSearch(row, query));
+            const invoices = invState.invoiceLedgerRows.filter(row => rowMatchesSearch(row, query));
+            renderSales(sales, false);
+            renderInvoiceLedger(invoices, false);
+            updateInventorySearchSummary(query, sales.length + invoices.length, invState.salesRows.length + invState.invoiceLedgerRows.length, 'sales and invoice records');
+            return;
+        }
+
+        if (tab === 'installations') {
+            const rows = invState.installationRows.filter(row => rowMatchesSearch(row, query));
+            renderInstallations(rows, false);
+            updateInventorySearchSummary(query, rows.length, invState.installationRows.length, 'installation records');
+            return;
+        }
+
+        if (tab === 'support') {
+            const complaints = invState.complaints.filter(row => rowMatchesSearch(row, query));
+            const replacements = invState.replacements.filter(row => rowMatchesSearch(row, query));
+            renderSupport({ complaints, replacements }, false);
+            updateInventorySearchSummary(query, complaints.length + replacements.length, invState.complaints.length + invState.replacements.length, 'support records');
+            return;
+        }
+
+        if (tab === 'parties') {
+            const customers = invState.customers.filter(row => rowMatchesSearch(row, query));
+            const vendors = invState.vendors.filter(row => rowMatchesSearch(row, query));
+            renderParties(customers, vendors, false);
+            updateInventorySearchSummary(query, customers.length + vendors.length, invState.customers.length + invState.vendors.length, 'customers and vendors');
+            return;
+        }
+
+        if (tab === 'masters') {
+            const categories = invState.categories.filter(row => rowMatchesSearch(row, query));
+            renderCategories(categories, false);
+            updateInventorySearchSummary(query, categories.length, invState.categories.length, 'master categories');
+            return;
+        }
+
+        const total = countRows(invState.products) + countRows(invState.serials) + countRows(invState.purchaseRows) + countRows(invState.salesRows) + countRows(invState.invoiceLedgerRows) + countRows(invState.customers) + countRows(invState.vendors);
+        updateInventorySearchSummary(query, total, total, 'inventory records');
+    }
+
+    function clearInventorySearch() {
+        const input = document.getElementById('inventorySearch');
+        if (input) input.value = '';
+        applyInventorySearch();
     }
 
     function actions(type, id) {
@@ -1456,8 +1625,8 @@
         renderMovements(summary.recent_movements || []);
     }
 
-    function renderCategories(categories) {
-        invState.categories = categories;
+    function renderCategories(categories, store = true) {
+        if (store) invState.categories = categories;
         const el = document.getElementById('categoryBars');
         const table = document.getElementById('categoriesBody');
         if (!categories.length) {
@@ -1499,8 +1668,8 @@
         </div>`).join('');
     }
 
-    function renderProducts(rows) {
-        invState.products = rows;
+    function renderProducts(rows, store = true) {
+        if (store) invState.products = rows;
         const el = document.getElementById('productsBody');
         if (!rows.length) {
             el.innerHTML = '<tr><td colspan="6">No products found.</td></tr>';
@@ -1516,8 +1685,8 @@
         </tr>`).join('');
     }
 
-    function renderSerials(rows) {
-        invState.serials = rows;
+    function renderSerials(rows, store = true) {
+        if (store) invState.serials = rows;
         const el = document.getElementById('serialsBody');
         if (!rows.length) {
             el.innerHTML = '<tr><td colspan="5">No tracked serials found.</td></tr>';
@@ -1532,8 +1701,8 @@
         </tr>`).join('');
     }
 
-    function renderPurchase(rows) {
-        invState.purchaseRows = rows;
+    function renderPurchase(rows, store = true) {
+        if (store) invState.purchaseRows = rows;
         const el = document.getElementById('purchaseBody');
         if (!rows.length) {
             el.innerHTML = '<tr><td colspan="7">No purchase requests found.</td></tr>';
@@ -1550,8 +1719,8 @@
         </tr>`).join('');
     }
 
-    function renderSales(rows) {
-        invState.salesRows = rows;
+    function renderSales(rows, store = true) {
+        if (store) invState.salesRows = rows;
         const el = document.getElementById('salesBody');
         if (!rows.length) {
             el.innerHTML = '<tr><td colspan="7">No sales records found.</td></tr>';
@@ -1616,8 +1785,8 @@
         return buttons.length ? `<div class="inv-table-actions">${buttons.join('')}</div>` : '<span class="inv-status gray">No action</span>';
     }
 
-    function renderInvoiceLedger(rows) {
-        invState.invoiceLedgerRows = rows;
+    function renderInvoiceLedger(rows, store = true) {
+        if (store) invState.invoiceLedgerRows = rows;
         const el = document.getElementById('invoiceLedgerBody');
         if (!el) return;
         if (!rows.length) {
@@ -1811,8 +1980,8 @@
         URL.revokeObjectURL(link.href);
     }
 
-    function renderInstallations(rows) {
-        invState.installationRows = rows;
+    function renderInstallations(rows, store = true) {
+        if (store) invState.installationRows = rows;
         const el = document.getElementById('installationsBody');
         if (!rows.length) {
             el.innerHTML = '<tr><td colspan="7">No installation requests found.</td></tr>';
@@ -1844,13 +2013,17 @@
         return buttons.length ? `<div class="inv-table-actions">${buttons.join('')}</div>` : '<span class="inv-status gray">Closed</span>';
     }
 
-    function renderSupport(data) {
-        invState.complaints = data.complaints || [];
-        invState.replacements = data.replacements || [];
+    function renderSupport(data, store = true) {
+        const complaints = data.complaints || [];
+        const replacements = data.replacements || [];
+        if (store) {
+            invState.complaints = complaints;
+            invState.replacements = replacements;
+        }
         const complaintsEl = document.getElementById('complaintsBody');
         const replacementsEl = document.getElementById('replacementsBody');
 
-        complaintsEl.innerHTML = invState.complaints.length ? invState.complaints.map(row => `<tr>
+        complaintsEl.innerHTML = complaints.length ? complaints.map(row => `<tr>
             <td><strong>${safe(row.ticket_no, 'New ticket')}</strong><br><small>${new Date(row.created_at).toLocaleDateString()}</small></td>
             <td>${safe(row.customer_name)}<br><small>${safe(row.vehicle_no, '')}</small></td>
             <td>${safe(row.issue_type)}<br><small>${safe(row.remarks, '')}</small></td>
@@ -1859,7 +2032,7 @@
             <td>${complaintActions(row)}</td>
         </tr>`).join('') : '<tr><td colspan="6">No complaints found.</td></tr>';
 
-        replacementsEl.innerHTML = invState.replacements.length ? invState.replacements.map(row => `<tr>
+        replacementsEl.innerHTML = replacements.length ? replacements.map(row => `<tr>
             <td><strong>${safe(row.replacement_no, 'New replacement')}</strong><br><small>${new Date(row.created_at).toLocaleDateString()}</small></td>
             <td>${safe(row.customer_name)}</td>
             <td>${safe(row.vehicle_no)}</td>
@@ -1878,9 +2051,11 @@
         return buttons.length ? `<div class="inv-table-actions">${buttons.join('')}</div>` : '<span class="inv-status gray">Closed</span>';
     }
 
-    function renderParties(customers, vendors) {
-        invState.customers = customers;
-        invState.vendors = vendors;
+    function renderParties(customers, vendors, store = true) {
+        if (store) {
+            invState.customers = customers;
+            invState.vendors = vendors;
+        }
         const customersEl = document.getElementById('customersList');
         const vendorsEl = document.getElementById('vendorsList');
         const visibleCustomers = customers.slice(0, 12);
@@ -2434,6 +2609,15 @@
         renderInstallations(installationsRes.value?.data || []);
         renderSupport(supportRes.value?.data || { complaints: [], replacements: [] });
         renderParties(customersRes.value?.data || [], vendorsRes.value?.data || []);
+        const initialSearch = new URLSearchParams(window.location.search).get('search') || '';
+        const initialTab = new URLSearchParams(window.location.search).get('tab') || '';
+        const searchInput = document.getElementById('inventorySearch');
+        if (initialSearch && searchInput && !searchInput.value) searchInput.value = initialSearch;
+        if (initialTab && document.querySelector(`.inv-tabs button[data-tab="${CSS.escape(initialTab)}"]`)) {
+            showInvTab(initialTab);
+        } else {
+            applyInventorySearch();
+        }
     }
 
     loadInventoryControl();

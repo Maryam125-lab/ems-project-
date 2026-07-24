@@ -66,7 +66,7 @@
                 <option value="all">All Statuses</option><option value="active">Active</option><option value="probation">Probation</option><option value="inactive">Inactive</option>
             </select>
         </div>
-        <input class="filter-search" type="text" placeholder="Search employees…" oninput="applyFilters()" id="empSearch" />
+        <input class="filter-search" type="text" placeholder="Search name, ID, email, phone, CNIC, bank, IBAN..." oninput="applyFilters()" id="empSearch" />
     </div>
 
     <div class="table-scroll-wrapper">
@@ -227,7 +227,25 @@
         let filtered = allEmployees;
         if (dept !== 'all') filtered = filtered.filter(e => (e.department_name || '').toLowerCase() === dept.toLowerCase());
         if (status !== 'all') filtered = filtered.filter(e => (e.job_status_name || e.status || '').toLowerCase().includes(status));
-        if (search) filtered = filtered.filter(e => (e.name || '').toLowerCase().includes(search) || (e.employee_id || '').toLowerCase().includes(search));
+        if (search) filtered = filtered.filter(e => [
+            e.name,
+            e.employee_id,
+            e.id,
+            e.email,
+            e.user_email,
+            e.cnic,
+            e.phone_mobile,
+            e.department_name,
+            e.designation_title,
+            e.designation_name,
+            e.status,
+            e.job_status_name,
+            e.manager_name,
+            e.bank_name,
+            e.account_title,
+            e.account_number,
+            e.iban
+        ].some(value => String(value || '').toLowerCase().includes(search)));
         renderEmployees(filtered);
     }
 </script>

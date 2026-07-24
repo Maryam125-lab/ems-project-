@@ -329,6 +329,10 @@
                     <div class="search-section-title">Employees</div>
                     <!-- Dynamically populated via JS for simulation -->
                 </div>
+
+                <div class="search-section" id="inventorySearchResults" style="display:none;">
+                    <div class="search-section-title">Inventory</div>
+                </div>
             </div>
             <div class="search-modal-footer">
                 <div style="display:flex; gap:16px;">
@@ -481,8 +485,69 @@
             const searchModalOverlay = document.getElementById("searchModalOverlay");
             const modalSearchInput = document.getElementById("modalSearchInput");
             const employeeResults = document.getElementById("employeeSearchResults");
+            const inventoryResults = document.getElementById("inventorySearchResults");
             const quickLinks = document.getElementById("quickLinksSection");
             let searchDebounce = null;
+
+            function escapeHtml(value) {
+                return String(value ?? '')
+                    .replaceAll('&', '&amp;')
+                    .replaceAll('<', '&lt;')
+                    .replaceAll('>', '&gt;')
+                    .replaceAll('"', '&quot;')
+                    .replaceAll("'", '&#039;');
+            }
+
+            function responseRows(res) {
+                if (!res || !res.success || !res.data) return [];
+                if (Array.isArray(res.data)) return res.data;
+                if (Array.isArray(res.data.data)) return res.data.data;
+                if (Array.isArray(res.data.items)) return res.data.items;
+                return [];
+            }
+
+            function valuesText(row) {
+                return Object.values(row || {}).map(value => String(value ?? '')).join(' ').toLowerCase();
+            }
+
+            function filterRows(rows, query) {
+                const normalized = query.toLowerCase();
+                return rows.filter(row => valuesText(row).includes(normalized));
+            }
+
+            async function searchInventory(query) {
+                const hrefForTab = (tab) => '/Inventory?tab=' + encodeURIComponent(tab) + '&search=' + encodeURIComponent(query);
+                const calls = await Promise.allSettled([
+                    EmsApi.inventory.invoiceLedger(),
+                    EmsApi.inventory.salesFlow(),
+                    EmsApi.inventory.products({ limit: 100 }),
+                    EmsApi.inventory.serials({ limit: 100 }),
+                    EmsApi.inventory.customers({ limit: 100 }),
+                    EmsApi.inventory.vendors({ limit: 100 })
+                ]);
+                const [ledger, sales, products, serials, customers, vendors] = calls.map(result => result.status === 'fulfilled' ? result.value : null);
+                return [
+                    ...filterRows(responseRows(ledger), query).map(row => ({ title: row.invoice_no || row.reference_no || 'Invoice', desc: `${row.invoice_direction || 'Invoice'} / ${row.party_name || ''} / ${row.payment_status || ''}`, href: hrefForTab('sales'), icon: 'fa-file-invoice' })),
+                    ...filterRows(responseRows(sales), query).map(row => ({ title: row.invoice_id || row.quotation_id || row.do_id || 'Sales workflow', desc: `${row.customer_name || ''} / ${row.delivery_status || ''} / ${row.payment_status || ''}`, href: hrefForTab('sales'), icon: 'fa-receipt' })),
+                    ...filterRows(responseRows(products), query).map(row => ({ title: row.product_name || 'Product', desc: `${row.category_name || ''} / ${row.product_type || ''} / ${row.tracking_type || ''}`, href: hrefForTab('stock'), icon: 'fa-boxes-stacked' })),
+                    ...filterRows(responseRows(serials), query).map(row => ({ title: row.serial_number || 'Serial', desc: `${row.product_name || ''} / ${row.category_name || ''} / ${row.current_status || ''}`, href: hrefForTab('stock'), icon: 'fa-barcode' })),
+                    ...filterRows(responseRows(customers), query).map(row => ({ title: row.customer_name || row.company_name || 'Customer', desc: `${row.company_name || ''} / ${row.phone || ''} / ${row.email || ''}`, href: hrefForTab('parties'), icon: 'fa-building-user' })),
+                    ...filterRows(responseRows(vendors), query).map(row => ({ title: row.vendor_name || 'Vendor', desc: `${row.contact_person || ''} / ${row.phone || ''} / ${row.email || ''}`, href: hrefForTab('parties'), icon: 'fa-truck-field' }))
+                ].slice(0, 8);
+            }
+
+            function syncPageSearch(query) {
+                const inventorySearch = document.getElementById('inventorySearch');
+                if (inventorySearch && typeof window.applyInventorySearch === 'function') {
+                    inventorySearch.value = query;
+                    window.applyInventorySearch();
+                }
+                const employeeSearch = document.getElementById('empSearch');
+                if (employeeSearch && typeof window.applyFilters === 'function') {
+                    employeeSearch.value = query;
+                    window.applyFilters();
+                }
+            }
 
             function openSearchModal() {
                 searchModalOverlay.classList.add("active");
@@ -493,7 +558,7 @@
             function closeSearchModal() {
                 searchModalOverlay.classList.remove("active");
                 modalSearchInput.value = "";
-                renderResults("", []);
+                renderResults("", [], []);
             }
 
             topSearch.addEventListener("focus", openSearchModal);
@@ -514,17 +579,24 @@
 
             modalSearchInput.addEventListener("input", function (e) {
                 const query = e.target.value.trim();
-                if (!query) { renderResults("", []); return; }
+                syncPageSearch(query);
+                if (!query) { renderResults("", [], []); return; }
                 clearTimeout(searchDebounce);
                 searchDebounce = setTimeout(async () => {
-                    const res = await EmsApi.employees.list(query);
-                    renderResults(query, res.success ? (Array.isArray(res.data) ? res.data : []) : []);
+                    const [employeeRes, inventoryRes] = await Promise.allSettled([
+                        EmsApi.employees.list(query),
+                        searchInventory(query)
+                    ]);
+                    const employees = employeeRes.status === 'fulfilled' ? responseRows(employeeRes.value) : [];
+                    const inventory = inventoryRes.status === 'fulfilled' ? inventoryRes.value : [];
+                    renderResults(query, employees, inventory);
                 }, 300);
             });
 
-            function renderResults(query, employees) {
+            function renderResults(query, employees, inventory) {
                 if (!query) {
                     employeeResults.style.display = "none";
+                    inventoryResults.style.display = "none";
                     quickLinks.style.display = "block";
                     return;
                 }
@@ -549,6 +621,24 @@
                 } else {
                     employeeResults.style.display = "block";
                     employeeResults.innerHTML = '<div class="search-section-title">Employees</div><div style="padding:12px;color:var(--muted);font-size:13px;text-align:center;padding-top:20px;">No results found for "'+query+'"</div>';
+                }
+                if (inventory.length > 0) {
+                    inventoryResults.style.display = "block";
+                    inventoryResults.innerHTML = '<div class="search-section-title">Inventory</div>';
+                    inventory.forEach(item => {
+                        const html = `
+                        <a href="${item.href}" class="search-result-item">
+                            <div class="search-result-icon blue"><i class="fa-solid ${item.icon}"></i></div>
+                            <div class="search-result-content">
+                                <div class="search-result-title">${escapeHtml(item.title)}</div>
+                                <div class="search-result-desc">${escapeHtml(item.desc)}</div>
+                            </div>
+                            <div class="search-result-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+                        </a>`;
+                        inventoryResults.insertAdjacentHTML('beforeend', html);
+                    });
+                } else {
+                    inventoryResults.style.display = "none";
                 }
             }
         });
