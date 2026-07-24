@@ -405,7 +405,7 @@
                 }
 
                 // ── RBAC Sidebar Visibility ──
-                const isSuperAdmin = role === 'super_admin';
+                const isSuperAdmin = role === 'super_admin' || role === 'superadmin' || user.is_super_admin === true;
                 const isHR = role.toLowerCase().includes('hr');
                 const isEmployee = role === 'employee';
 
@@ -439,6 +439,10 @@
                 } else {
                     // Admin/HR see core modules
                     if (empPortalSection) empPortalSection.style.display = 'block';
+                    if (!isSuperAdmin && erpSection) erpSection.style.display = 'none';
+                    document.querySelectorAll('.super-admin-only').forEach(el => {
+                        el.style.display = isSuperAdmin ? '' : 'none';
+                    });
                     if (isHR && !isSuperAdmin) {
                         if (adminSection) adminSection.style.display = 'none';
                     }

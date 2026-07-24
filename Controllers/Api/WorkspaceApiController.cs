@@ -25,19 +25,26 @@ public sealed class WorkspaceApiController : ControllerBase
         var roleName = current?.RoleId is null
             ? "employee"
             : await connection.QuerySingleOrDefaultAsync<string>("SELECT role_name FROM public.roles WHERE id = @RoleId LIMIT 1", new { current.RoleId }) ?? "employee";
-        var isEmployee = string.Equals(roleName, "employee", StringComparison.OrdinalIgnoreCase);
+        var normalizedRole = (roleName ?? "employee").Trim().ToLowerInvariant().Replace(" ", "_");
+        var isEmployee = normalizedRole == "employee";
+        var isSuperAdmin = normalizedRole is "super_admin" or "superadmin";
         var modules = isEmployee
             ? new[]
             {
                 new { key = "hr", name = "Employee Portal", status = "active", health = "online", route = "/MyPortal/Dashboard", description = "Self-service attendance, leave, payslips, penalties, profile, and company directory.", capabilities = new[] { "My dashboard", "Leave self-service", "Attendance verification", "Company directory" } }
             }
-            : new[]
-        {
-            new { key = "hr", name = "HR Management", status = "active", health = "online", route = "/Dashboard", description = "Employees, attendance, leave, payroll, penalties, announcements, and HR configuration.", capabilities = new[] { "Employee master", "Attendance ledger", "Leave approvals", "Payroll and penalties" } },
-            new { key = "inventory", name = "Inventory Control", status = "active", health = "online", route = "/Inventory", description = "Item master, stock-in, stock-out, purchase approvals, invoicing, tracker installation, complaints, and replacements.", capabilities = new[] { "Item master", "Purchase flow", "Sales and invoices", "Tracker support" } },
-            new { key = "projects", name = "Project Management", status = "active", health = "online", route = "/Projects", description = "Projects, milestones, tasks, team allocation, timesheets, inventory consumption, and project cost tracking.", capabilities = new[] { "Project master", "Milestones", "Tasks", "Team allocation", "Cost tracking" } },
-            new { key = "reports", name = "Reports Center", status = "partial", health = "connected", route = "/AuditLog", description = "Cross-module reporting surface for HR, inventory, projects, approvals, and audit trails.", capabilities = new[] { "Audit logs", "HR summaries", "Exports", "Cross-module KPIs" } }
-        };
+            : isSuperAdmin
+                ? new[]
+                {
+                    new { key = "hr", name = "HR Management", status = "active", health = "online", route = "/Dashboard", description = "Employees, attendance, leave, payroll, penalties, announcements, and HR configuration.", capabilities = new[] { "Employee master", "Attendance ledger", "Leave approvals", "Payroll and penalties" } },
+                    new { key = "inventory", name = "Inventory Control", status = "active", health = "online", route = "/Inventory", description = "Item master, stock-in, stock-out, purchase approvals, invoicing, tracker installation, complaints, and replacements.", capabilities = new[] { "Item master", "Purchase flow", "Sales and invoices", "Tracker support" } },
+                    new { key = "projects", name = "Project Management", status = "active", health = "online", route = "/Projects", description = "Projects, milestones, tasks, team allocation, timesheets, inventory consumption, and project cost tracking.", capabilities = new[] { "Project master", "Milestones", "Tasks", "Team allocation", "Cost tracking" } },
+                    new { key = "reports", name = "Reports Center", status = "partial", health = "connected", route = "/AuditLog", description = "Cross-module reporting surface for HR, inventory, projects, approvals, and audit trails.", capabilities = new[] { "Audit logs", "HR summaries", "Exports", "Cross-module KPIs" } }
+                }
+                : new[]
+                {
+                    new { key = "hr", name = "HR Management", status = "active", health = "online", route = "/Dashboard", description = "Employees, attendance, leave, payroll, penalties, announcements, and HR configuration.", capabilities = new[] { "Employee master", "Attendance ledger", "Leave approvals", "Payroll and penalties" } }
+                };
         return Ok(ApiResponse<object>.Ok(new
         {
             user = new { current?.EmployeeId, current?.RoleId, role_name = roleName },

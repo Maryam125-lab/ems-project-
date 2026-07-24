@@ -133,17 +133,35 @@ app.Use(async (context, next) =>
     if (context.User.Identity?.IsAuthenticated == true)
     {
         var roleName = (context.User.FindFirst("role_name")?.Value ?? string.Empty).Trim().ToLowerInvariant().Replace(" ", "_");
+        var isSuperAdmin = roleName is "super_admin" or "superadmin";
+        var path = context.Request.Path;
+        var method = context.Request.Method;
+        var isApi = path.StartsWithSegments("/api");
+        var isStatic = path.StartsWithSegments("/css")
+            || path.StartsWithSegments("/js")
+            || path.StartsWithSegments("/lib")
+            || path.StartsWithSegments("/images")
+            || path.StartsWithSegments("/favicon.ico");
+
+        if (!isSuperAdmin && (
+            path.StartsWithSegments("/Inventory")
+            || path.StartsWithSegments("/Projects")
+            || path.StartsWithSegments("/api/inventory")
+            || path.StartsWithSegments("/api/projects")))
+        {
+            if (isApi)
+            {
+                context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                await context.Response.WriteAsJsonAsync(ApiResponse<object>.Fail("FORBIDDEN", "Inventory and project modules are available to Super Admin only."));
+                return;
+            }
+
+            context.Response.Redirect(roleName == "employee" ? "/MyPortal/Dashboard" : "/Dashboard");
+            return;
+        }
+
         if (roleName == "employee")
         {
-            var path = context.Request.Path;
-            var method = context.Request.Method;
-            var isApi = path.StartsWithSegments("/api");
-            var isStatic = path.StartsWithSegments("/css")
-                || path.StartsWithSegments("/js")
-                || path.StartsWithSegments("/lib")
-                || path.StartsWithSegments("/images")
-                || path.StartsWithSegments("/favicon.ico");
-
             var allowedEmployeeApi = path.StartsWithSegments("/api/auth")
                 || path.StartsWithSegments("/api/erp/modules")
                 || path.StartsWithSegments("/api/notifications")
