@@ -21,30 +21,37 @@
         <div class="inv-hero-card">
             <span>Office demo readiness</span>
             <strong id="demoReadiness">Loading...</strong>
-            <small>Purchasing, sales, installations, complaints and replacements are connected with live ERP actions.</small>
+            <small id="demoReadinessSub">Live actions, ledger views, stock movement, invoices and customer support are being checked.</small>
+            <div class="inv-health-meter" aria-label="Inventory readiness">
+                <span id="demoReadinessMeter"></span>
+            </div>
         </div>
     </div>
 
     <div class="inv-kpi-grid">
         <div class="inv-kpi blue">
-            <span>Total Products</span>
+            <div class="inv-kpi-head"><span>Total Products</span><i class="fa-solid fa-boxes-stacked" aria-hidden="true"></i></div>
             <strong id="kpiProducts">--</strong>
             <small id="kpiProductsSub">Loading...</small>
+            <div class="inv-kpi-foot"><span id="kpiCategoryFoot">Categories loading</span></div>
         </div>
         <div class="inv-kpi green">
-            <span>Available Serials</span>
+            <div class="inv-kpi-head"><span>Available Serials</span><i class="fa-solid fa-barcode" aria-hidden="true"></i></div>
             <strong id="kpiAvailable">--</strong>
             <small id="kpiAvailableSub">Ready stock</small>
+            <div class="inv-mini-meter"><span id="stockHealthMeter"></span></div>
         </div>
         <div class="inv-kpi amber">
-            <span>Pending Approvals</span>
+            <div class="inv-kpi-head"><span>Pending Approvals</span><i class="fa-solid fa-route" aria-hidden="true"></i></div>
             <strong id="kpiPending">--</strong>
             <small>Purchase and invoice queue</small>
+            <div class="inv-kpi-foot"><span id="kpiPendingFoot">Queue loading</span></div>
         </div>
         <div class="inv-kpi red">
-            <span>Exceptions</span>
+            <div class="inv-kpi-head"><span>Exceptions</span><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i></div>
             <strong id="kpiExceptions">--</strong>
             <small>Damaged / returned stock</small>
+            <div class="inv-kpi-foot"><span id="kpiExceptionFoot">Risk loading</span></div>
         </div>
     </div>
 
@@ -66,6 +73,29 @@
             <button type="button" onclick="openWorkflowModal('installation')"><span>Installations</span><strong>New Request</strong></button>
             <button type="button" onclick="openWorkflowModal('complaint')"><span>Support</span><strong>New Complaint</strong></button>
             <button type="button" onclick="openMasterModal('product')"><span>Master</span><strong>Add Product</strong></button>
+        </div>
+
+        <div class="inv-exec-grid">
+            <div class="inv-exec-card primary">
+                <span>Operational health</span>
+                <strong id="execHealthScore">--</strong>
+                <small id="execHealthSub">Calculating ERP readiness...</small>
+            </div>
+            <div class="inv-exec-card">
+                <span>Invoice value</span>
+                <strong id="execInvoiceValue">--</strong>
+                <small id="execInvoiceSub">Sales ledger value</small>
+            </div>
+            <div class="inv-exec-card">
+                <span>Stock utilization</span>
+                <strong id="execStockUtilization">--</strong>
+                <small id="execStockSub">Available vs tracked serials</small>
+            </div>
+            <div class="inv-exec-card danger">
+                <span>Attention queue</span>
+                <strong id="execAttention">--</strong>
+                <small id="execAttentionSub">Approvals, complaints, exceptions</small>
+            </div>
         </div>
 
         <div class="inv-dashboard-grid">
@@ -543,6 +573,25 @@
 
     .inv-hero-card small { display: block; color: var(--muted); margin-top: 8px; line-height: 1.4; }
 
+    .inv-health-meter,
+    .inv-mini-meter {
+        height: 8px;
+        border-radius: 99px;
+        overflow: hidden;
+        background: #e7edf5;
+        margin-top: 14px;
+    }
+
+    .inv-health-meter span,
+    .inv-mini-meter span {
+        display: block;
+        width: 0%;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, var(--accent2), #22c55e);
+        transition: width .35s ease;
+    }
+
     .inv-kpi-grid {
         display: grid;
         grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -556,14 +605,48 @@
         background: var(--white);
         padding: 18px;
         box-shadow: 0 10px 30px rgba(15, 23, 42, .06);
+        transition: transform .14s ease, box-shadow .14s ease;
+    }
+
+    .inv-kpi:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 16px 36px rgba(15, 23, 42, .09);
     }
 
     .inv-kpi.green { border-top-color: var(--accent2); }
     .inv-kpi.amber { border-top-color: var(--accent3); }
     .inv-kpi.red { border-top-color: var(--accent4); }
+    .inv-kpi-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .inv-kpi-head i {
+        width: 34px;
+        height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        color: var(--accent);
+        background: var(--accent-light);
+    }
+    .inv-kpi.green .inv-kpi-head i { color: var(--accent2); background: var(--accent2-light); }
+    .inv-kpi.amber .inv-kpi-head i { color: var(--accent3); background: var(--accent3-light); }
+    .inv-kpi.red .inv-kpi-head i { color: var(--accent4); background: var(--accent4-light); }
     .inv-kpi span { color: var(--muted); font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: .04em; }
     .inv-kpi strong { display: block; margin-top: 10px; color: #0f172a; font-family: 'DM Mono', monospace; font-size: 30px; }
     .inv-kpi small { display: block; margin-top: 6px; color: var(--muted); }
+    .inv-kpi-foot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 12px;
+        padding-top: 10px;
+        border-top: 1px solid var(--border-light);
+    }
+    .inv-kpi-foot span {
+        text-transform: none;
+        letter-spacing: 0;
+        font-size: 11px;
+        color: var(--text2);
+    }
 
     .inv-flow-board {
         display: grid;
@@ -666,6 +749,62 @@
         margin-top: 5px;
         color: #0f172a;
         font-size: 13px;
+    }
+
+    .inv-exec-grid {
+        display: grid;
+        grid-template-columns: 1.35fr repeat(3, minmax(0, 1fr));
+        gap: 14px;
+        margin-bottom: 16px;
+    }
+
+    .inv-exec-card {
+        position: relative;
+        overflow: hidden;
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        background: linear-gradient(135deg, #fff, #f8fbff);
+        padding: 18px;
+        box-shadow: 0 14px 34px rgba(15, 23, 42, .07);
+    }
+
+    .inv-exec-card.primary {
+        border-color: rgba(37,99,235,.18);
+        background:
+            radial-gradient(circle at 88% 0%, rgba(37,99,235,.15), transparent 34%),
+            linear-gradient(135deg, #ffffff, #eff6ff);
+    }
+
+    .inv-exec-card.danger {
+        border-color: rgba(220,38,38,.14);
+        background:
+            radial-gradient(circle at 88% 0%, rgba(220,38,38,.11), transparent 34%),
+            linear-gradient(135deg, #ffffff, #fff7ed);
+    }
+
+    .inv-exec-card span {
+        display: block;
+        color: var(--muted);
+        font-size: 10px;
+        font-weight: 900;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+    }
+
+    .inv-exec-card strong {
+        display: block;
+        margin-top: 8px;
+        color: #0f172a;
+        font-family: 'DM Mono', monospace;
+        font-size: 26px;
+    }
+
+    .inv-exec-card small {
+        display: block;
+        margin-top: 6px;
+        color: var(--muted);
+        line-height: 1.35;
+        font-weight: 700;
     }
 
     .inv-dashboard-grid {
@@ -1165,6 +1304,7 @@
         .inv-flow-board,
         .inv-kpi-grid,
         .inv-dashboard-grid,
+        .inv-exec-grid,
         .inv-command-strip,
         .inv-readiness-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
@@ -1175,6 +1315,7 @@
         .inv-flow-board,
         .inv-kpi-grid,
         .inv-dashboard-grid,
+        .inv-exec-grid,
         .inv-command-strip,
         .inv-readiness-grid { grid-template-columns: 1fr; }
         .inv-bar-row { grid-template-columns: 1fr; }
@@ -1253,15 +1394,39 @@
         const installations = summary.installations || {};
         const support = summary.support || {};
         const parties = summary.parties || {};
+        const trackedSerials = Number(stock.total_serials || 0);
+        const availableSerials = Number(stock.available || 0);
+        const damagedSerials = Number(stock.damaged || 0);
+        const returnedSerials = Number(stock.returned || 0);
+        const pendingQueue = Number(purchase.pending_pr || 0) + Number(sales.pending_invoices || 0) + Number(installations.requested || 0) + Number(support.open_complaints || 0);
+        const exceptionQueue = damagedSerials + returnedSerials + Number(support.open_complaints || 0);
+        const stockHealth = trackedSerials > 0 ? Math.round((availableSerials / trackedSerials) * 100) : 100;
+        const riskPenalty = Math.min(45, pendingQueue * 3 + exceptionQueue * 4);
+        const readinessScore = Math.max(55, Math.min(100, stockHealth - riskPenalty + 28));
 
         document.getElementById('inventoryAuthStatus').textContent = 'Backend connected';
         document.getElementById('demoReadiness').textContent = 'Final ERP ready';
+        document.getElementById('demoReadinessSub').textContent = `${readinessScore}% operational health across stock, purchasing, invoicing and support.`;
+        document.getElementById('demoReadinessMeter').style.width = `${readinessScore}%`;
         document.getElementById('kpiProducts').textContent = products.total_products || 0;
         document.getElementById('kpiProductsSub').textContent = `${products.assets || 0} assets, ${products.consumables || 0} consumables, ${products.services || 0} services`;
+        document.getElementById('kpiCategoryFoot').textContent = `${(summary.categories || []).length} active categories`;
         document.getElementById('kpiAvailable').textContent = stock.available || 0;
         document.getElementById('kpiAvailableSub').textContent = `${stock.total_serials || 0} tracked serials`;
-        document.getElementById('kpiPending').textContent = Number(purchase.pending_pr || 0) + Number(sales.pending_invoices || 0) + Number(installations.requested || 0) + Number(support.open_complaints || 0);
-        document.getElementById('kpiExceptions').textContent = Number(stock.damaged || 0) + Number(stock.returned || 0) + Number(support.open_complaints || 0);
+        document.getElementById('stockHealthMeter').style.width = `${stockHealth}%`;
+        document.getElementById('kpiPending').textContent = pendingQueue;
+        document.getElementById('kpiPendingFoot').textContent = pendingQueue > 0 ? 'Action required' : 'No pending queue';
+        document.getElementById('kpiExceptions').textContent = exceptionQueue;
+        document.getElementById('kpiExceptionFoot').textContent = exceptionQueue > 0 ? 'Review stock/support' : 'No active risk';
+
+        document.getElementById('execHealthScore').textContent = `${readinessScore}%`;
+        document.getElementById('execHealthSub').textContent = `${pendingQueue} pending actions and ${exceptionQueue} exceptions across workflows.`;
+        document.getElementById('execInvoiceValue').textContent = money.format(Number(sales.invoice_value || 0));
+        document.getElementById('execInvoiceSub').textContent = `${sales.invoices || 0} invoices, ${sales.pending_invoices || 0} pending approvals`;
+        document.getElementById('execStockUtilization').textContent = `${stockHealth}%`;
+        document.getElementById('execStockSub').textContent = `${availableSerials} available of ${trackedSerials} tracked serials`;
+        document.getElementById('execAttention').textContent = pendingQueue + exceptionQueue;
+        document.getElementById('execAttentionSub').textContent = `${pendingQueue} approvals/support, ${exceptionQueue} stock exceptions`;
 
         document.getElementById('dashPurchase').textContent = purchase.purchase_requests || 0;
         document.getElementById('dashPurchaseSub').textContent = `${purchase.pending_pr || 0} pending, ${purchase.purchase_orders || 0} POs, ${purchase.grns || 0} GRNs`;
